@@ -391,7 +391,8 @@ exports.delFor_return_objectvalue = async (req, res) => {
       [account_transition_id]
     );
 
-    const [result] = await sql.query(`SELECT 
+    const [result] = await sql.query(
+      `SELECT 
                                         account_transition_value , 
                                         account_type_id AS transition_start ,
                                         account_type_from_id AS transition_end 

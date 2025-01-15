@@ -24,5 +24,5 @@ fs.readdirSync(routesPath).forEach((file) => {
 });
 
 server.listen(port, "0.0.0.0", () => {
-  console.log(`App running on http://localhost:${port}`);
+  //console.log(`App running on http://localhost:${port}`);
 });
