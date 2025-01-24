@@ -1,4 +1,5 @@
 const sql = require("../database/db");
+
 exports.openAccountGroup_bankTransition = async (req, res) => {
   try {
     const {

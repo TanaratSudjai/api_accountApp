@@ -5,10 +5,13 @@ const dotenv = require("dotenv");
 const server = express();
 const cors = require("cors");
 
-server.use(cors());
+
+// Swagger
+const { setupSwagger } = require("./controllers/swaggerController");
+setupSwagger(server);
 
 const routesPath = path.join(__dirname, "routes");
-
+server.use(cors());
 dotenv.config();
 const port = process.env.PORT || 5000;
 server.use(express.json());
@@ -23,6 +26,7 @@ fs.readdirSync(routesPath).forEach((file) => {
   }
 });
 
+
 server.listen(port, "0.0.0.0", () => {
-  //console.log(`App running on http://localhost:${port}`);
+  console.log(`App running on http://localhost:${port}`);
 });
