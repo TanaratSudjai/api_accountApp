@@ -1,7 +1,6 @@
 const dotenv = require("dotenv");
 dotenv.config();
 const swaggerJsdoc = require("swagger-jsdoc");
-const envprocessing = process.env.API_BASE_URL;
 const swaggerOption = {
   definition: {
     openapi: "3.0.0",
