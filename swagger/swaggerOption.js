@@ -20,5 +20,7 @@ const swaggerOption = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOption);
+console.log(swaggerOption);
+console.log(envprocessing);
 
 module.exports = swaggerSpec;
