@@ -5,8 +5,8 @@ const dotenv = require("dotenv");
 const server = express();
 const cors = require("cors");
 
-
 // Swagger
+
 const { setupSwagger } = require("./controllers/swaggerController");
 setupSwagger(server);
 
@@ -17,6 +17,7 @@ const port = process.env.PORT || 5000;
 server.use(express.json());
 
 // route
+
 fs.readdirSync(routesPath).forEach((file) => {
   try {
     const route = require(path.join(routesPath, file));
@@ -26,7 +27,8 @@ fs.readdirSync(routesPath).forEach((file) => {
   }
 });
 
-
 server.listen(port, "0.0.0.0", () => {
-  // console.log(`App running on http://localhost:${port}`);
+  console.log(
+    `App running on http://localhost:[112:542.651.234] This API provides authentication and user account management features, built using JWT for secure access.`
+  );
 });
