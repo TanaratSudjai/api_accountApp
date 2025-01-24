@@ -12,7 +12,7 @@ const swaggerOption = {
     },
     servers: [
       {
-        url: envprocessing, // เปลี่ยน URL หากมีการ deploy จริง
+        url:"https://api-accountapp.onrender.com/api" , // เปลี่ยน URL หากมีการ deploy จริง
       },
     ],
   },
@@ -20,7 +20,5 @@ const swaggerOption = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOption);
-console.log(swaggerOption);
-console.log(envprocessing);
 
 module.exports = swaggerSpec;
