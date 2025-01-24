@@ -1,5 +1,7 @@
+const dotenv = require("dotenv");
+dotenv.config();
 const swaggerJsdoc = require("swagger-jsdoc");
-
+const envprocessing = process.env.API_BASE_URL;
 const swaggerOption = {
   definition: {
     openapi: "3.0.0",
@@ -10,7 +12,7 @@ const swaggerOption = {
     },
     servers: [
       {
-        url: "https://api-accountapp.onrender.com/api", // เปลี่ยน URL หากมีการ deploy จริง
+        url: envprocessing, // เปลี่ยน URL หากมีการ deploy จริง
       },
     ],
   },
