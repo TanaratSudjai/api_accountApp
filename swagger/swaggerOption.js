@@ -10,7 +10,7 @@ const swaggerOption = {
     },
     servers: [
       {
-        url: "https://api-accountapp.onrender.com/api/", // เปลี่ยน URL หากมีการ deploy จริง
+        url: "https://api-accountapp.onrender.com/api", // เปลี่ยน URL หากมีการ deploy จริง
       },
     ],
   },
