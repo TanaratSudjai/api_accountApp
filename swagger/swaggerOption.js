@@ -4,13 +4,13 @@ const swaggerOption = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "API Node.js Document",
+      title: "API backend server APP ACCOUNTING",
       version: "1.0.0",
       description: "A System API Node.js server",
     },
     servers: [
       {
-        url: process.env.PORTAPI_SWAGGER, // เปลี่ยน URL หากมีการ deploy จริง
+        url: "https://api-accountapp.onrender.com/api", // เปลี่ยน URL หากมีการ deploy จริง
       },
     ],
   },
