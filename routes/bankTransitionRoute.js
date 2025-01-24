@@ -17,7 +17,6 @@ router.post(
   bankControllers.openAccountGroup_bankTransition
 );
 
-
 router.post("/bank_borrow", bankControllers.creditor_borrow_bankTransition);
 router.post("/bank_return", bankControllers.creditor_return_bankTransition);
 
