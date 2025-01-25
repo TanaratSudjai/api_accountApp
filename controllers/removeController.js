@@ -16,10 +16,10 @@ exports.removeDataTransition = async (req, res) => {
 };
 exports.removeDataType = async (req, res) => {
   try {
-    const { params_id_type } = req.params;
+    // const { params_id_type } = req.params;
     const query =
-      "UPDATE account_type SET `account_type_sum` = 0.00, account_type_total = 0.00 WHERE `account_type_id` = ?";
-    await sql.query(query, [params_id_type]);
+      "UPDATE account_type SET `account_type_sum` = 0.00, account_type_total = 0.00 ";
+    await sql.query(query);
     res.status(200).json({
       message: "Removed data type amount successfully",
     });
