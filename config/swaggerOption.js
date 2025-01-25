@@ -28,7 +28,8 @@ const swaggerOptions = {
     security: [{ bearerAuth: [] }],
     servers: [
       {
-        url: "https://api-accountapp.onrender.com/api",
+        url:"http://localhost:5000/api", 
+        // "https://api-accountapp.onrender.com/api",
         description: "Production Server (hosted on Render)",
       },
     ],
