@@ -25,5 +25,19 @@ router.get("/dasktop_data", dataDasktopController.getNameType);
  *         description: Successfully retrieved the summarized values by type.
  */
 router.get("/dasktop_data_sumtype", dataDasktopController.get_sumvalue_type);
+/**
+ * @swagger
+ * /dasktop_data_sumzero:
+ *   get:
+ *     summary: Get Sum Value by Type
+ *     description: Retrieve the total value summarized by type from the desktop data.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the summarized values by type.
+ */
+router.get("/dasktop_data_sumzero", dataDasktopController.get_zero_value);
+
+
+
 
 module.exports = router;
