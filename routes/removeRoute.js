@@ -18,7 +18,7 @@ router.delete("/removetransition", removeController.removeDataTransition);
 
 /**
  * @swagger
- * /removedatatype/{params_id_type}:
+ * /removedatatype:
  *   put:
  *     summary: Update or remove data by type ID
  *     description: Updates or removes data based on the provided type ID.
@@ -37,6 +37,6 @@ router.delete("/removetransition", removeController.removeDataTransition);
  *       500:
  *         description: Internal server error.
  */
-router.put("/removedatatype/:params_id_type", removeController.removeDataType);
+router.put("/removedatatype", removeController.removeDataType);
 
 module.exports = router;
