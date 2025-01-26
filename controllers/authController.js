@@ -4,80 +4,22 @@ const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 
 dotenv.config();
+const SECRET_KEY = process.env.SECRET_KEY;
 
-// Constants
-const CONSTANTS = {
-  SALT_ROUNDS: 12,
-  TOKEN_EXPIRY: "1h",
-  MIN_PASSWORD_LENGTH: 6,
-  MAX_USERNAME_LENGTH: 30,
-};
-
-const tokenBlacklist = new Set();
-
-const validateInput = {
-  username: (username) => {
-    return (
-      username &&
-      typeof username === "string" &&
-      username.length <= CONSTANTS.MAX_USERNAME_LENGTH &&
-      /^[a-zA-Z0-9_]+$/.test(username)
-    );
-  },
-  password: (password) => {
-    return (
-      password &&
-      typeof password === "string" &&
-      password.length >= CONSTANTS.MIN_PASSWORD_LENGTH
-    );
-  },
-  name: (name) => {
-    return name && typeof name === "string" && name.trim().length > 0;
-  },
-};
-
-// Error handler
-const handleError = (res, error, statusCode = 500) => {
-  console.error(`Error: ${error.message}`);
-  return res.status(statusCode).json({
-    success: false,
-    message: error.message,
-    error: process.env.NODE_ENV === "development" ? error.stack : undefined,
-  });
-};
-
-// verifyToken middleware
 exports.verifyToken = (req, res, next) => {
-  try {
-    const token = req.headers.authorization?.split(" ")[1];
+  const token = req.headers["authorization"];
 
-    if (!token) {
-      return res.status(403).json({
-        success: false,
-        message: "No token provided",
-      });
-    }
-
-    if (tokenBlacklist.has(token)) {
-      return res.status(401).json({
-        success: false,
-        message: "Token has been invalidated",
-      });
-    }
-
-    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
-      if (err) {
-        return res.status(401).json({
-          success: false,
-          message: "Invalid or expired token",
-        });
-      }
-      req.user = decoded;
-      next();
-    });
-  } catch (error) {
-    return handleError(res, error);
+  if (!token) {
+    return res.status(403).json({ message: "No token provided" });
   }
+
+  jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    req.userId = decoded.id;
+    next();
+  });
 };
 
 // register
@@ -87,59 +29,31 @@ exports.register = async (req, res) => {
       req.body;
 
     // Validate input
-    if (!validateInput.username(account_user_username)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid username format",
-      });
+    if (!account_user_username || !account_user_password) {
+      return res.status(400).json({ message: "Please provide all fields" });
     }
 
-    if (!validateInput.password(account_user_password)) {
-      return res.status(400).json({
-        success: false,
-        message: `Password must be at least ${CONSTANTS.MIN_PASSWORD_LENGTH} characters long`,
-      });
-    }
+    // เข้ารหัส password ด้วย bcrypt
+    const hashPassword = await bcrypt.hash(account_user_password, 12);
 
-    if (!validateInput.name(account_user_name)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid name format",
-      });
-    }
-
-    // Check if username already exists
-    const [existingUser] = await pool.query(
-      "SELECT account_user_id FROM account_user WHERE account_user_username = ?",
-      [account_user_username]
-    );
-
-    if (existingUser.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: "Username already exists",
-      });
-    }
-
-    // Hash password
-    const hashPassword = await bcrypt.hash(
-      account_user_password,
-      CONSTANTS.SALT_ROUNDS
-    );
-
-    // Insert user
-    const [result] = await pool.query(
+    // เพิ่มข้อมูลลง database
+    const result = await pool.query(
       "INSERT INTO account_user (account_user_username, account_user_password, account_user_name) VALUES (?, ?, ?)",
       [account_user_username, hashPassword, account_user_name]
     );
 
+    // ส่ง response
     res.status(201).json({
-      success: true,
       message: "Account registered successfully",
-      userId: result.insertId,
+      result,
     });
   } catch (error) {
-    return handleError(res, error);
+    console.error("Error during registration:", err);
+    // จัดการข้อผิดพลาด
+    res.status(500).json({
+      message: "Error registering user",
+      error: err.message,
+    });
   }
 };
 
@@ -147,16 +61,6 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { account_user_username, account_user_password } = req.body;
-
-    if (
-      !validateInput.username(account_user_username) ||
-      !validateInput.password(account_user_password)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid input format",
-      });
-    }
 
     const [users] = await pool.query(
       "SELECT * FROM account_user WHERE account_user_username = ?",
@@ -175,21 +79,15 @@ exports.login = async (req, res) => {
       account_user_password,
       user.account_user_password
     );
-
     if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    // สร้าง JWT token
     const token = jwt.sign(
-      {
-        id: user.account_user_id,
-        username: user.account_user_username,
-      },
-      process.env.SECRET_KEY,
-      { expiresIn: CONSTANTS.TOKEN_EXPIRY }
+      { id: user.id, username: user.username },
+      SECRET_KEY,
+      { expiresIn: "1h" }
     );
 
     res.json({
@@ -203,35 +101,47 @@ exports.login = async (req, res) => {
       },
     });
   } catch (error) {
-    return handleError(res, error);
+    res.json({ error });
   }
 };
-
 // logout
 exports.logout = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        message: "No token provided",
+        message: "Unauthorized: No token provided",
       });
     }
+    // Clear authentication cookies
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/", // เพิ่ม path เพื่อให้แน่ใจว่าลบ cookie ถูกต้อง
+    });
 
-    // Add token to blacklist
-    tokenBlacklist.add(token);
+    // Clear refresh token if exists
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+    });
 
-    // Optional: Clean up old tokens from blacklist
-    setTimeout(() => {
-      tokenBlacklist.delete(token);
-    }, parseInt(CONSTANTS.TOKEN_EXPIRY) * 1000);
-
-    res.json({
+    return res.status(200).json({
       success: true,
       message: "Logged out successfully",
     });
   } catch (error) {
-    return handleError(res, error);
+    // ปรับปรุงการจัดการ error
+    console.error("Logout error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error during logout",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
