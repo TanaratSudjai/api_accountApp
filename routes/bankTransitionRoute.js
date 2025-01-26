@@ -1,21 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const bankControllers = require("../controllers/bankTransitionController");
-
-
+const authMiddleware = require("../middleware/authMiddleware");
 
 /**
  * @swagger
  * /bank_trantisionInsert:
  *   post:
- *     summary: Insert Bank Transaction
- *     description: Add a new bank transaction to the system.
+ *     summary: Add a New Bank Transaction
+ *     description: Add details of a new transaction to the bank system.
  *     responses:
  *       200:
- *         description: Bank transaction added successfully.
+ *         description: The bank transaction has been successfully added.
  */
 router.post(
   "/bank_trantisionInsert",
+  authMiddleware,
   bankControllers.openAccountGroup_bankTransition
 );
 
@@ -23,42 +23,50 @@ router.post(
  * @swagger
  * /bank_borrow:
  *   post:
- *     summary: Borrow from Bank
- *     description: Record a borrowing transaction from the bank.
+ *     summary: Record a Loan Transaction
+ *     description: Save a transaction for borrowing funds from the bank.
  *     responses:
  *       200:
- *         description: Borrowing transaction recorded successfully.
+ *         description: The loan transaction has been successfully recorded.
  */
-router.post("/bank_borrow", bankControllers.creditor_borrow_bankTransition);
+router.post(
+  "/bank_borrow",
+  authMiddleware,
+  bankControllers.creditor_borrow_bankTransition
+);
 
 /**
  * @swagger
  * /bank_return:
  *   post:
- *     summary: Return to Bank
- *     description: Record a return transaction to the bank.
+ *     summary: Record a Return Transaction
+ *     description: Save a transaction for returning funds to the bank.
  *     responses:
  *       200:
- *         description: Return transaction recorded successfully.
+ *         description: The return transaction has been successfully recorded.
  */
-router.post("/bank_return", bankControllers.creditor_return_bankTransition);
+router.post(
+  "/bank_return",
+  authMiddleware,
+  bankControllers.creditor_return_bankTransition
+);
 
 /**
  * @swagger
  * /reuse_return_bank/{account_transition_id}:
  *   delete:
- *     summary: Delete Bank Transaction
- *     description: Remove a specific bank transaction using its ID.
+ *     summary: Delete a Bank Transaction
+ *     description: Remove a bank transaction using its unique ID.
  *     parameters:
  *       - name: account_transition_id
  *         in: path
  *         required: true
- *         description: ID of the bank transaction to delete.
+ *         description: The unique ID of the bank transaction to delete.
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Bank transaction deleted successfully.
+ *         description: The bank transaction has been successfully deleted.
  */
 router.delete(
   "/reuse_return_bank/:account_transition_id",
