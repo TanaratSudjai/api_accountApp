@@ -6,6 +6,8 @@ const typeController = require("../controllers/typeController");
  * @swagger
  * /account_type_create:
  *   post:
+ *     tags:
+ *       - Type
  *     summary: Create Account Type
  *     description: Create a new account type.
  *     responses:
@@ -18,6 +20,8 @@ router.post("/account_type_create", typeController.CreateAccountType);
  * @swagger
  * /account_type_update/{account_type_id}:
  *   put:
+ *     tags:
+ *       - Type
  *     summary: Update Account Type
  *     description: Update an existing account type by its ID.
  *     parameters:
@@ -40,6 +44,8 @@ router.put(
  * @swagger
  * /account_type_get:
  *   get:
+ *     tags:
+ *       - Type
  *     summary: Get All Account Types
  *     description: Retrieve all account types.
  *     responses:
@@ -52,6 +58,8 @@ router.get("/account_type_get", typeController.GetAccountType);
  * @swagger
  * /account_type_get/{account_type_id}:
  *   get:
+ *     tags:
+ *       - Type
  *     summary: Get Account Type by ID
  *     description: Retrieve details of a specific account type using its ID.
  *     parameters:
@@ -74,6 +82,8 @@ router.get(
  * @swagger
  * /account_type_del/{account_type_id}:
  *   delete:
+ *     tags:
+ *       - Type
  *     summary: Delete Account Type
  *     description: Delete an account type by its ID.
  *     parameters:

@@ -6,6 +6,8 @@ const dashboardController = require("../controllers/dashboardController");
  * @swagger
  * /dashboard:
  *   get:
+ *     tags:
+ *       - Dashboard
  *     summary: Get Dashboard Data
  *     description: Retrieve submission transition data for the dashboard.
  *     responses:

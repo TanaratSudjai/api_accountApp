@@ -6,6 +6,8 @@ const removeController = require("../controllers/removeController");
  * @swagger
  * /removetransition:
  *   delete:
+ *     tags:
+ *       - Remove
  *     summary: Delete all amount transitions
  *     description: Deletes all transition records from the database.
  *     responses:
@@ -20,6 +22,8 @@ router.delete("/removetransition", removeController.removeDataTransition);
  * @swagger
  * /removedatatype:
  *   put:
+ *     tags:
+ *       - Remove
  *     summary: Update or remove data by type ID
  *     description: Updates or removes data based on the provided type ID.
  *     parameters:

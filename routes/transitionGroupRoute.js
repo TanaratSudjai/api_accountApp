@@ -6,6 +6,8 @@ const transitionGroupController = require("../controllers/transitionGroupControl
  * @swagger
  * /getMenuGroup_expense:
  *   get:
+ *     tags:
+ *       - Transition Group
  *     summary: Get Expense Menu Groups
  *     description: Retrieve all expense menu groups.
  *     responses:
@@ -21,6 +23,8 @@ router.get(
  * @swagger
  * /getMenuGroup_income:
  *   get:
+ *     tags:
+ *       - Transition Group
  *     summary: Get Income Menu Groups
  *     description: Retrieve all income menu groups.
  *     responses:
@@ -36,6 +40,8 @@ router.get(
  * @swagger
  * /getSelect_countSelect:
  *   get:
+ *     tags:
+ *       - Transition Group
  *     summary: Get Selection Count
  *     description: Retrieve the count of selected transitions.
  *     responses:
@@ -51,6 +57,8 @@ router.get(
  * @swagger
  * /getSelect_select/{account_type_id}:
  *   put:
+ *     tags:
+ *       - Transition Group
  *     summary: Update Selection by Account Type ID
  *     description: Update selection value for a specific account type ID.
  *     parameters:
@@ -73,6 +81,8 @@ router.put(
  * @swagger
  * /transition_group_income_and_extend:
  *   post:
+ *     tags:
+ *       - Transition Group
  *     summary: Submit Income and Expense Group Transition
  *     description: Submit transitions for both income and expense groups.
  *     responses:
@@ -88,6 +98,8 @@ router.post(
  * @swagger
  * /transition_select_expense:
  *   post:
+ *     tags:
+ *       - Transition Group
  *     summary: Open Expense Group Transition
  *     description: Create a new transition for the expense group.
  *     responses:
@@ -103,6 +115,8 @@ router.post(
  * @swagger
  * /transition_select_income:
  *   post:
+ *     tags:
+ *       - Transition Group
  *     summary: Open Income Group Transition
  *     description: Create a new transition for the income group.
  *     responses:
@@ -118,6 +132,8 @@ router.post(
  * @swagger
  * /get_type_from_id:
  *   get:
+ *     tags:
+ *       - Transition Group
  *     summary: Get Account Type from ID
  *     description: Retrieve account type details using its ID.
  *     responses:
@@ -130,6 +146,8 @@ router.get("/get_type_from_id", transitionGroupController.getType_from_id);
  * @swagger
  * /get_creditor:
  *   get:
+ *     tags:
+ *       - Transition Group
  *     summary: Get Creditors
  *     description: Retrieve a list of creditors.
  *     responses:
@@ -142,6 +160,8 @@ router.get("/get_creditor", transitionGroupController.getCreditor);
  * @swagger
  * /get_debtor:
  *   get:
+ *     tags:
+ *       - Transition Group
  *     summary: Get Debtors
  *     description: Retrieve a list of debtors.
  *     responses:
@@ -154,6 +174,8 @@ router.get("/get_debtor", transitionGroupController.getDebtor);
  * @swagger
  * /get_expense_transition:
  *   get:
+ *     tags:
+ *       - Transition Group
  *     summary: Get Expense Transitions
  *     description: Retrieve all expense transitions.
  *     responses:
@@ -169,6 +191,8 @@ router.get(
  * @swagger
  * /get_income_transition:
  *   get:
+ *     tags:
+ *       - Transition Group
  *     summary: Get Income Transitions
  *     description: Retrieve all income transitions.
  *     responses:
@@ -184,6 +208,8 @@ router.get(
  * @swagger
  * /deletetransition/{account_transition_id}:
  *   delete:
+ *     tags:
+ *       - Transition Group
  *     summary: Delete Transition
  *     description: Delete a transition using its ID.
  *     parameters:
@@ -206,6 +232,8 @@ router.delete(
  * @swagger
  * /delete_transition_expense/{account_transition_id}:
  *   put:
+ *     tags:
+ *       - Transition Group
  *     summary: Mark Expense Transition as Deleted
  *     description: Mark a specific expense transition as deleted using its ID.
  *     parameters:
@@ -228,6 +256,8 @@ router.put(
  * @swagger
  * /delete_transition_income/{account_transition_id}:
  *   put:
+ *     tags:
+ *       - Transition Group
  *     summary: Mark Income Transition as Deleted
  *     description: Mark a specific income transition as deleted using its ID.
  *     parameters:
@@ -250,6 +280,8 @@ router.put(
  * @swagger
  * /transition_bank:
  *   get:
+ *     tags:
+ *       - Transition Group
  *     summary: Get Bank Transitions
  *     description: Retrieve all bank transitions.
  *     responses:
