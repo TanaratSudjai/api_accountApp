@@ -6,6 +6,8 @@ const dataDasktopController = require("../controllers/dataDasktopController");
  * @swagger
  * /dasktop_data:
  *   get:
+ *     tags:
+ *       - Dasktop
  *     summary: Get Name Type Data
  *     description: Retrieve the list of name types from the desktop data.
  *     responses:
@@ -18,6 +20,8 @@ router.get("/dasktop_data", dataDasktopController.getNameType);
  * @swagger
  * /dasktop_data_sumtype:
  *   get:
+ *     tags:
+ *       - Dasktop
  *     summary: Get Sum Value by Type
  *     description: Retrieve the total value summarized by type from the desktop data.
  *     responses:
@@ -29,6 +33,8 @@ router.get("/dasktop_data_sumtype", dataDasktopController.get_sumvalue_type);
  * @swagger
  * /dasktop_data_sumzero:
  *   get:
+ *     tags:
+ *       - Dasktop
  *     summary: Get Sum Value by Type
  *     description: Retrieve the total value summarized by type from the desktop data.
  *     responses:

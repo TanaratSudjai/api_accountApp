@@ -7,6 +7,8 @@ const authMiddleware = require("../middleware/authMiddleware");
  * @swagger
  * /bank_trantisionInsert:
  *   post:
+ *     tags:
+ *       - Transaction 
  *     summary: Add a New Bank Transaction
  *     description: Add details of a new transaction to the bank system.
  *     responses:
@@ -23,6 +25,8 @@ router.post(
  * @swagger
  * /bank_borrow:
  *   post:
+ *     tags:
+ *       - Transaction
  *     summary: Record a Loan Transaction
  *     description: Save a transaction for borrowing funds from the bank.
  *     responses:
@@ -39,6 +43,8 @@ router.post(
  * @swagger
  * /bank_return:
  *   post:
+ *     tags:
+ *       - Transaction
  *     summary: Record a Return Transaction
  *     description: Save a transaction for returning funds to the bank.
  *     responses:
@@ -55,6 +61,8 @@ router.post(
  * @swagger
  * /reuse_return_bank/{account_transition_id}:
  *   delete:
+ *     tags:
+ *       - Transaction
  *     summary: Delete a Bank Transaction
  *     description: Remove a bank transaction using its unique ID.
  *     parameters:

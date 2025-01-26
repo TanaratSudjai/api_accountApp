@@ -5,6 +5,8 @@ const pieChartController = require("../controllers/pieChartController");
  * @swagger
  * /dataGetIncome:
  *   get:
+ *     tags:
+ *       - Chart Pie Bar
  *     summary: Get Dashboard Data
  *     description: Retrieve submission transition data for the dashboard.
  *     responses:
@@ -16,6 +18,8 @@ router.get("/dataGetIncome", pieChartController.getIncome);
  * @swagger
  * /dataGetExpanse:
  *   get:
+ *     tags:
+ *       - Chart Pie Bar
  *     summary: Get Dashboard Data
  *     description: Retrieve submission transition data for the dashboard.
  *     responses:

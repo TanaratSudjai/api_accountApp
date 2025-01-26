@@ -6,6 +6,8 @@ const groupController = require("../controllers/groupController");
  * @swagger
  * /account_group_create:
  *   post:
+ *     tags:
+ *       - Group
  *     summary: Create Account Group
  *     description: Create a new account group in the system.
  *     responses:
@@ -18,6 +20,8 @@ router.post('/account_group_create', groupController.CreateAccountGroup);
  * @swagger
  * /account_group_get:
  *   get:
+ *     tags:
+ *       - Group
  *     summary: Get All Account Groups
  *     description: Retrieve a list of all account groups in the system.
  *     responses:
@@ -30,6 +34,8 @@ router.get('/account_group_get', groupController.GetAccountGroup);
  * @swagger
  * /account_group_get/{account_group_id}:
  *   get:
+ *     tags:
+ *       - Group
  *     summary: Get Account Group by ID
  *     description: Retrieve details of a specific account group using its ID.
  *     parameters:
@@ -49,6 +55,8 @@ router.get('/account_group_get/:account_group_id', groupController.GetAccountGro
  * @swagger
  * /account_group_del/{account_group_id}:
  *   delete:
+ *     tags:
+ *       - Group
  *     summary: Delete Account Group by ID
  *     description: Delete a specific account group using its ID.
  *     parameters:
@@ -68,6 +76,8 @@ router.delete('/account_group_del/:account_group_id', groupController.DeleteAcco
  * @swagger
  * /account_group_update/{account_group_id}:
  *   put:
+ *     tags:
+ *       - Group
  *     summary: Update Account Group by ID
  *     description: Update the details of a specific account group using its ID.
  *     parameters:
@@ -87,6 +97,8 @@ router.put('/account_group_update/:account_group_id', groupController.UpdateAcco
  * @swagger
  * /account_group_counttype:
  *   get:
+ *     tags:
+ *       - Group
  *     summary: Get Account Group Type Count
  *     description: Retrieve the count of account groups by type.
  *     responses:
@@ -99,6 +111,8 @@ router.get('/account_group_counttype', groupController.GetAccountTypeCount_group
  * @swagger
  * /account_group_counttype/{account_category_id}:
  *   get:
+ *     tags:
+ *       - Group
  *     summary: Get Account Group Type Count by Category ID
  *     description: Retrieve the count of account groups by type for a specific category.
  *     parameters:

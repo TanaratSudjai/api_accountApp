@@ -5,9 +5,7 @@ const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
-    return res
-      .status(401)
-      .json({ message: "Access denied. No token provided." });
+    return res.redirect("/");
   }
 
   try {
@@ -15,7 +13,7 @@ const authMiddleware = (req, res, next) => {
     req.user = decoded; // Attach user info to the request object
     next();
   } catch (err) {
-    res.status(403).json({ message: "Invalid token" });
+    return res.redirect("/"); // Redirect to the root path if the token is invalid
   }
 };
 

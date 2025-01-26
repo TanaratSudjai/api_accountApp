@@ -6,6 +6,8 @@ const report = require("../controllers/reportController");
  * @swagger
  * /report:
  *   get:
+ *     tags:
+ *       - Report
  *     summary: Get Account Report
  *     description: Retrieve a detailed report of account activities.
  *     responses:
