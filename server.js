@@ -55,7 +55,7 @@ server.requiresAuth = true; // config สำหรับ route authentication
  *       400:
  *         description: Invalid request body
  */
-
+router.post("/auth/register", authController.register);
 /**
  * @swagger
  * /auth/login:
@@ -82,6 +82,7 @@ server.requiresAuth = true; // config สำหรับ route authentication
  *         description: Invalid credentials
  */
 
+router.post("/auth/login", authController.login);
 /**
  * @swagger
  * /auth/logout:
@@ -92,8 +93,7 @@ server.requiresAuth = true; // config สำหรับ route authentication
  *       200:
  *         description: Logout successful
  */
-router.post("/auth/register", authController.register);
-router.post("/auth/login", authController.login);
+
 router.post("/auth/logout", authController.logout);
 
 // ฟังก์ชันตรวจสอบว่า user login หรือไม่
