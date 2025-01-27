@@ -14,7 +14,12 @@ const port = process.env.PORT || 5000;
 // Authentication Controller
 const authController = require("./controllers/authController");
 
-server.use(cors());
+server.use(
+  cors({
+    origin: "http://localhost:3000/",
+    credentials: true,
+  })
+);
 server.use(express.json());
 //ให้ Middleware ใช้กับทุก Request ที่เข้ามาใน Server
 server.use((req, res, next) => {
