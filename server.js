@@ -2,45 +2,62 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const dotenv = require("dotenv");
-const server = express();
 const cors = require("cors");
-
+const server = express();
+const router = express.Router(); // แก้ไขการสร้าง router
+dotenv.config();
 // Swagger
-
 const { setupSwagger } = require("./controllers/swaggerController");
 setupSwagger(server);
-
 const routesPath = path.join(__dirname, "routes");
-server.use(cors());
-dotenv.config();
 const port = process.env.PORT || 5000;
-server.use(express.json());
+// Authentication Controller
+const authController = require("./controllers/authController");
 
-// route
+server.use(cors());
+server.use(express.json());
+//ให้ Middleware ใช้กับทุก Request ที่เข้ามาใน Server
+server.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+server.requiresAuth = true; // config สำหรับ route authentication
+// Swagger Documentation for Authentication Endpoints
+router.post("/auth/register", authController.register);
+router.post("/auth/login", authController.login);
+router.post("/auth/logout", authController.logout);
+
 // ฟังก์ชันตรวจสอบว่า user login หรือไม่
 const checkLogin = (req, res, next) => {
   if (!req.isAuthenticated()) {
-    // ตรวจสอบ session หรือ token ของ user
     return res.status(401).send("กรุณา login ก่อน");
   }
-  next(); // ถ้า login แล้วให้ดำเนินการต่อ
+  next();
 };
+
+// โหลด route files จากโฟลเดอร์ routes
 fs.readdirSync(routesPath).forEach((file) => {
   try {
-    const route = require(path.join(routesPath, file));
+    // ตรวจสอบว่าไฟล์เป็น .js เท่านั้น
+    if (file.endsWith(".js")) {
+      const route = require(path.join(routesPath, file));
+      console.log("Loaded Route:", file);
 
-    // ตรวจสอบว่ามีการตั้งค่า middleware checkLogin ในแต่ละ route หรือไม่
-    if (route.requiresAuth) {
-      // ถ้า route นี้ต้องการการ login
-      server.use("/api", checkLogin, route);
+      // ใช้งาน route โดยตรวจสอบ requiresAuth
+      if (route.requiresAuth) {
+        server.use("/api", checkLogin, route);
+      } else {
+        server.use("/api", route);
+      }
     }
   } catch (error) {
     console.error(`Error loading route from file ${file}:`, error.message);
   }
 });
 
+// Start Server
 server.listen(port, "0.0.0.0", () => {
   console.log(
-    `App running on http://localhost:[112:542.651.234] This API provides authentication and user account management features, built using JWT for secure access.`
+    `App running on http://localhost:${port} - API for authentication and user account management`
   );
 });
