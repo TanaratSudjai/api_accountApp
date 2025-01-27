@@ -13,10 +13,13 @@ const routesPath = path.join(__dirname, "routes");
 const port = process.env.PORT || 5000;
 // Authentication Controller
 const authController = require("./controllers/authController");
+const cookieParser = require("cookie-parser");
 
+// cookieParser
+server.use(cookieParser());
 server.use(
   cors({
-    origin: "http://localhost:3000/",
+    origin: "http://localhost:3000",
     credentials: true,
   })
 );
@@ -26,8 +29,6 @@ server.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
-// use /api เป็นตั้งต้น
-server.use("/api", router);
 // Swagger Documentation for Authentication Endpoints
 router.post("/auth/register", authController.register);
 router.post("/auth/login", authController.login);
@@ -42,26 +43,26 @@ const checkLogin = (req, res, next) => {
   next();
 };
 
-// โหลด route files จากโฟลเดอร์ routes
+// โหลด route files
 fs.readdirSync(routesPath).forEach((file) => {
   try {
-    // ตรวจสอบว่าไฟล์เป็น .js เท่านั้น
     if (file.endsWith(".js")) {
       const route = require(path.join(routesPath, file));
       console.log("Loaded Route:", file);
 
-      // ใช้งาน route โดยตรวจสอบ requiresAuth
+      // ใช้ router.use แทน server.use
       if (route.requiresAuth) {
-        server.use("/api", checkLogin, route);
+        router.use("/", checkLogin, route);
       } else {
-        server.use("/api", route);
+        router.use("/", route);
       }
     }
   } catch (error) {
     console.error(`Error loading route from file ${file}:`, error.message);
   }
 });
-
+// ใช้ router กับ /api path
+server.use("/api", router);
 // Start Server
 server.listen(port, "0.0.0.0", () => {
   console.log(

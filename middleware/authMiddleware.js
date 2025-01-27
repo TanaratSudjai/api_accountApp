@@ -1,7 +1,5 @@
 const jwt = require("jsonwebtoken");
 const SECRET_KEY = process.env.SECRET_KEY;
-// public path
-const publicRoutes = ["/auth/login", "/auth/register"];
 
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];

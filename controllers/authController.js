@@ -89,6 +89,13 @@ exports.login = async (req, res) => {
       SECRET_KEY,
       { expiresIn: "1h" }
     );
+    // เพิ่มการตั้งค่า cookie
+    res.cookie("token", token, {
+      httpOnly: true, // ป้องกันการเข้าถึง cookie ผ่าน JavaScript
+      secure: process.env.NODE_ENV === "production", // ใช้ HTTPS ในโหมด production
+      sameSite: "strict", // ป้องกัน CSRF
+      maxAge: 3600000, // หมดอายุใน 1 ชั่วโมง (1 hour in milliseconds)
+    });
 
     res.json({
       success: true,
@@ -107,41 +114,13 @@ exports.login = async (req, res) => {
 // logout
 exports.logout = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: No token provided",
-      });
-    }
-    // Clear authentication cookies
-    res.clearCookie("accessToken", {
+    res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      path: "/", // เพิ่ม path เพื่อให้แน่ใจว่าลบ cookie ถูกต้อง
     });
-
-    // Clear refresh token if exists
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Logged out successfully",
-    });
+    res.json({ success: true, message: "Logout successful" });
   } catch (error) {
-    // ปรับปรุงการจัดการ error
-    console.error("Logout error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error during logout",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    res.status(500).json({ error: error.message });
   }
 };

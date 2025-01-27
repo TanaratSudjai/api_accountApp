@@ -25,16 +25,15 @@ const swaggerOptions = {
         },
       },
     },
-    security: [{ bearerAuth: [] }],
+    security: [{ bearerAuth: [] }], // Global security requirement
     servers: [
       {
-        url: "https://api-accountapp.onrender.com/api",
-        // "https://api-accountapp.onrender.com/api",
-        description: "Production Server (hosted on Render)",
+        url: "http://localhost:5000/api",
+        description: "Development Server",
       },
     ],
   },
-  apis: ["./routes/*.js"], // ใช้ไฟล์ route สำหรับการอธิบาย API
+  apis: ["./routes/*.js"],
 };
 
 module.exports = swaggerJsdoc(swaggerOptions);

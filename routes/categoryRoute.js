@@ -34,6 +34,8 @@ router.post("/categoryDr", categoryController.createCategoryDr);
  * @swagger
  * /category:
  *   get:
+ *     security:
+ *       - bearerAuth: []
  *     tags:
  *       - Category
  *     summary: Get All Categories

@@ -38,7 +38,8 @@ const router = express.Router();
  * @swagger
  * /auth/login:
  *   post:
- *     summary: Log in a user
+ *     security: []  # ไม่ต้องการ authentication
+ *     summary: Login to get JWT token
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -47,12 +48,10 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             properties:
- *               username:
+ *               account_user_username:
  *                 type: string
- *                 example: johndoe
- *               password:
+ *               account_user_password:
  *                 type: string
- *                 example: password123
  *     responses:
  *       200:
  *         description: Login successful
@@ -63,8 +62,6 @@ const router = express.Router();
  *               properties:
  *                 token:
  *                   type: string
- *       401:
- *         description: Invalid credentials
  */
 
 /**
