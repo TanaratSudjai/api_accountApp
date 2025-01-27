@@ -1,14 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const bankControllers = require("../controllers/bankTransitionController");
-const authMiddleware = require("../middleware/authMiddleware");
 
 /**
  * @swagger
  * /bank_trantisionInsert:
  *   post:
  *     tags:
- *       - Transaction 
+ *       - Transaction
  *     summary: Add a New Bank Transaction
  *     description: Add details of a new transaction to the bank system.
  *     responses:
@@ -17,7 +16,6 @@ const authMiddleware = require("../middleware/authMiddleware");
  */
 router.post(
   "/bank_trantisionInsert",
-  authMiddleware,
   bankControllers.openAccountGroup_bankTransition
 );
 
@@ -33,11 +31,7 @@ router.post(
  *       200:
  *         description: The loan transaction has been successfully recorded.
  */
-router.post(
-  "/bank_borrow",
-  authMiddleware,
-  bankControllers.creditor_borrow_bankTransition
-);
+router.post("/bank_borrow", bankControllers.creditor_borrow_bankTransition);
 
 /**
  * @swagger
