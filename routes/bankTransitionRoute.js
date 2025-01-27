@@ -47,7 +47,6 @@ router.post("/bank_borrow", bankControllers.creditor_borrow_bankTransition);
  */
 router.post(
   "/bank_return",
-  authMiddleware,
   bankControllers.creditor_return_bankTransition
 );
 

@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const SECRET_KEY = process.env.SECRET_KEY; 
+const SECRET_KEY = process.env.SECRET_KEY;
 // public path
 const publicRoutes = ["/auth/login", "/auth/register"];
 
@@ -9,7 +9,6 @@ const authMiddleware = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ message: "Token is missing. Please login." });
   }
-
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
     req.user = decoded;
