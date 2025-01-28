@@ -19,7 +19,7 @@ const cookieParser = require("cookie-parser");
 server.use(cookieParser());
 server.use(
   cors({
-    origin: "https://account-app-sable.vercel.app",
+    origin: "https://account-app-mu.vercel.app",
     credentials: true,
   })
 );
