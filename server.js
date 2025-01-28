@@ -19,7 +19,8 @@ const cookieParser = require("cookie-parser");
 server.use(cookieParser());
 server.use(
   cors({
-    origin: "https://account-app-mu.vercel.app",
+    origin: "http://localhost:3000",
+    // origin: "https://account-app-mu.vercel.app",
     credentials: true,
   })
 );
