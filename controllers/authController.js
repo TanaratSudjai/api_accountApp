@@ -91,10 +91,10 @@ exports.login = async (req, res) => {
     );
     // เพิ่มการตั้งค่า cookie
     res.cookie("token", token, {
-      httpOnly: true, // ป้องกันการเข้าถึง cookie ผ่าน JavaScript
-      secure: process.env.NODE_ENV === "production", // ใช้ HTTPS ในโหมด production
-      sameSite: "strict", // ป้องกัน CSRF
-      maxAge: 3600000, // หมดอายุใน 1 ชั่วโมง (1 hour in milliseconds)
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // ใช้ secure ใน production
+      sameSite: "strict", // หรือ "lax" ขึ้นอยู่กับการใช้งาน
+      maxAge: 7 * 24 * 60 * 60 * 1000, // อายุ 7 วัน
     });
 
     res.json({
