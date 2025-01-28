@@ -29,7 +29,11 @@ exports.register = async (req, res) => {
       req.body;
 
     // Validate input
-    if (!account_user_username || !account_user_password) {
+    if (
+      !account_user_username ||
+      !account_user_password ||
+      !account_user_name
+    ) {
       return res.status(400).json({ message: "Please provide all fields" });
     }
 

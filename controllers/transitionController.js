@@ -1,4 +1,6 @@
 const sql = require("../database/db");
+const jwt = require("jsonwebtoken");
+const SECRET_KEY = process.env.SECRET_KEY;
 exports.openAccount = async (req, res) => {
   try {
     const {
@@ -166,7 +168,17 @@ exports.sumbitTransition = async (req, res) => {
 };
 
 exports.getTransaction = async (req, res) => {
+  const token = req.cookies.token; // สมมติว่า token ถูกเก็บในชื่อ 'token'
+  if (!token) {
+    return res
+      .status(401)
+      .json({ error: "Unauthorized access, token missing!" });
+  }
+
   try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    const account_user_id = decoded.account_user_id;
+    console.log(account_user_id);
     const [res_transition] = await sql.query(
       `SELECT
         account_group.account_category_id, 
@@ -194,7 +206,9 @@ exports.getTransaction = async (req, res) => {
         INNER JOIN
         account_group
         ON 
-          account_type.account_group_id = account_group.account_group_id`
+          account_type.account_group_id = account_group.account_group_id
+        WHERE account_transition.account_user_id = ?`,
+      [account_user_id]
     );
     res.json({ res_transition });
   } catch (err) {
