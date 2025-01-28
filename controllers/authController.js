@@ -89,17 +89,13 @@ exports.login = async (req, res) => {
 
     // สร้าง JWT token
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      {
+        account_user_id: user.account_user_id,
+        // account_user_username: user.account_user_username,
+      },
       SECRET_KEY,
       { expiresIn: "1h" }
     );
-    // เพิ่มการตั้งค่า cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // ใช้ secure ใน production
-      sameSite: "strict", // หรือ "lax" ขึ้นอยู่กับการใช้งาน
-      maxAge: 7 * 24 * 60 * 60 * 1000, // อายุ 7 วัน
-    });
 
     res.json({
       success: true,

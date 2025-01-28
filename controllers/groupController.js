@@ -1,5 +1,6 @@
 const sql = require("../database/db");
-
+const jwt = require("jsonwebtoken");
+const SECRET_KEY = process.env.SECRET_KEY;
 exports.CreateAccountGroup = async (req, res) => {
   const { account_group_name, account_category_id } = req.body;
 
@@ -8,14 +9,26 @@ exports.CreateAccountGroup = async (req, res) => {
       message: "Account group name and account category ID are required",
     });
   }
-
+  // const account_user_id = req.user.account_user_id;
   try {
-    const query = `INSERT INTO account_group (account_group_name , account_category_id) 
-    VALUES (? ,?)`;
+    // get token of backend
+    const authHeader = req.headers["authorization"];
+    let authToken = "";
+    if (authHeader) {
+      authToken = authHeader.split(" ")[1];
+    }
+    console.log("authToken : \n", authToken);
+    const user = jwt.verify(authToken, SECRET_KEY);
+    console.log("super key token : \n", user);
+    const account_user_id = user.account_user_id;
+
+    const query = `INSERT INTO account_group (account_group_name , account_category_id, account_user_id) 
+    VALUES (? ,?, ?)`;
 
     const [new_account_group] = await sql.query(query, [
       account_group_name,
       account_category_id,
+      account_user_id,
     ]);
     res.status(201).json({
       message: "Group created successfully",

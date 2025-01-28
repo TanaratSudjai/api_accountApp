@@ -5,7 +5,6 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const server = express();
 const router = express.Router(); // สร้าง router
-dotenv.config();
 // Swagger
 const { setupSwagger } = require("./controllers/swaggerController");
 setupSwagger(server);
@@ -14,14 +13,17 @@ const port = process.env.PORT;
 // Authentication Controller
 const authController = require("./controllers/authController");
 const cookieParser = require("cookie-parser");
+const verify = require("./middleware/authMiddleware")
+dotenv.config();
 
 // cookieParser
 server.use(cookieParser());
 server.use(
   cors({
     origin: "http://localhost:3000",
-    // origin: "https://account-app-mu.vercel.app",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 server.use(express.json());
@@ -36,13 +38,6 @@ router.post("/auth/login", authController.login);
 router.post("/auth/logout", authController.logout);
 
 server.requiresAuth = true; // config สำหรับ route authentication
-// ฟังก์ชันตรวจสอบว่า user login หรือไม่
-const checkLogin = (req, res, next) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).send("กรุณา login ก่อน");
-  }
-  next();
-};
 
 // โหลด route files
 fs.readdirSync(routesPath).forEach((file) => {
@@ -53,7 +48,7 @@ fs.readdirSync(routesPath).forEach((file) => {
 
       // ใช้ router.use แทน server.use
       if (route.requiresAuth) {
-        router.use("/", checkLogin, route);
+        router.use("/",verify, route);
       } else {
         router.use("/", route);
       }
@@ -62,6 +57,8 @@ fs.readdirSync(routesPath).forEach((file) => {
     console.error(`Error loading route from file ${file}:`, error.message);
   }
 });
+
+server.options("*", cors());
 // ใช้ router กับ /api path
 server.use("/api", router);
 // Start Server
