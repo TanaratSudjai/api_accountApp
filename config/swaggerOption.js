@@ -28,7 +28,7 @@ const swaggerOptions = {
     security: [{ bearerAuth: [] }], // Global security requirement
     servers: [
       {
-        url: "http://localhost:5000/api",
+        url: "https://api-accountapp.onrender.com/api",
         description: "Development Server",
       },
     ],
