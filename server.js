@@ -10,7 +10,7 @@ dotenv.config();
 const { setupSwagger } = require("./controllers/swaggerController");
 setupSwagger(server);
 const routesPath = path.join(__dirname, "routes");
-const port = process.env.PORT || 5000;
+const port = process.env.PORT;
 // Authentication Controller
 const authController = require("./controllers/authController");
 const cookieParser = require("cookie-parser");
