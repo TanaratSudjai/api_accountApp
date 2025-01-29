@@ -60,7 +60,7 @@ fs.readdirSync(routesPath).forEach((file) => {
 
 server.options("*", cors());
 // ใช้ router กับ /api path
-server.use("/api", middleware, router);
+server.use("/api", router);
 // Start Server
 server.listen(port, "0.0.0.0", () => {
   console.log(

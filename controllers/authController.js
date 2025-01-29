@@ -110,6 +110,7 @@ exports.login = async (req, res) => {
     res.json({ error });
   }
 };
+
 // logout
 exports.logout = async (req, res) => {
   try {
@@ -117,11 +118,12 @@ exports.logout = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
+      path: "/",
     });
-    const [res] = localStorage.removeItem("token");
-    console.log(res);
-
-    res.json({ success: true, message: "Logout successful" });
+    res.json({
+      success: true,
+      message: "Logout successful, please remove token from client storage",
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
