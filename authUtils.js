@@ -16,7 +16,6 @@ const getUserFromToken = (req) => {
     if (!authToken) {
       throw new Error("Token is missing in Authorization header");
     }
-
     const user = jwt.verify(authToken, SECRET_KEY);
     return user;
   } catch (error) {
