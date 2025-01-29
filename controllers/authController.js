@@ -91,7 +91,6 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       {
         account_user_id: user.account_user_id,
-        // account_user_username: user.account_user_username,
       },
       SECRET_KEY,
       { expiresIn: "1h" }
@@ -119,6 +118,9 @@ exports.logout = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
+    const [res] = localStorage.removeItem("token");
+    console.log(res);
+
     res.json({ success: true, message: "Logout successful" });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -2,6 +2,7 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const dotenv = require("dotenv");
+dotenv.config();
 const cors = require("cors");
 const server = express();
 const router = express.Router(); // สร้าง router
@@ -13,8 +14,7 @@ const port = process.env.PORT;
 // Authentication Controller
 const authController = require("./controllers/authController");
 const cookieParser = require("cookie-parser");
-const verify = require("./middleware/authMiddleware")
-dotenv.config();
+const middleware = require("./middleware/authMiddleware");
 
 // cookieParser
 server.use(cookieParser());
@@ -48,7 +48,7 @@ fs.readdirSync(routesPath).forEach((file) => {
 
       // ใช้ router.use แทน server.use
       if (route.requiresAuth) {
-        router.use("/",verify, route);
+        router.use("/", middleware, route);
       } else {
         router.use("/", route);
       }
@@ -60,7 +60,7 @@ fs.readdirSync(routesPath).forEach((file) => {
 
 server.options("*", cors());
 // ใช้ router กับ /api path
-server.use("/api", router);
+server.use("/api", middleware, router);
 // Start Server
 server.listen(port, "0.0.0.0", () => {
   console.log(

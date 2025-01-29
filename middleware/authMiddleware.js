@@ -1,8 +1,13 @@
-const jwt = require("jsonwebtoken");
-const SECRET_KEY = process.env.SECRET_KEY;
+const { getUserFromToken } = require("../authUtils");
 
 const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  try {
+    const user = getUserFromToken(req);
+    req.user = user; // ใส่ข้อมูลผู้ใช้ลงใน `req.user`
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: error.message });
+  }
 };
 
 module.exports = authMiddleware;
