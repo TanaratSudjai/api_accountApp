@@ -2,6 +2,7 @@ const pool = require("../database/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+const { getUserFromToken } = require("../authUtils");
 
 dotenv.config();
 const SECRET_KEY = process.env.SECRET_KEY;
@@ -29,7 +30,11 @@ exports.register = async (req, res) => {
       req.body;
 
     // Validate input
-    if (!account_user_username || !account_user_password) {
+    if (
+      !account_user_username ||
+      !account_user_password ||
+      !account_user_name
+    ) {
       return res.status(400).json({ message: "Please provide all fields" });
     }
 
@@ -55,6 +60,20 @@ exports.register = async (req, res) => {
       error: err.message,
     });
   }
+};
+
+exports.gettingSession = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
+  if (!user || !user.account_user_id) {
+    return res.status(401).json({ error: "Unauthorized or missing user ID" });
+  }
+  const query = `SELECT * FROM account_user WHERE account_user_id = ?`;
+  const [result] = await pool.query(query, [account_user_id]);
+  if (result.length === 0) {
+    return res.status(404).json({ error: "User not found" });
+  }
+  res.json({ success: true, data_user: result[0] });
 };
 
 // login
@@ -85,17 +104,15 @@ exports.login = async (req, res) => {
 
     // สร้าง JWT token
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      {
+        account_user_id: user.account_user_id,
+      },
       SECRET_KEY,
       { expiresIn: "1h" }
     );
-    // เพิ่มการตั้งค่า cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // ใช้ secure ใน production
-      sameSite: "strict", // หรือ "lax" ขึ้นอยู่กับการใช้งาน
-      maxAge: 7 * 24 * 60 * 60 * 1000, // อายุ 7 วัน
-    });
+
+    // geting session user
+    // req.session.user = { username, account_user_id };
 
     res.json({
       success: true,
@@ -108,9 +125,10 @@ exports.login = async (req, res) => {
       },
     });
   } catch (error) {
-    res.json({ error });
+    res.json({ error: error.message });
   }
 };
+
 // logout
 exports.logout = async (req, res) => {
   try {
@@ -118,8 +136,12 @@ exports.logout = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
+      path: "/",
     });
-    res.json({ success: true, message: "Logout successful" });
+    res.json({
+      success: true,
+      message: "Logout successful, please remove token from client storage",
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

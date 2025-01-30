@@ -1,4 +1,6 @@
 const sql = require("../database/db");
+const jwt = require("jsonwebtoken");
+const SECRET_KEY = process.env.SECRET_KEY;
 exports.openAccount = async (req, res) => {
   try {
     const {
@@ -167,16 +169,32 @@ exports.sumbitTransition = async (req, res) => {
 
 exports.getTransaction = async (req, res) => {
   try {
+    // get token of backend
+    const authHeader = req.headers["authorization"];
+    let authToken = "";
+    if (authHeader) {
+      authToken = authHeader.split(" ")[1];
+    }
+    console.log("authToken : \n", authToken);
+    const user = jwt.verify(authToken, SECRET_KEY);
+    console.log("super key token : \n", user);
+    const account_user_id = user.account_user_id;
+
     const [res_transition] = await sql.query(
       `SELECT
-        account_group.account_category_id, 
+        account_transition.*, 
         account_transition.account_transition_id, 
         account_transition.account_type_id, 
+        account_transition.account_category_id, 
         account_transition.account_transition_value, 
         account_transition.account_transition_datetime, 
         account_transition.account_transition_start, 
-        account_transition.account_transition_submit, 
         account_transition.account_type_from_id, 
+        account_transition.account_transition_submit, 
+        account_transition.account_category_from_id, 
+        account_transition.account_type_dr_id, 
+        account_transition.account_type_cr_id, 
+        account_type.account_type_id, 
         account_type.account_type_name, 
         account_type.account_type_value, 
         account_type.account_type_description, 
@@ -184,7 +202,9 @@ exports.getTransaction = async (req, res) => {
         account_type.account_type_icon, 
         account_type.account_type_important, 
         account_type.account_type_sum, 
-        account_group.account_group_id
+        account_type.account_group_id, 
+        account_type.account_category_id, 
+        account_type.account_type_total
       FROM
         account_transition
         INNER JOIN
@@ -194,11 +214,19 @@ exports.getTransaction = async (req, res) => {
         INNER JOIN
         account_group
         ON 
-          account_type.account_group_id = account_group.account_group_id`
+          account_type.account_group_id = account_group.account_group_id
+        INNER JOIN
+        account_user
+        ON 
+          account_group.account_user_id = account_user.account_user_id
+      WHERE
+        account_user.account_user_id = ?
+       `,
+      [account_user_id]
     );
     res.json({ res_transition });
   } catch (err) {
-    res.json({
+    res.status(401).json({
       message: err.message,
       error: "Error occurred while fetching transactions!",
     });
