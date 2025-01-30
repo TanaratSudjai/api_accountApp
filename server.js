@@ -15,7 +15,6 @@ const port = process.env.PORT;
 const authController = require("./controllers/authController");
 const cookieParser = require("cookie-parser");
 const middleware = require("./middleware/authMiddleware");
-
 // cookieParser
 server.use(cookieParser());
 server.use(
@@ -36,6 +35,7 @@ server.use((req, res, next) => {
 router.post("/auth/register", authController.register);
 router.post("/auth/login", authController.login);
 router.post("/auth/logout", authController.logout);
+router.get("/auth/get_session", authController.gettingSession);
 
 server.requiresAuth = true; // config สำหรับ route authentication
 
@@ -57,7 +57,6 @@ fs.readdirSync(routesPath).forEach((file) => {
     console.error(`Error loading route from file ${file}:`, error.message);
   }
 });
-
 server.options("*", cors());
 // ใช้ router กับ /api path
 server.use("/api", router);
