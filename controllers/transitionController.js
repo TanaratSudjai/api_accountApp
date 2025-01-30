@@ -1,6 +1,6 @@
 const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
-const SECRET_KEY = process.env.SECRET_KEY;
+const { getUserFromToken } = require("../authUtils");
 exports.openAccount = async (req, res) => {
   try {
     const {
@@ -169,17 +169,8 @@ exports.sumbitTransition = async (req, res) => {
 
 exports.getTransaction = async (req, res) => {
   try {
-    // get token of backend
-    const authHeader = req.headers["authorization"];
-    let authToken = "";
-    if (authHeader) {
-      authToken = authHeader.split(" ")[1];
-    }
-    console.log("authToken : \n", authToken);
-    const user = jwt.verify(authToken, SECRET_KEY);
-    console.log("super key token : \n", user);
+    const user = getUserFromToken(req);
     const account_user_id = user.account_user_id;
-
     const [res_transition] = await sql.query(
       `SELECT
         account_transition.*, 
@@ -270,6 +261,8 @@ exports.getGroupTwoTransition = async (req, res) => {
 
 exports.getGroupOneTransition = async (req, res) => {
   try {
+    const user = getUserFromToken(req);
+    const account_user_id = user.account_user_id;
     const [res_transitiongroup] = await sql.query(
       `SELECT
         account_transition.account_transition_id, 
@@ -294,8 +287,10 @@ exports.getGroupOneTransition = async (req, res) => {
       WHERE
         account_group.account_category_id = 1 AND
         account_transition_value > 0 AND
-        account_transition.account_transition_submit IS NULL
-        `
+        account_transition.account_transition_submit IS NULL AND
+        account_group.account_user_id = ? 
+        `,
+      [account_user_id]
     );
     res.json(res_transitiongroup);
   } catch (error) {
@@ -305,7 +300,10 @@ exports.getGroupOneTransition = async (req, res) => {
 
 exports.getSumValueGroupOne = async (req, res) => {
   try {
-    const [res_transitiongroup] = await sql.query(`
+    const user = getUserFromToken(req);
+    const account_user_id = user.account_user_id;
+    const [res_transitiongroup] = await sql.query(
+      `
       SELECT
     SUM(account_transition.account_transition_value) AS total_transition_value,
     account_group.account_category_id
@@ -320,10 +318,14 @@ exports.getSumValueGroupOne = async (req, res) => {
       ON 
           account_type.account_group_id = account_group.account_group_id
       WHERE
-          account_group.account_category_id = 1 AND account_transition.account_transition_submit IS NULL
+          account_group.account_category_id = 1 AND 
+          account_transition.account_transition_submit IS NULL AND
+          account_group.account_user_id = ? 
       GROUP BY
           account_group.account_category_id;
-    `);
+    `,
+      [account_user_id]
+    );
     res.json(res_transitiongroup);
   } catch (error) {
     res.json({ massage: error.massage, text: "Error geted data group One !" });
@@ -332,7 +334,10 @@ exports.getSumValueGroupOne = async (req, res) => {
 
 exports.getSumValueGroupTwo = async (req, res) => {
   try {
-    const [res_transitiongroup] = await sql.query(`
+    const user = getUserFromToken(req);
+    const account_user_id = user.account_user_id;
+    const [res_transitiongroup] = await sql.query(
+      `
       SELECT
     SUM(account_transition.account_transition_value) AS total_transition_value,
     account_group.account_category_id
@@ -347,11 +352,15 @@ exports.getSumValueGroupTwo = async (req, res) => {
       ON 
           account_type.account_group_id = account_group.account_group_id
       WHERE
-          account_group.account_category_id = 2 AND account_transition.account_transition_submit IS NULL
+          account_group.account_category_id = 2 AND 
+          account_transition.account_transition_submit IS NULL
+          account_group.account_user_id = ?
       GROUP BY
           account_group.account_category_id;
-    `);
-    res.json(res_transitiongroup);
+    `,
+      [account_user_id]
+    );
+    res.json(res_transitiongroup).status(200);
   } catch (error) {
     res.json({ massage: error.massage, text: "Error geted data group One !" });
   }
