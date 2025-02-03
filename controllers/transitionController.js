@@ -1,4 +1,6 @@
 const sql = require("../database/db");
+const jwt = require("jsonwebtoken");
+const { getUserFromToken } = require("../authUtils");
 exports.openAccount = async (req, res) => {
   try {
     const {
@@ -167,16 +169,23 @@ exports.sumbitTransition = async (req, res) => {
 
 exports.getTransaction = async (req, res) => {
   try {
+    const user = getUserFromToken(req);
+    const account_user_id = user.account_user_id;
     const [res_transition] = await sql.query(
       `SELECT
-        account_group.account_category_id, 
+        account_transition.*, 
         account_transition.account_transition_id, 
         account_transition.account_type_id, 
+        account_transition.account_category_id, 
         account_transition.account_transition_value, 
         account_transition.account_transition_datetime, 
         account_transition.account_transition_start, 
-        account_transition.account_transition_submit, 
         account_transition.account_type_from_id, 
+        account_transition.account_transition_submit, 
+        account_transition.account_category_from_id, 
+        account_transition.account_type_dr_id, 
+        account_transition.account_type_cr_id, 
+        account_type.account_type_id, 
         account_type.account_type_name, 
         account_type.account_type_value, 
         account_type.account_type_description, 
@@ -184,7 +193,9 @@ exports.getTransaction = async (req, res) => {
         account_type.account_type_icon, 
         account_type.account_type_important, 
         account_type.account_type_sum, 
-        account_group.account_group_id
+        account_type.account_group_id, 
+        account_type.account_category_id, 
+        account_type.account_type_total
       FROM
         account_transition
         INNER JOIN
@@ -194,11 +205,19 @@ exports.getTransaction = async (req, res) => {
         INNER JOIN
         account_group
         ON 
-          account_type.account_group_id = account_group.account_group_id`
+          account_type.account_group_id = account_group.account_group_id
+        INNER JOIN
+        account_user
+        ON 
+          account_group.account_user_id = account_user.account_user_id
+      WHERE
+        account_user.account_user_id = ?
+       `,
+      [account_user_id]
     );
     res.json({ res_transition });
   } catch (err) {
-    res.json({
+    res.status(401).json({
       message: err.message,
       error: "Error occurred while fetching transactions!",
     });
@@ -242,6 +261,8 @@ exports.getGroupTwoTransition = async (req, res) => {
 
 exports.getGroupOneTransition = async (req, res) => {
   try {
+    const user = getUserFromToken(req);
+    const account_user_id = user.account_user_id;
     const [res_transitiongroup] = await sql.query(
       `SELECT
         account_transition.account_transition_id, 
@@ -266,8 +287,10 @@ exports.getGroupOneTransition = async (req, res) => {
       WHERE
         account_group.account_category_id = 1 AND
         account_transition_value > 0 AND
-        account_transition.account_transition_submit IS NULL
-        `
+        account_transition.account_transition_submit IS NULL AND
+        account_group.account_user_id = ? 
+        `,
+      [account_user_id]
     );
     res.json(res_transitiongroup);
   } catch (error) {
@@ -277,7 +300,10 @@ exports.getGroupOneTransition = async (req, res) => {
 
 exports.getSumValueGroupOne = async (req, res) => {
   try {
-    const [res_transitiongroup] = await sql.query(`
+    const user = getUserFromToken(req);
+    const account_user_id = user.account_user_id;
+    const [res_transitiongroup] = await sql.query(
+      `
       SELECT
     SUM(account_transition.account_transition_value) AS total_transition_value,
     account_group.account_category_id
@@ -292,10 +318,14 @@ exports.getSumValueGroupOne = async (req, res) => {
       ON 
           account_type.account_group_id = account_group.account_group_id
       WHERE
-          account_group.account_category_id = 1 AND account_transition.account_transition_submit IS NULL
+          account_group.account_category_id = 1 AND 
+          account_transition.account_transition_submit IS NULL AND
+          account_group.account_user_id = ? 
       GROUP BY
           account_group.account_category_id;
-    `);
+    `,
+      [account_user_id]
+    );
     res.json(res_transitiongroup);
   } catch (error) {
     res.json({ massage: error.massage, text: "Error geted data group One !" });
@@ -304,7 +334,10 @@ exports.getSumValueGroupOne = async (req, res) => {
 
 exports.getSumValueGroupTwo = async (req, res) => {
   try {
-    const [res_transitiongroup] = await sql.query(`
+    const user = getUserFromToken(req);
+    const account_user_id = user.account_user_id;
+    const [res_transitiongroup] = await sql.query(
+      `
       SELECT
     SUM(account_transition.account_transition_value) AS total_transition_value,
     account_group.account_category_id
@@ -319,11 +352,15 @@ exports.getSumValueGroupTwo = async (req, res) => {
       ON 
           account_type.account_group_id = account_group.account_group_id
       WHERE
-          account_group.account_category_id = 2 AND account_transition.account_transition_submit IS NULL
+          account_group.account_category_id = 2 AND 
+          account_transition.account_transition_submit IS NULL
+          account_group.account_user_id = ?
       GROUP BY
           account_group.account_category_id;
-    `);
-    res.json(res_transitiongroup);
+    `,
+      [account_user_id]
+    );
+    res.json(res_transitiongroup).status(200);
   } catch (error) {
     res.json({ massage: error.massage, text: "Error geted data group One !" });
   }

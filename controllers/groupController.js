@@ -1,4 +1,5 @@
 const sql = require("../database/db");
+const { getUserFromToken } = require("../authUtils");
 
 exports.CreateAccountGroup = async (req, res) => {
   const { account_group_name, account_category_id } = req.body;
@@ -8,14 +9,17 @@ exports.CreateAccountGroup = async (req, res) => {
       message: "Account group name and account category ID are required",
     });
   }
-
   try {
-    const query = `INSERT INTO account_group (account_group_name , account_category_id) 
-    VALUES (? ,?)`;
+    const user = getUserFromToken(req);
+    const account_user_id = user.account_user_id;
+
+    const query = `INSERT INTO account_group (account_group_name , account_category_id, account_user_id) 
+    VALUES (? ,?, ?)`;
 
     const [new_account_group] = await sql.query(query, [
       account_group_name,
       account_category_id,
+      account_user_id,
     ]);
     res.status(201).json({
       message: "Group created successfully",
@@ -145,16 +149,31 @@ exports.GetAccountTypeCount_group = async (req, res) => {
 
 exports.GetAccountTypeCount_groupID = async (req, res) => {
   const { account_category_id } = req.params;
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
+
+  console.log(
+    "category : ",
+    account_category_id,
+    " user id :",
+    account_user_id
+  );
+
   try {
     const query = `
     SELECT ag.account_group_id ,ag.account_group_name, COUNT(at.account_type_id) AS type_count
     FROM account_group ag
     LEFT JOIN account_type at ON ag.account_group_id = at.account_group_id
-    WHERE ag.account_category_id = ?
+    WHERE ag.account_category_id = ? AND ag.account_user_id = ?
     GROUP BY ag.account_group_id;
   `;
 
-    const [count_type_at_group] = await sql.query(query, [account_category_id]);
+    const [count_type_at_group] = await sql.query(query, [
+      account_category_id,
+      account_user_id,
+    ]);
+    console.log(count_type_at_group);
+
     res.status(201).json({
       message: "Group geting successfully",
       count_type_at_group,
