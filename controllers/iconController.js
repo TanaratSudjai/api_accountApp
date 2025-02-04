@@ -26,3 +26,21 @@ exports.insertIcons = async (req, res) => {
         res.status(500).json({ error: "Something went wrong" });
     }
 };
+
+exports.getIcons = async (req, res) => {
+    try {
+        const [icons] = await sql.query("SELECT * FROM account_icon");
+
+        res.status(200).json({
+            data: icons
+        });
+    } catch (err) {
+        console.error("Error fetching icons:", err);
+
+
+        res.status(500).json({
+            message: "An error occurred while fetching the icons.",
+            error: err.message
+        });
+    }
+};
