@@ -19,7 +19,7 @@ const middleware = require("./middleware/authMiddleware");
 server.use(cookieParser());
 server.use(
   cors({
-    origin: "http://localhost:3000/",
+    origin: "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -63,6 +63,6 @@ server.use("/api", router);
 // Start Server
 server.listen(port, "0.0.0.0", () => {
   console.log(
-    `App running on http://localhost:${port} - API for authentication and user account management`
+    `App running on http://localhost: ..... - API for authentication and user account management`
   );
 });
