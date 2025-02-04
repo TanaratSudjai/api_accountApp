@@ -125,7 +125,8 @@ exports.GetAccountType = async (req, res) => {
 exports.GetAccountTypeId = async (req, res) => {
   const { account_type_id } = req.params;
   try {
-    const query = `SELECT * FROM account_type WHERE account_group_id = ?`;
+    const query = `SELECT * FROM account_type JOIN account_icon 
+    ON account_type.account_type_icon = account_icon.account_icon_id WHERE account_type.account_group_id = ?`;
 
     const [account_type] = await sql.query(query, [account_type_id]);
 
