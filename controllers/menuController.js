@@ -1,5 +1,5 @@
 const sql = require("../database/db");
-const { getUserFromToken } = require("../authUtils");
+const { getUserFromToken } = require("../utils/authUtils");
 exports.getMenuWhereCat = async (req, res) => {
   try {
     const user = getUserFromToken(req);

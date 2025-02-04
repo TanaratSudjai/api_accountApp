@@ -1,5 +1,5 @@
 const sql = require("../database/db");
-const { getUserFromToken } = require("../authUtils");
+const { getUserFromToken } = require("../utils/authUtils");
 
 exports.CreateAccountGroup = async (req, res) => {
   const { account_group_name, account_category_id } = req.body;

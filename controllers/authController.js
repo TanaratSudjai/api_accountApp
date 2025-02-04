@@ -2,7 +2,7 @@ const pool = require("../database/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const { getUserFromToken } = require("../authUtils");
+const { getUserFromToken } = require("../utils/authUtils");
 
 dotenv.config();
 const SECRET_KEY = process.env.SECRET_KEY;
