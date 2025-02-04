@@ -17,14 +17,17 @@ const cookieParser = require("cookie-parser");
 const middleware = require("./middleware/authMiddleware");
 // cookieParser
 server.use(cookieParser());
+
 server.use(
   cors({
-    origin: process.env.Origin_cors,
+    origin: process.env.CLIENT_ORIGIN,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+
 server.use(express.json());
 //ให้ Middleware ใช้กับทุก Request ที่เข้ามาใน Server
 server.use((req, res, next) => {
@@ -65,4 +68,5 @@ server.listen(port, "0.0.0.0", () => {
   console.log(
     `App running on http://localhost:${port} - API for authentication and user account management`
   );
+  console.log("CORS Origin:", process.env.CLIENT_ORIGIN);
 });
