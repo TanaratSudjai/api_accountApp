@@ -11,15 +11,9 @@ exports.insertIcons = async (req, res) => {
             if (err) {
                 return res.status(500).json({ error: "File upload failed" });
             }
-
-            // ดึงชื่อไฟล์ที่อัปโหลด
             const account_icon_name = req.file.filename;
-
-            // บันทึกชื่อไฟล์ลงในฐานข้อมูล
             const query = "INSERT INTO account_icon (account_icon_name) VALUES (?)";
             await sql.query(query, [account_icon_name]);
-
-            // ส่ง response กลับไป
             res.status(200).json({ message: "File uploaded successfully", account_icon_name });
         });
     } catch (error) {

@@ -8,22 +8,27 @@ exports.CreateAccountType = async (req, res) => {
     account_type_value,
     account_type_description,
     account_type_from_id,
+    account_type_icon,
     account_group_id,
+    account_category_id,
   } = req.body;
 
-  if (!account_type_name || !account_group_id || !account_type_from_id) {
+  if (!account_type_name || !account_group_id || !account_type_from_id || !account_category_id) {
     return res.status(400).json({
       message: "Input not found!",
     });
   }
 
-  const account_type_icon = req.file ? req.file.filename : "";
-
+  if (!account_type_icon) {
+    return res.status(400).json({
+      message: "กรุณาเลือกไอคอน!",
+    });
+  }
   try {
     const query = `
         INSERT INTO account_type 
-        (account_type_name, account_type_value, account_type_description, account_type_from_id, account_type_icon, account_group_id) 
-        VALUES (?, ?, ?,  ?, ?, ?)
+        (account_type_name, account_type_value, account_type_description, account_type_from_id, account_type_icon, account_group_id, account_category_id) 
+        VALUES (?, ?, ?,  ?, ?, ?,?)
       `;
 
     const [new_account_type] = await sql.query(query, [
@@ -33,6 +38,7 @@ exports.CreateAccountType = async (req, res) => {
       account_type_from_id,
       account_type_icon,
       account_group_id,
+      account_category_id
     ]);
 
     res.status(201).json({
@@ -119,7 +125,8 @@ exports.GetAccountType = async (req, res) => {
 exports.GetAccountTypeId = async (req, res) => {
   const { account_type_id } = req.params;
   try {
-    const query = `SELECT * FROM account_type WHERE account_group_id = ?`;
+    const query = `SELECT * FROM account_type JOIN account_icon 
+    ON account_type.account_type_icon = account_icon.account_icon_id WHERE account_type.account_group_id = ?`;
 
     const [account_type] = await sql.query(query, [account_type_id]);
 

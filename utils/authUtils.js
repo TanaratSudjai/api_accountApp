@@ -7,21 +7,19 @@ if (!SECRET_KEY) {
 
 const getUserFromToken = (req) => {
   try {
-    const authHeader = req.headers["authorization"];
-    if (!authHeader) {
-      throw new Error("Authorization header is missing");
+    const token = req.cookies.token;
+    // console.log("getUserFromToken token : ", token);
+    if (!token) {
+      console.log("Token is missing");
+      return null;
     }
+    const user = jwt.verify(token, SECRET_KEY);
+    // console.log("Decoded user from token:", user);
 
-    const authToken = authHeader.split(" ")[1];
-    if (!authToken) {
-      // throw new Error("Token is missing in Authorization header");
-      console.log("Token is missing in Authorization header");
-    }
-    const user = jwt.verify(authToken, SECRET_KEY);
     return user;
   } catch (error) {
     console.error("Error in authUtils:", error.message);
-    // throw new Error("Invalid or expired token");
+    return null
   }
 };
 
