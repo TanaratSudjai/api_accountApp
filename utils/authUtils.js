@@ -7,21 +7,28 @@ if (!SECRET_KEY) {
 
 const getUserFromToken = (req) => {
   try {
+    const token = req.cookies.token;
+    console.log(token);
+    if (!token) {
+      console.log("Token is missing");
+      return null;
+    }
     const authHeader = req.headers["authorization"];
     if (!authHeader) {
-      throw new Error("Authorization header is missing");
-    }
-
-    const authToken = authHeader.split(" ")[1];
-    if (!authToken) {
-      // throw new Error("Token is missing in Authorization header");
       console.log("Token is missing in Authorization header");
+      return null;
+    }
+    const authToken = authHeader.split(" ")[1];  // ดึง token ออกจาก header
+    if (!authToken) {
+      console.log("Token is missing in Authorization header");
+      return null;  // หยุดการทำงานหากไม่มี token
     }
     const user = jwt.verify(authToken, SECRET_KEY);
+    // console.log(user.account_user_id);
+
     return user;
   } catch (error) {
     console.error("Error in authUtils:", error.message);
-    // throw new Error("Invalid or expired token");
   }
 };
 

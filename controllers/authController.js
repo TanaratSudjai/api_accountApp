@@ -64,15 +64,19 @@ exports.register = async (req, res) => {
 
 exports.gettingSession = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
   if (!user || !user.account_user_id) {
     return res.status(401).json({ error: "Unauthorized or missing user ID" });
   }
+  const account_user_id = user.account_user_id;
+  console.log(account_user_id);
+
   const query = `SELECT * FROM account_user WHERE account_user_id = ?`;
   const [result] = await pool.query(query, [account_user_id]);
   if (result.length === 0) {
     return res.status(404).json({ error: "User not found" });
   }
+  console.log(result[0].account_user_name);
+
   res.json({ success: true, data_user: result[0] });
 };
 
@@ -111,8 +115,12 @@ exports.login = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    // geting session user
-    // req.session.user = { username, account_user_id };
+    res.cookie('token', token, {
+      httpOnly: true,    // ไม่สามารถเข้าถึงจาก JavaScript ได้
+      secure: process.env.NODE_ENV === 'production', // ใช้เฉพาะในโปรดักชัน (ต้องใช้ HTTPS)
+      sameSite: 'Strict', // ป้องกัน CSRF
+      maxAge: 3600000, // 1 ชั่วโมง
+    });
 
     res.json({
       success: true,
