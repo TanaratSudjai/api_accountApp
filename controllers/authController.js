@@ -14,6 +14,9 @@ exports.verifyToken = (req, res, next) => {
     return res.status(403).json({ message: "No token provided" });
   }
 
+  console.log("This is Token verifyToken ", token);
+
+
   jwt.verify(token, SECRET_KEY, (err, decoded) => {
     if (err) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -63,21 +66,28 @@ exports.register = async (req, res) => {
 };
 
 exports.gettingSession = async (req, res) => {
-  const user = getUserFromToken(req);
-  if (!user || !user.account_user_id) {
-    return res.status(401).json({ error: "Unauthorized or missing user ID" });
-  }
-  const account_user_id = user.account_user_id;
-  console.log(account_user_id);
+  try {
+    const user = getUserFromToken(req);
+    if (!user || !user.account_user_id) {
+      return res.status(401).json({ error: "Unauthorized or missing user ID" });
+    }
+    const account_user_id = user.account_user_id;
+    console.log("Account User ID:", account_user_id);
 
-  const query = `SELECT * FROM account_user WHERE account_user_id = ?`;
-  const [result] = await pool.query(query, [account_user_id]);
-  if (result.length === 0) {
-    return res.status(404).json({ error: "User not found" });
-  }
-  console.log(result[0].account_user_name);
+    const query = `SELECT * FROM account_user WHERE account_user_id = ?`;
+    const [result] = await pool.query(query, [account_user_id]);
 
-  res.json({ success: true, data_user: result[0] });
+    if (result.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const userData = result[0];
+    console.log("User Name:", userData.account_user_name);
+
+    res.json({ success: true, data_user: userData });
+  } catch (error) {
+    console.error("Error in gettingSession:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
 // login
@@ -115,12 +125,12 @@ exports.login = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.cookie('token', token, {
-      httpOnly: true,    // ไม่สามารถเข้าถึงจาก JavaScript ได้
-      secure: process.env.NODE_ENV === 'production', // ใช้เฉพาะในโปรดักชัน (ต้องใช้ HTTPS)
-      sameSite: 'Strict', // ป้องกัน CSRF
-      maxAge: 3600000, // 1 ชั่วโมง
-    });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    })
 
     res.json({
       success: true,
