@@ -34,6 +34,8 @@ exports.getMenuGroup_expense = async (req, res) => {
 };
 
 exports.getMenuGroup_income = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
   const query = `
       SELECT
           account_type.account_type_id, 
@@ -47,10 +49,10 @@ exports.getMenuGroup_income = async (req, res) => {
           account_group
           ON account_type.account_group_id = account_group.account_group_id
       WHERE 
-          account_type.account_category_id IN (4);
+          account_type.account_category_id IN (4) AND account_group.account_user_id = ?;
     `;
   try {
-    const [result] = await sql.query(query);
+    const [result] = await sql.query(query, account_user_id);
 
     if (result.length > 0) {
       res.json(result);
