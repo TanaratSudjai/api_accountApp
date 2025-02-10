@@ -1,6 +1,7 @@
 const sql = require("../database/db");
 const path = require("path");
 const multer = require("multer");
+const { getUserFromToken } = require("../utils/authUtils");
 
 exports.CreateAccountType = async (req, res) => {
   const {
@@ -13,7 +14,7 @@ exports.CreateAccountType = async (req, res) => {
     account_category_id,
   } = req.body;
 
-  if (!account_type_name || !account_group_id || !account_type_from_id || !account_category_id) {
+  if (!account_type_name || !account_group_id || !account_category_id) {
     return res.status(400).json({
       message: "Input not found!",
     });
@@ -105,10 +106,14 @@ exports.UpdateAccountType = async (req, res) => {
 };
 
 exports.GetAccountType = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
   try {
-    const query = `SELECT * FROM account_type WHERE account_type_important = 1`;
+    const query = `SELECT * FROM account_type at 
+    JOIN account_group ag ON at.account_group_id = ag.account_group_id
+    WHERE account_type_important = 1 AND account_user_id = ?`;
 
-    const [account_type] = await sql.query(query);
+    const [account_type] = await sql.query(query, account_user_id);
 
     res.status(201).json({
       message: "Account type updating successfully",

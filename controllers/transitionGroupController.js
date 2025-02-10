@@ -1,6 +1,10 @@
 const sql = require("../database/db");
+const { getUserFromToken } = require("../utils/authUtils");
 
 exports.getMenuGroup_expense = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
+
   const query = `
       SELECT
           account_type.account_type_id, 
@@ -14,10 +18,10 @@ exports.getMenuGroup_expense = async (req, res) => {
           account_group
           ON account_type.account_group_id = account_group.account_group_id
       WHERE 
-          account_type.account_category_id IN (5);
+          account_type.account_category_id IN (5) AND account_group.account_user_id = ?;
     `;
   try {
-    const [result] = await sql.query(query);
+    const [result] = await sql.query(query, account_user_id);
 
     if (result.length > 0) {
       res.json(result);
@@ -30,6 +34,8 @@ exports.getMenuGroup_expense = async (req, res) => {
 };
 
 exports.getMenuGroup_income = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
   const query = `
       SELECT
           account_type.account_type_id, 
@@ -43,10 +49,10 @@ exports.getMenuGroup_income = async (req, res) => {
           account_group
           ON account_type.account_group_id = account_group.account_group_id
       WHERE 
-          account_type.account_category_id IN (4);
+          account_type.account_category_id IN (4) AND account_group.account_user_id = ?;
     `;
   try {
-    const [result] = await sql.query(query);
+    const [result] = await sql.query(query, account_user_id);
 
     if (result.length > 0) {
       res.json(result);
@@ -145,6 +151,8 @@ exports.submit_transition_group_income_extend = async (req, res) => {
 // };
 
 exports.getType_from_id = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
   const [result] = await sql.query(`SELECT
                                 account_type.account_type_id, 
                                 account_category.account_category_name, 
@@ -154,7 +162,8 @@ exports.getType_from_id = async (req, res) => {
                                 account_type.account_type_sum, 
                                 account_type.account_type_total, 
                                 account_type.account_type_from_id,
-                                account_category.account_category_id
+                                account_category.account_category_id,
+                                account_icon.account_icon_name
                               FROM
                                 account_group
                                 INNER JOIN
@@ -165,9 +174,13 @@ exports.getType_from_id = async (req, res) => {
                                 account_type
                               ON 
                                   account_type.account_group_id = account_group.account_group_id
+                              JOIN 
+                                account_icon
+                              ON
+                                  account_type.account_type_icon = account_icon.account_icon_id
                               WHERE 
-                                  account_type.account_group_id IN (1,2) AND account_type.account_type_important = 1
-                                `);
+                                  account_type.account_type_important = 1 AND account_group.account_user_id = ${account_user_id}
+                                `); 
 
   res.json({ result });
 };

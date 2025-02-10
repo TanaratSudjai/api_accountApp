@@ -161,7 +161,7 @@ exports.GetAccountTypeCount_groupID = async (req, res) => {
 
   try {
     const query = `
-    SELECT ag.account_group_id ,ag.account_group_name, COUNT(at.account_type_id) AS type_count
+    SELECT ag.account_group_id ,ag.account_group_name, at.account_type_important,COUNT(at.account_type_id) AS type_count
     FROM account_group ag
     LEFT JOIN account_type at ON ag.account_group_id = at.account_group_id
     WHERE ag.account_category_id = ? AND ag.account_user_id = ?
