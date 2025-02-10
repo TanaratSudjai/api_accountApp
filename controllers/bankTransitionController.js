@@ -418,6 +418,8 @@ exports.delFor_return_objectvalue = async (req, res) => {
 
     // switch เช็ค ว่า ยืม หรือ คืน
     var transition_query, reuse_value_query;
+    console.log(type_category_id);
+
     switch (type_category_id) {
       case 1:
         transition_query = `UPDATE account_type 
@@ -447,3 +449,45 @@ exports.delFor_return_objectvalue = async (req, res) => {
     });
   }
 };
+
+
+//return back transition 
+exports.delFor_return_bank = async (req, res) => {
+  // const { account_transition_id } = req.params;
+
+
+  const select_transition_latest = `SELECT *
+                                    FROM account_transition
+                                    WHERE account_category_id = 1 AND account_category_from_id = 1
+                                    ORDER BY account_transition_id DESC
+                                    LIMIT 1;
+                                    ;
+                                                `
+    ;
+
+  // transition_latest data
+  const [result_select_transition_latest] = await sql.query(
+    select_transition_latest,
+  );
+
+  if (!result_select_transition_latest[0]) {
+    console.log("transition not found");
+
+  } console.log(result_select_transition_latest[0].account_type_id);
+
+  // account_type_id 
+  const rollback_id = result_select_transition_latest[0].account_type_id;
+  const rollback_value = result_select_transition_latest[0].account_transition_value;
+  const rollback_transition = "UPDATE account_type SET account_type_total = account_type_total + ? WHERE account_type_id = ?";
+  await sql.query(rollback_transition, [rollback_value, rollback_id])
+
+ // account_type_from_id 
+  const rollback_id_from = result_select_transition_latest[0].account_type_from_id;
+  const rollback_transition_from = "UPDATE account_type SET account_type_total = account_type_total - ? WHERE account_type_id = ?";
+
+  await sql.query(rollback_transition_from, [rollback_value , rollback_id_from]);
+
+  res.json({
+    data: result_select_transition_latest[0]
+  })
+}

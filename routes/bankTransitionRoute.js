@@ -73,5 +73,7 @@ router.delete(
   "/reuse_return_bank/:account_transition_id",
   bankControllers.delFor_return_objectvalue
 );
-
+router.patch(
+  "/return_transition_bank", bankControllers.delFor_return_bank
+)
 module.exports = router;
