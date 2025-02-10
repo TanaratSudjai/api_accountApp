@@ -487,6 +487,9 @@ exports.delFor_return_bank = async (req, res) => {
 
   await sql.query(rollback_transition_from, [rollback_value , rollback_id_from]);
 
+  const account_transition_id = result_select_transition_latest[0].account_transition_id
+  await sql.query("DELETE FROM account_transition WHERE account_transition_id = ?", [account_transition_id])
+
   res.json({
     data: result_select_transition_latest[0]
   })
