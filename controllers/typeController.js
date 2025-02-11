@@ -61,13 +61,14 @@ exports.UpdateAccountType = async (req, res) => {
     account_type_value,
     account_type_from_id,
     account_type_description,
+    account_type_icon
   } = req.body;
 
   if (
     !account_type_id ||
     !account_type_name ||
-    !account_type_value ||
-    !account_type_from_id
+    !account_type_value 
+    
   ) {
     return res.status(400).json({
       message: "Required fields are missing!",
@@ -77,7 +78,7 @@ exports.UpdateAccountType = async (req, res) => {
   try {
     const query = `
   UPDATE account_type 
-  SET account_type_name = ?, account_type_value = ?, account_type_from_id = ?, account_type_description = ? 
+  SET account_type_name = ?, account_type_value = ?, account_type_from_id = ?, account_type_description = ?, account_type_icon = ?
   WHERE account_type_id = ?`;
 
     const [result] = await sql.query(query, [
@@ -85,6 +86,7 @@ exports.UpdateAccountType = async (req, res) => {
       account_type_value,
       account_type_from_id,
       account_type_description,
+      account_type_icon,
       account_type_id,
     ]);
 
