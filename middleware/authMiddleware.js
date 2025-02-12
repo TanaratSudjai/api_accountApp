@@ -1,4 +1,4 @@
-const { getUserFromToken } = require("../authUtils");
+const { getUserFromToken } = require("../utils/authUtils");
 
 const authMiddleware = (req, res, next) => {
   try {

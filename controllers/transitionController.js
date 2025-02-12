@@ -1,6 +1,6 @@
 const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
-const { getUserFromToken } = require("../authUtils");
+const { getUserFromToken } = require("../utils/authUtils");
 exports.openAccount = async (req, res) => {
   try {
     const {
