@@ -21,6 +21,7 @@ server.use(cookieParser());
 server.use(
   cors({
     origin: process.env.CLIENT_ORIGIN,
+
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -66,7 +67,7 @@ server.use("/api", router);
 // Start Server
 server.listen(port, "0.0.0.0", () => {
   console.log(
-    `App running on http://localhost:${port} - API for authentication and user account management`
+    `App running on http://localhost: ..... - API for authentication and user account management`
   );
   console.log("CORS Origin:", process.env.CLIENT_ORIGIN);
 });
