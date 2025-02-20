@@ -462,6 +462,7 @@ exports.get_Bank_Transition = async (req, res) => {
                         at_trans.account_type_id,
                         at_trans.account_transition_value,
                         at_trans.account_category_id,
+                        at_trans.account_category_from_id,
                         at_from.account_type_name AS account_type_from_name
                     FROM
                         account_transition AS at_trans
@@ -474,7 +475,7 @@ exports.get_Bank_Transition = async (req, res) => {
                     ON
                         at_trans.account_type_from_id = at_from.account_type_id
                     WHERE
-                        at_trans.account_category_id = 1
+                        at_trans.account_category_id = 1 || at_trans.account_category_id = 2
                     ORDER BY
                         at_trans.account_transition_id DESC;
                     `;
