@@ -122,7 +122,7 @@ exports.login = async (req, res) => {
         account_user_id: user.account_user_id,
       },
       SECRET_KEY,
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
 
     res.cookie("token", token, {
