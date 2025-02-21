@@ -15,6 +15,7 @@ const port = process.env.PORT;
 const authController = require("./controllers/authController");
 const cookieParser = require("cookie-parser");
 const middleware = require("./middleware/authMiddleware");
+const loggingMiddleware = require("./middleware/loggingMiddleware");
 // cookieParser
 server.use(cookieParser());
 
@@ -31,10 +32,8 @@ server.use(
 
 server.use(express.json());
 //ให้ Middleware ใช้กับทุก Request ที่เข้ามาใน Server
-server.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
+server.use(loggingMiddleware);
+server.use(middleware);
 // Swagger Documentation for Authentication Endpoints
 router.post("/auth/register", authController.register);
 router.post("/auth/login", authController.login);
@@ -64,6 +63,11 @@ fs.readdirSync(routesPath).forEach((file) => {
 server.options("*", cors());
 // ใช้ router กับ /api path
 server.use("/api", router);
+// Centralized error handling middleware
+server.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 // Start Server
 server.listen(port, "0.0.0.0", () => {
   console.log(
