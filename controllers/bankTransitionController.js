@@ -277,7 +277,7 @@ exports.creditor_return_bankTransition = async (req, res) => {
     const query = `
         INSERT INTO account_transition 
         (account_type_id, account_category_id, account_transition_value, account_transition_datetime, account_type_from_id, account_transition_start, account_category_from_id, account_type_cr_id, account_type_dr_id)
-        VALUES (?, ?, ?, NOW(), ?, ?, 1,?,?) 
+        VALUES (?, ?, ?, NOW(), ?, ?, 2,?,?) 
         ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
       `;
 
