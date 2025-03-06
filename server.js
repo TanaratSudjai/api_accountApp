@@ -1,8 +1,10 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 dotenv.config();
+server.use(cookieParser());
 const cors = require("cors");
 const server = express();
 const router = express.Router(); // สร้าง router
@@ -13,17 +15,16 @@ const routesPath = path.join(__dirname, "routes");
 const port = process.env.PORT;
 // Authentication Controller
 const authController = require("./controllers/authController");
-const cookieParser = require("cookie-parser");
 const middleware = require("./middleware/authMiddleware");
 const loggingMiddleware = require("./middleware/loggingMiddleware");
 // cookieParser
-server.use(cookieParser());
+
 
 server.use(
   cors({
     origin: process.env.CLIENT_ORIGIN,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
