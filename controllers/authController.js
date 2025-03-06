@@ -15,12 +15,13 @@ exports.verifyToken = (req, res, next) => {
   }
 
   console.log("This is Token verifyToken ", token);
-
+  console.log("Token received in verifyToken:", token);
 
   jwt.verify(token, SECRET_KEY, (err, decoded) => {
     if (err) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+    console.log("Decoded token:", decoded);
     req.account_user_id = decoded.id;
     next();
   });
@@ -56,11 +57,11 @@ exports.register = async (req, res) => {
       result,
     });
   } catch (error) {
-    console.error("Error during registration:", err);
+    console.error("Error during registration:", error);
     // จัดการข้อผิดพลาด
     res.status(500).json({
       message: "Error registering user",
-      error: err.message,
+      error: error.message,
     });
   }
 };
@@ -82,6 +83,7 @@ exports.gettingSession = async (req, res) => {
     }
     const userData = result[0];
     console.log("User Name:", userData.account_user_name);
+    console.log("User found:", user);
 
     res.json({ success: true, data_user: userData });
   } catch (error) {
@@ -132,6 +134,7 @@ exports.login = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     })
     console.log("Token at storage : ", token);
+    console.log("Token created:", token);
 
     res.json({
       success: true,
@@ -158,6 +161,7 @@ exports.logout = async (req, res) => {
       sameSite: "strict",
       path: "/",
     });
+    console.log("Token cleared on logout");
     res.json({
       success: true,
       message: "Logout successful, please remove token from client storage",
