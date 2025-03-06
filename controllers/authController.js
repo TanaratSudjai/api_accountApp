@@ -141,6 +141,7 @@ exports.login = async (req, res) => {
         username: user.account_user_username,
         name: user.account_user_name,
       },
+      status: 200
     });
   } catch (error) {
     res.json({ error: error.message });
