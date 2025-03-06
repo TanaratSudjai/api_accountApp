@@ -7,8 +7,7 @@ if (!SECRET_KEY) {
 
 const getUserFromToken = (req) => {
   try {
-    console.log("Is Token Cookie ", req.cookies);
-    
+    console.log("Cookies received:", req.cookies);    
     const token = req.cookies.token;
     // console.log("getUserFromToken token : ", token);
     if (!token) {

@@ -127,10 +127,11 @@ exports.login = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV ,
+      secure: process.env.NODE_ENV,
       sameSite: "strict",
       maxAge: 24 * 60 * 60 * 1000,
     })
+    console.log("Token at storage : ", token);
 
     res.json({
       success: true,
@@ -153,7 +154,7 @@ exports.logout = async (req, res) => {
   try {
     res.clearCookie("token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV ,
+      secure: process.env.NODE_ENV,
       sameSite: "strict",
       path: "/",
     });
