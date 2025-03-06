@@ -21,7 +21,7 @@ const loggingMiddleware = require("./middleware/loggingMiddleware");
 // CORS ต้องมาก่อน middleware อื่นๆ
 server.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN ,
+    origin: process.env.CLIENT_ORIGIN,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -33,14 +33,14 @@ server.use(
 server.use(cookieParser());
 server.use(express.json());
 
-// Logging Middleware
-server.use(loggingMiddleware);
-
 // Authentication Routes
 router.post("/auth/register", authController.register);
 router.post("/auth/login", authController.login);
 router.post("/auth/logout", authController.logout);
 router.get("/auth/get_session", authController.gettingSession);
+
+// Logging Middleware
+server.use(loggingMiddleware);
 
 // โหลด route files
 const routesPath = path.join(__dirname, "routes");
@@ -51,7 +51,7 @@ fs.readdirSync(routesPath).forEach((file) => {
       console.log("Loaded Route:", file);
 
       if (route.requiresAuth) {
-        router.use("/",middleware, route);
+        router.use("/", middleware, route);
       }
       router.use("/", route);
     }
