@@ -21,7 +21,7 @@ const loggingMiddleware = require("./middleware/loggingMiddleware");
 // CORS ต้องมาก่อน middleware อื่นๆ
 server.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN,
+    origin: process.env.ALLOWED_ORIGINS,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -73,5 +73,5 @@ server.use((err, req, res, next) => {
 const port = process.env.PORT || 5000;
 server.listen(port, "0.0.0.0", () => {
   console.log(`App running on http://localhost:${port} - API is live`);
-  console.log("CORS Origin:", process.env.CLIENT_ORIGIN);
+  console.log("CORS Origin:", process.env.ALLOWED_ORIGINS);
 });
