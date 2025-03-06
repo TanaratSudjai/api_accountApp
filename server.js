@@ -43,14 +43,17 @@ server.use(
 server.use(cookieParser());
 server.use(express.json());
 
+
+// Logging Middleware
+server.use(loggingMiddleware);
+
 // Authentication Routes
 router.post("/auth/register", authController.register);
 router.post("/auth/login", authController.login);
 router.post("/auth/logout", authController.logout);
 router.get("/auth/get_session", authController.gettingSession);
 
-// Logging Middleware
-server.use(loggingMiddleware);
+
 
 // โหลด route files
 const routesPath = path.join(__dirname, "routes");

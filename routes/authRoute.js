@@ -66,41 +66,6 @@ const router = express.Router();
 
 /**
  * @swagger
- * /auth/get_session:
- *   post:
- *     security: []  # ไม่ต้องการ authentication
- *     summary: Login to get JWT token
- *     tags: [Authentication]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *                 example: "john_doe"
- *               password:
- *                 type: string
- *                 example: "securepassword123"
- *     responses:
- *       200:
- *         description: Successfully authenticated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1..."
- *       401:
- *         description: Unauthorized - Invalid credentials
- */
-
-/**
- * @swagger
  * /auth/logout:
  *   post:
  *     summary: Log out the current user
