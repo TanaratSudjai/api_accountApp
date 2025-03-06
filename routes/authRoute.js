@@ -63,6 +63,7 @@ const router = express.Router();
  *                 token:
  *                   type: string
  */
+
 /**
  * @swagger
  * /auth/get_session:
