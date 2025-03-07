@@ -64,7 +64,7 @@ fs.readdirSync(routesPath).forEach((file) => {
       console.log("Loaded Route:", file);
 
       if (route.requiresAuth) {
-        router.use("/api", middleware, route);
+        router.use("/", middleware, route);
       }
       router.use("/", route);
     }
@@ -73,6 +73,8 @@ fs.readdirSync(routesPath).forEach((file) => {
   }
 });
 
+// ใช้ router กับ /api path
+server.use("/api", router);
 
 // Centralized error handling
 server.use((err, req, res, next) => {
