@@ -21,7 +21,7 @@ const loggingMiddleware = require("./middleware/loggingMiddleware");
 // CORS ต้องมาก่อน middleware อื่นๆ
 server.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN ,
+    origin: [process.env.CLIENT_ORIGIN, "http://localhost:3000"] ,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
