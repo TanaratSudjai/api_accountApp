@@ -75,5 +75,4 @@ const router = express.Router();
  *         description: Logout successful
  */
 
-
 module.exports = router;

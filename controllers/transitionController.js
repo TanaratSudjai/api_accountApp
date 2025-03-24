@@ -241,6 +241,8 @@ exports.getTransaction = async (req, res) => {
 };
 
 exports.getGroupTwoTransition = async (req, res) => {
+  const user = getUserFromToken(req);
+    const account_user_id = user.account_user_id;
   try {
     const user = getUserFromToken(req);
     const account_user_id = user.account_user_id;
@@ -382,7 +384,7 @@ exports.getSumValueGroupTwo = async (req, res) => {
     );
     res.json(res_transitiongroup).status(200);
   } catch (error) {
-    res.json({ massage: error.massage, text: "Error geted data group One !" });
+    res.json({ massage: error.massage, text: "Error geted data group Two !" });
   }
 };
 
