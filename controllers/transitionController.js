@@ -38,6 +38,22 @@ exports.openAccount = async (req, res) => {
           ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
         `;
         break;
+        case 6:
+          query = `
+            INSERT INTO account_transition 
+            (account_type_id, account_transition_value, account_transition_datetime, account_transition_start, account_type_dr_id)
+            VALUES (?, ?, NOW(), ?, ?) 
+            ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
+          `;
+          break;
+          case 7:
+            query = `
+              INSERT INTO account_transition 
+              (account_type_id, account_transition_value, account_transition_datetime, account_transition_start, account_type_dr_id)
+              VALUES (?, ?, NOW(), ?, ?) 
+              ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
+            `;
+            break;
       default:
         return res.status(400).json({ error: "Invalid account category." });
     }
@@ -228,6 +244,8 @@ exports.getGroupTwoTransition = async (req, res) => {
   const user = getUserFromToken(req);
     const account_user_id = user.account_user_id;
   try {
+    const user = getUserFromToken(req);
+    const account_user_id = user.account_user_id;
     const [res_transitiongroup] = await sql.query(
       `SELECT
         account_transition.account_transition_id, 
@@ -289,7 +307,7 @@ exports.getGroupOneTransition = async (req, res) => {
         ON 
           account_type.account_group_id = account_group.account_group_id
       WHERE
-        account_group.account_category_id = 1 AND
+        account_group.account_category_id in (1,6,7) AND
         account_transition_value > 0 AND
         account_transition.account_transition_submit IS NULL AND
         account_group.account_user_id = ? 
@@ -322,7 +340,7 @@ exports.getSumValueGroupOne = async (req, res) => {
       ON 
           account_type.account_group_id = account_group.account_group_id
       WHERE
-          account_group.account_category_id = 1 AND 
+          account_group.account_category_id in (1,6,7) AND 
           account_transition.account_transition_submit IS NULL AND
           account_group.account_user_id = ? 
       GROUP BY
