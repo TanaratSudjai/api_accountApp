@@ -373,8 +373,8 @@ exports.getSumValueGroupTwo = async (req, res) => {
           account_type.account_group_id = account_group.account_group_id
       WHERE
           account_group.account_category_id = 2 AND 
-          account_transition.account_transition_submit IS NULL
-          account_group.account_user_id = ?
+          account_transition.account_transition_submit IS NULL AND
+          account_group.account_user_id = ? 
       GROUP BY
           account_group.account_category_id;
     `,
