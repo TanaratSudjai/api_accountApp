@@ -19,8 +19,8 @@ exports.getMenuWhereCat = async (req, res) => {
                 INNER JOIN
                     account_icon ON account_type.account_type_icon = account_icon.account_icon_id
                 WHERE
-                    account_group.account_category_id <= 2 
-                    AND account_group.account_user_id = ?;
+                     account_group.account_category_id IN (1, 2, 6, 7)
+                     AND account_group.account_user_id = ?
                 `;
     const [data_menu] = await sql.query(qurey, [account_user_id]);
     res.status(201).json({
