@@ -61,7 +61,7 @@ fs.readdirSync(routesPath).forEach((file) => {
   try {
     if (file.endsWith(".js")) {
       const route = require(path.join(routesPath, file));
-      console.log("Loaded Route:", file);
+      console.log("♻️  Loaded Route ➜ ", file ,"  🔥");
 
       if (route.requiresAuth) {
         router.use("/", middleware, route);
@@ -85,6 +85,6 @@ server.use((err, req, res, next) => {
 // Start Server
 const port = process.env.PORT || 5000;
 server.listen(port, "0.0.0.0", () => {
-  console.log(`App running on http://localhost:${port} - API is live`);
-  console.log("CORS Origin:", process.env.CLIENT_ORIGIN);
+  console.log(`⚡️ App running on http://localhost:${port} - API is live ⚡️`);
+  console.log("☁️  CORS Origin:", process.env.CLIENT_ORIGIN, " ⏳");
 });
