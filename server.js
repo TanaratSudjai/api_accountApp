@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const dotenv = require("dotenv");
 dotenv.config();
+const pool = require("./database/db");
 
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -72,6 +73,26 @@ fs.readdirSync(routesPath).forEach((file) => {
     console.error(`Error loading route from file ${file}:`, error.message);
   }
 });
+
+async function checkDatabaseConnection() {
+  try {
+    const connection = await pool.getConnection();
+    console.log("✅ Database connected successfully!");
+    connection.release();
+    return true;
+  } catch (error) {
+    console.error("❌ Database connection failed:", error.message);
+    return false;
+  }
+}
+
+const isDBConnected = checkDatabaseConnection();
+
+if (isDBConnected) {
+  console.error("✅ Connnected successfullly.");
+} else {
+  console.error("❌ Server not started due to database connection failure.");
+}
 
 // ใช้ router กับ /api path
 server.use("/api", router);

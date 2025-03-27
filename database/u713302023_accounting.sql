@@ -1,17 +1,17 @@
 /*
  Navicat Premium Dump SQL
 
- Source Server         : account_senoirproject
+ Source Server         : Accounting
  Source Server Type    : MySQL
- Source Server Version : 101110 (10.11.10-MariaDB)
- Source Host           : 153.92.15.30:3306
+ Source Server Version : 100432 (10.4.32-MariaDB)
+ Source Host           : localhost:3306
  Source Schema         : u713302023_accounting
 
  Target Server Type    : MySQL
- Target Server Version : 101110 (10.11.10-MariaDB)
+ Target Server Version : 100432 (10.4.32-MariaDB)
  File Encoding         : 65001
 
- Date: 26/01/2025 15:53:48
+ Date: 27/03/2025 20:48:04
 */
 
 SET NAMES utf8mb4;
@@ -27,7 +27,7 @@ CREATE TABLE `account_category`  (
   `account_category_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'ชื่อหมวด',
   `account_category_base` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'การลงบัญชี',
   PRIMARY KEY (`account_category_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of account_category
@@ -37,7 +37,8 @@ INSERT INTO `account_category` VALUES (2, 2, 'หนี้สิน', 'CR');
 INSERT INTO `account_category` VALUES (3, 3, 'ส่วนของเจ้าของ', 'CR');
 INSERT INTO `account_category` VALUES (4, 4, 'รายได้', 'CR');
 INSERT INTO `account_category` VALUES (5, 5, 'ค่าใช้จ่าย', 'DR');
-INSERT INTO `account_category` VALUES (6, NULL, NULL, 'DR');
+INSERT INTO `account_category` VALUES (6, 6, 'ลูกหนี้', 'DR');
+INSERT INTO `account_category` VALUES (7, 7, 'ธนาคาร', 'DR');
 
 -- ----------------------------
 -- Table structure for account_group
@@ -48,37 +49,46 @@ CREATE TABLE `account_group`  (
   `account_group_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'ชื่อกลุ่ม',
   `account_group_sort` int NULL DEFAULT NULL COMMENT 'เรียงลำดับ',
   `account_category_id` int NULL DEFAULT NULL COMMENT 'อยู่ในหมวด',
+  `account_user_id` int NULL DEFAULT NULL COMMENT 'รหัสของผู้ใช้',
   PRIMARY KEY (`account_group_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 47 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 55 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of account_group
 -- ----------------------------
-INSERT INTO `account_group` VALUES (1, 'เงินคงมือ', NULL, 1);
-INSERT INTO `account_group` VALUES (2, 'ธนาคาร', NULL, 1);
-INSERT INTO `account_group` VALUES (3, 'ลูกหนี้', NULL, 1);
-INSERT INTO `account_group` VALUES (4, 'สินทรัพย์ระยะยาว', NULL, 1);
-INSERT INTO `account_group` VALUES (5, 'อุปกรณ์', NULL, 1);
-INSERT INTO `account_group` VALUES (8, 'เจ้าหนี้ทั่วไป', NULL, 2);
-INSERT INTO `account_group` VALUES (9, 'เจ้าหนี้สัญญา', NULL, 2);
-INSERT INTO `account_group` VALUES (10, 'เจ้าหนี้ผ่อน', NULL, 2);
-INSERT INTO `account_group` VALUES (11, 'เจ้าหนี้อื่น ๆ', NULL, 2);
-INSERT INTO `account_group` VALUES (12, 'ส่วนของเจ้าของ', NULL, 3);
-INSERT INTO `account_group` VALUES (13, 'รายได้หลัก', NULL, 4);
-INSERT INTO `account_group` VALUES (14, 'รายได้เสริม', NULL, 4);
-INSERT INTO `account_group` VALUES (15, 'รายได้เบ็ตเล็ด', NULL, 4);
-INSERT INTO `account_group` VALUES (16, 'ค่าอาหาร', NULL, 5);
-INSERT INTO `account_group` VALUES (17, 'ค่าเดินทาง', NULL, 5);
-INSERT INTO `account_group` VALUES (18, 'ค่าพาหนะ', NULL, 5);
-INSERT INTO `account_group` VALUES (19, 'ค่าความรู้และการศึกษา', NULL, 5);
-INSERT INTO `account_group` VALUES (20, 'ค่าความบันเทิง', NULL, 5);
-INSERT INTO `account_group` VALUES (21, 'ค่าเลี้ยงรับรอง', NULL, 5);
-INSERT INTO `account_group` VALUES (22, 'ค่าสาธารณูประโภค', NULL, 5);
-INSERT INTO `account_group` VALUES (23, 'ค่าของใช้ส่วนตัว', NULL, 5);
-INSERT INTO `account_group` VALUES (24, 'ค่าจัดการส่วนตัว', NULL, 5);
-INSERT INTO `account_group` VALUES (25, 'ค่าอื่น ๆ', NULL, 5);
-INSERT INTO `account_group` VALUES (45, 'รักนัก', NULL, 4);
-INSERT INTO `account_group` VALUES (46, 'ที่รัก', NULL, 4);
+INSERT INTO `account_group` VALUES (1, 'เงินคงมือ', NULL, 1, 11);
+INSERT INTO `account_group` VALUES (2, 'ธนาคาร', NULL, 1, 11);
+INSERT INTO `account_group` VALUES (3, 'ลูกหนี้', NULL, 1, 11);
+INSERT INTO `account_group` VALUES (4, 'สินทรัพย์ระยะยาว', NULL, 1, 11);
+INSERT INTO `account_group` VALUES (5, 'อุปกรณ์', NULL, 1, 11);
+INSERT INTO `account_group` VALUES (8, 'เจ้าหนี้ทั่วไป', NULL, 2, 11);
+INSERT INTO `account_group` VALUES (9, 'เจ้าหนี้สัญญา', NULL, 2, 11);
+INSERT INTO `account_group` VALUES (10, 'เจ้าหนี้ผ่อน', NULL, 2, 11);
+INSERT INTO `account_group` VALUES (11, 'เจ้าหนี้อื่น ๆ', NULL, 2, 11);
+INSERT INTO `account_group` VALUES (12, 'ส่วนของเจ้าของ', NULL, 3, 11);
+INSERT INTO `account_group` VALUES (13, 'รายได้หลัก', NULL, 4, 11);
+INSERT INTO `account_group` VALUES (14, 'รายได้เสริม', NULL, 4, 11);
+INSERT INTO `account_group` VALUES (15, 'รายได้เบ็ตเล็ด', NULL, 4, 11);
+INSERT INTO `account_group` VALUES (16, 'ค่าอาหาร', NULL, 5, 11);
+INSERT INTO `account_group` VALUES (17, 'ค่าเดินทาง', NULL, 5, 11);
+INSERT INTO `account_group` VALUES (18, 'ค่าพาหนะ', NULL, 5, 11);
+INSERT INTO `account_group` VALUES (19, 'ค่าความรู้และการศึกษา', NULL, 5, 11);
+INSERT INTO `account_group` VALUES (20, 'ค่าความบันเทิง', NULL, 5, 11);
+INSERT INTO `account_group` VALUES (21, 'ค่าเลี้ยงรับรอง', NULL, 5, 11);
+INSERT INTO `account_group` VALUES (22, 'ค่าสาธารณูประโภค', NULL, 5, 11);
+INSERT INTO `account_group` VALUES (23, 'ค่าของใช้ส่วนตัว', NULL, 5, 11);
+INSERT INTO `account_group` VALUES (24, 'ค่าจัดการส่วนตัว', NULL, 5, 11);
+INSERT INTO `account_group` VALUES (25, 'ค่าอื่น ๆ', NULL, 5, 11);
+INSERT INTO `account_group` VALUES (45, 'รักนัก', NULL, 4, 11);
+INSERT INTO `account_group` VALUES (46, 'ที่รัก', NULL, 4, 11);
+INSERT INTO `account_group` VALUES (47, 'เงินคงมือ', NULL, 1, 12);
+INSERT INTO `account_group` VALUES (48, 'หนี้รายเดือน', NULL, 2, 12);
+INSERT INTO `account_group` VALUES (49, 'ลูกหนี้ทั่วไป', NULL, 6, 12);
+INSERT INTO `account_group` VALUES (50, 'รายได้รายเดือน', NULL, 4, 12);
+INSERT INTO `account_group` VALUES (51, 'รายได้รายสัปดาห์', NULL, 4, 12);
+INSERT INTO `account_group` VALUES (52, 'ค่าใช้จ่ายรายเดือน', NULL, 5, 12);
+INSERT INTO `account_group` VALUES (53, 'ค่่าใช้จ่ายประจำวัน', NULL, 5, 12);
+INSERT INTO `account_group` VALUES (54, 'ธนาคารทั่่วไป', NULL, 7, 12);
 
 -- ----------------------------
 -- Table structure for account_icon
@@ -88,11 +98,58 @@ CREATE TABLE `account_icon`  (
   `account_icon_id` int NOT NULL,
   `account_icon_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`account_icon_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of account_icon
 -- ----------------------------
+INSERT INTO `account_icon` VALUES (1, '1738697574598.png');
+INSERT INTO `account_icon` VALUES (2, '1738697400316.png');
+INSERT INTO `account_icon` VALUES (3, '1738697395707.png');
+INSERT INTO `account_icon` VALUES (4, '1738697388747.png');
+INSERT INTO `account_icon` VALUES (5, '1738661939639.png');
+INSERT INTO `account_icon` VALUES (6, '1738661933643.png');
+INSERT INTO `account_icon` VALUES (7, '1738661927854.png');
+INSERT INTO `account_icon` VALUES (8, '1738661921515.png');
+INSERT INTO `account_icon` VALUES (9, '1738661916449.png');
+INSERT INTO `account_icon` VALUES (10, '1738661911239.png');
+INSERT INTO `account_icon` VALUES (11, '1738661906637.png');
+INSERT INTO `account_icon` VALUES (12, '1738661901939.png');
+INSERT INTO `account_icon` VALUES (13, '1738661897275.png');
+INSERT INTO `account_icon` VALUES (14, '1738661891753.png');
+INSERT INTO `account_icon` VALUES (15, '1738661881718.png');
+INSERT INTO `account_icon` VALUES (16, '1738661875575.png');
+INSERT INTO `account_icon` VALUES (17, '1738661869351.png');
+INSERT INTO `account_icon` VALUES (18, '1738661864488.png');
+INSERT INTO `account_icon` VALUES (19, '1738661858457.png');
+INSERT INTO `account_icon` VALUES (20, '1738661852932.png');
+INSERT INTO `account_icon` VALUES (21, '1738661845971.png');
+INSERT INTO `account_icon` VALUES (22, '1738661840804.png');
+INSERT INTO `account_icon` VALUES (23, '1738661829820.png');
+INSERT INTO `account_icon` VALUES (24, '1738661823154.png');
+INSERT INTO `account_icon` VALUES (25, '1738661816352.png');
+INSERT INTO `account_icon` VALUES (26, '1738661809085.png');
+INSERT INTO `account_icon` VALUES (27, '1738661801861.png');
+INSERT INTO `account_icon` VALUES (28, '1738661792290.png');
+INSERT INTO `account_icon` VALUES (29, '1738661785863.png');
+INSERT INTO `account_icon` VALUES (30, '1738661778577.png');
+INSERT INTO `account_icon` VALUES (31, '1738661769893.png');
+INSERT INTO `account_icon` VALUES (32, '1738661762446.png');
+INSERT INTO `account_icon` VALUES (33, '1738661755097.png');
+INSERT INTO `account_icon` VALUES (34, '1738661746289.png');
+INSERT INTO `account_icon` VALUES (35, '1738661737430.png');
+INSERT INTO `account_icon` VALUES (36, '1738661728391.png');
+INSERT INTO `account_icon` VALUES (37, '1738661713820.png');
+INSERT INTO `account_icon` VALUES (38, '1738661708178.png');
+INSERT INTO `account_icon` VALUES (39, '1738661702835.png');
+INSERT INTO `account_icon` VALUES (40, '1738661697078.png');
+INSERT INTO `account_icon` VALUES (41, '1738661691697.png');
+INSERT INTO `account_icon` VALUES (42, '1738661685845.png');
+INSERT INTO `account_icon` VALUES (43, '1738661679769.png');
+INSERT INTO `account_icon` VALUES (44, '1738661671837.png');
+INSERT INTO `account_icon` VALUES (45, '1738661666457.png');
+INSERT INTO `account_icon` VALUES (46, '1738661422907.png');
+INSERT INTO `account_icon` VALUES (47, '1738660914049.png');
 
 -- ----------------------------
 -- Table structure for account_transition
@@ -112,7 +169,7 @@ CREATE TABLE `account_transition`  (
   `account_type_cr_id` int NULL DEFAULT NULL COMMENT 'CR',
   PRIMARY KEY (`account_transition_id`) USING BTREE,
   UNIQUE INDEX `acccount_check`(`account_type_id` ASC, `account_transition_start` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1045 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1045 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of account_transition
@@ -135,39 +192,54 @@ CREATE TABLE `account_type`  (
   `account_category_id` int NULL DEFAULT NULL COMMENT 'รหัสหมวด',
   `account_type_total` decimal(10, 2) NOT NULL COMMENT 'ยอดคงเหลือ',
   PRIMARY KEY (`account_type_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 61 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 76 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of account_type
 -- ----------------------------
-INSERT INTO `account_type` VALUES (1, 'เงินสด', NULL, '', NULL, 'https://cdn-icons-png.flaticon.com/512/2489/2489756.png', 1, 2700.00, 1, 1, 200.00);
-INSERT INTO `account_type` VALUES (2, 'เงินสด (ตามที่ต่าง ๆ)', NULL, 'เงินเดือน', 5, 'https://cdn-icons-png.freepik.com/512/8992/8992633.png', 1, 3500.00, 1, 1, 3500.00);
-INSERT INTO `account_type` VALUES (3, 'ออมสิน', NULL, NULL, NULL, 'https://cdn.icon-icons.com/icons2/516/PNG/512/coin_money_icon-icons.com_51091.png', 1, 0.00, 2, 1, 0.00);
-INSERT INTO `account_type` VALUES (4, 'กรุงไทย', NULL, NULL, NULL, 'https://e7.pngegg.com/pngimages/591/354/png-clipart-krung-thai-bank-money-credit-kasikornbank-bank-blue-text-thumbnail.png', 1, 0.00, 2, 1, 0.00);
-INSERT INTO `account_type` VALUES (5, 'กรุงศรี - พร้อมเพย์', NULL, 'พร้อมเพย์', NULL, 'https://play-lh.googleusercontent.com/ovSLL4E--Mo_nJg4XHE8k_9KYCpAbn6FB0FLMgzl6lyNubIJoJxdvWyEnM7sN02DD5I', 1, 0.00, 2, 1, 0.00);
-INSERT INTO `account_type` VALUES (6, 'สหกรณ์ - ครู', NULL, NULL, NULL, 'https://nswtsco.com/coop/FileManager/uploads/images/Utils/cooplogo.jpg', 1, 0.00, 4, 1, 0.00);
-INSERT INTO `account_type` VALUES (7, 'สหกรณ์ - มรถ.บร.', NULL, NULL, NULL, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7mcXJAj-_nSauvRyX15CNf1hZFHfVnouINQ&s', 1, 0.00, 4, 1, 0.00);
-INSERT INTO `account_type` VALUES (8, 'รถมอไซต์', NULL, NULL, NULL, 'https://cdn.icon-icons.com/icons2/1368/PNG/512/-motorcycle_89748.png', 0, 0.00, 5, 1, 0.00);
-INSERT INTO `account_type` VALUES (9, 'เงินเดือน', NULL, 'เอาน่า', 4, 'https://png.pngtree.com/element_our/png_detail/20181114/salary-icon-png_239779.jpg', 0, 0.00, 13, 4, 0.00);
-INSERT INTO `account_type` VALUES (10, 'Giffarine', NULL, NULL, 1, 'https://pbs.twimg.com/profile_images/1547417089119363072/YEdgLvQI_400x400.jpg', 0, 0.00, 13, 4, 0.00);
-INSERT INTO `account_type` VALUES (11, 'งานวิจัย', NULL, NULL, 1, 'https://kris.kmitl.ac.th/wp-content/uploads/2020/04/ethic-icon-3.png', 0, 0.00, 14, 4, 0.00);
-INSERT INTO `account_type` VALUES (12, 'ขายของเก่า', NULL, NULL, NULL, 'https://png.pngtree.com/png-vector/20221106/ourmid/pngtree-garage-sale-rgb-color-icon-cheap-icon-vintage-vector-png-image_40254378.jpg', 0, 0.00, 15, 4, 0.00);
-INSERT INTO `account_type` VALUES (13, 'เก็บเงินได้', NULL, NULL, NULL, 'https://png.pngtree.com/png-clipart/20191027/ourlarge/pngtree-saving-money-hand-png-image_1842638.jpg', 0, 0.00, 15, 4, 0.00);
-INSERT INTO `account_type` VALUES (14, 'ขายของเบ็ตเล็ด', NULL, NULL, NULL, 'https://img.lovepik.com/free-png/20210924/lovepik-a-flat-convenience-store-cartoon-icon-ui-png-image_401358657_wh1200.png', 0, 0.00, 15, 4, 0.00);
-INSERT INTO `account_type` VALUES (15, 'อาหาร - โรงอาหาร', NULL, NULL, 4, 'https://cdn-icons-png.flaticon.com/512/5235/5235253.png', 0, 0.00, 16, 5, 0.00);
-INSERT INTO `account_type` VALUES (16, 'เครื่องดื่ม', NULL, NULL, 5, 'https://cdn-icons-png.flaticon.com/256/2405/2405451.png', 0, 0.00, 16, 5, 0.00);
-INSERT INTO `account_type` VALUES (17, 'Amazon - ชาเขียว', NULL, NULL, 5, 'https://img.wongnai.com/p/256x256/2022/10/01/8e97d954288144b69cdb71377c1e44ab.jpg', 0, 0.00, 16, 5, 0.00);
-INSERT INTO `account_type` VALUES (18, 'ค่าน้ำมัน', NULL, NULL, NULL, 'https://cdn.icon-icons.com/icons2/865/PNG/512/Citycons_fuel_icon-icons.com_67929.png', 0, 0.00, 17, 5, 0.00);
-INSERT INTO `account_type` VALUES (19, 'ค่าโทรศัพท์', NULL, NULL, NULL, 'https://cdn.icon-icons.com/icons2/1099/PNG/512/1485482192-phone_78665.png', 0, 0.00, 17, 5, 0.00);
-INSERT INTO `account_type` VALUES (20, 'ค่าอินเทอร์เน็ต', NULL, NULL, NULL, 'https://png.pngtree.com/png-vector/20190419/ourmid/pngtree-vector-globe-internet-web-online-monitor-icon-png-image_958362.jpg', 0, 0.00, 22, 5, 0.00);
-INSERT INTO `account_type` VALUES (21, 'ค่าน้ำ', NULL, NULL, NULL, 'https://png.pngtree.com/png-vector/20190711/ourmid/pngtree-water-tap-icon-for-your-project-png-image_1541492.jpg', 0, 0.00, 22, 5, 0.00);
-INSERT INTO `account_type` VALUES (22, 'ค่าไฟ', NULL, NULL, NULL, 'https://png.pngtree.com/png-clipart/20230923/original/pngtree-lightbulb-house-electricity-bill-icon-with-yellow-glowing-lighting-utilities-vector-png-image_12578915.png', 0, 0.00, 22, 5, 0.00);
-INSERT INTO `account_type` VALUES (23, 'ที่บ้าน', NULL, NULL, NULL, 'https://cdn.icon-icons.com/icons2/2104/PNG/512/house_icon_129523.png', 0, 0.00, 22, 5, 0.00);
-INSERT INTO `account_type` VALUES (24, 'นักศึกษา - ทศ', NULL, NULL, NULL, 'https://i.pinimg.com/564x/b0/6d/80/b06d80c5216d4ab434a001648b9a33be.jpg', 0, 0.00, 11, 2, 0.00);
-INSERT INTO `account_type` VALUES (25, 'นักศึกษา - เจ', NULL, NULL, NULL, 'https://cdn.icon-icons.com/icons2/1670/PNG/512/10212womanstudent_110649.png', 0, 0.00, 11, 2, 0.00);
-INSERT INTO `account_type` VALUES (26, 'นักศึกษา - เนม', NULL, NULL, NULL, 'https://cdn.icon-icons.com/icons2/1465/PNG/512/129manstudent1_100298.png', 0, 0.00, 10, 2, 0.00);
-INSERT INTO `account_type` VALUES (27, 'นักศึกษา - ต้า', NULL, '', NULL, 'https://lh3.googleusercontent.com/proxy/ax76Z5SnD-30R45_IK39aRGkvCuLCqunaVGoOg80dzx0DE1LgZaoKKpln1lzAVOk5AlN7HgRdxIC-KtBakBvPTrcBZ79mirZyfHoHkz21ZEdXPXuJ3Ym2PY', 0, 500.00, 11, 2, 500.00);
-INSERT INTO `account_type` VALUES (57, 'ทุน - เบนซ์ ', NULL, NULL, NULL, NULL, 0, 6200.00, 12, 3, 200.00);
+INSERT INTO `account_type` VALUES (1, 'เงินสด', NULL, '', NULL, '1', 1, 0.00, 1, 1, 0.00);
+INSERT INTO `account_type` VALUES (2, 'เงินสด (ตามที่ต่าง ๆ)', NULL, 'เงินเดือน', 5, '1', 1, 0.00, 1, 1, 0.00);
+INSERT INTO `account_type` VALUES (3, 'ออมสิน', NULL, NULL, NULL, '1', 1, 0.00, 2, 1, 0.00);
+INSERT INTO `account_type` VALUES (4, 'กรุงไทย', NULL, NULL, NULL, '1', 1, 0.00, 2, 1, 0.00);
+INSERT INTO `account_type` VALUES (5, 'กรุงศรี - พร้อมเพย์', NULL, 'พร้อมเพย์', NULL, '1', 1, 0.00, 2, 1, 0.00);
+INSERT INTO `account_type` VALUES (6, 'สหกรณ์ - ครู', NULL, NULL, NULL, '1', 1, 0.00, 4, 1, 0.00);
+INSERT INTO `account_type` VALUES (7, 'สหกรณ์ - มรถ.บร.', NULL, NULL, NULL, '1', 1, 0.00, 4, 1, 0.00);
+INSERT INTO `account_type` VALUES (8, 'รถมอไซต์', NULL, NULL, NULL, '1', 0, 0.00, 5, 1, 0.00);
+INSERT INTO `account_type` VALUES (9, 'เงินเดือน', NULL, 'เอาน่า', 4, '1', 0, 0.00, 13, 4, 0.00);
+INSERT INTO `account_type` VALUES (10, 'Giffarine', NULL, NULL, 1, '1', 0, 0.00, 13, 4, 0.00);
+INSERT INTO `account_type` VALUES (11, 'งานวิจัย', NULL, NULL, 1, '1', 0, 0.00, 14, 4, 0.00);
+INSERT INTO `account_type` VALUES (12, 'ขายของเก่า', NULL, NULL, NULL, '1', 0, 0.00, 15, 4, 0.00);
+INSERT INTO `account_type` VALUES (13, 'เก็บเงินได้', NULL, NULL, NULL, '1', 0, 0.00, 15, 4, 0.00);
+INSERT INTO `account_type` VALUES (14, 'ขายของเบ็ตเล็ด', NULL, NULL, NULL, '1', 0, 0.00, 15, 4, 0.00);
+INSERT INTO `account_type` VALUES (15, 'อาหาร - โรงอาหาร', NULL, NULL, 4, '1', 0, 0.00, 16, 5, 0.00);
+INSERT INTO `account_type` VALUES (16, 'เครื่องดื่ม', NULL, NULL, 5, '1', 0, 0.00, 16, 5, 0.00);
+INSERT INTO `account_type` VALUES (17, 'Amazon - ชาเขียว', NULL, NULL, 5, '1', 0, 0.00, 16, 5, 0.00);
+INSERT INTO `account_type` VALUES (18, 'ค่าน้ำมัน', NULL, NULL, NULL, '1', 0, 0.00, 17, 5, 0.00);
+INSERT INTO `account_type` VALUES (19, 'ค่าโทรศัพท์', NULL, NULL, NULL, '1', 0, 0.00, 17, 5, 0.00);
+INSERT INTO `account_type` VALUES (20, 'ค่าอินเทอร์เน็ต', NULL, NULL, NULL, '1', 0, 0.00, 22, 5, 0.00);
+INSERT INTO `account_type` VALUES (21, 'ค่าน้ำ', NULL, NULL, NULL, '1', 0, 0.00, 22, 5, 0.00);
+INSERT INTO `account_type` VALUES (22, 'ค่าไฟ', NULL, NULL, NULL, '1', 0, 0.00, 22, 5, 0.00);
+INSERT INTO `account_type` VALUES (23, 'ที่บ้าน', NULL, NULL, NULL, '1', 0, 0.00, 22, 5, 0.00);
+INSERT INTO `account_type` VALUES (24, 'นักศึกษา - ทศ', NULL, NULL, NULL, '1', 0, 0.00, 11, 2, 0.00);
+INSERT INTO `account_type` VALUES (25, 'นักศึกษา - เจ', NULL, NULL, NULL, '1', 0, 0.00, 11, 2, 0.00);
+INSERT INTO `account_type` VALUES (26, 'นักศึกษา - เนม', NULL, NULL, NULL, '1', 0, 0.00, 10, 2, 0.00);
+INSERT INTO `account_type` VALUES (27, 'นักศึกษา - ต้า', NULL, '', NULL, '1', 0, 0.00, 11, 2, 0.00);
+INSERT INTO `account_type` VALUES (57, 'ทุน - เบนซ์ ', NULL, NULL, NULL, '1', 0, 0.00, 12, 3, 0.00);
+INSERT INTO `account_type` VALUES (61, 'เงินสด', '2000', 'เงินไว้จ่าย', NULL, '44', 0, 0.00, 47, 1, 0.00);
+INSERT INTO `account_type` VALUES (62, 'จอคอม', '1333', 'จ่ายทุกเดือน', NULL, '19', 0, 0.00, 48, 2, 0.00);
+INSERT INTO `account_type` VALUES (63, 'ลูกหนี้มิก', '6250', 'จ่ายยยย', NULL, '8', 0, 0.00, 49, 6, 0.00);
+INSERT INTO `account_type` VALUES (64, 'เงินเดือน', '10000', 'พ่อแม่ให้', NULL, '17', 0, 0.00, 50, 4, 0.00);
+INSERT INTO `account_type` VALUES (65, 'รายได้จากการสอน', '1000', 'สอนเด็กโว้นยยยยยย', NULL, '16', 0, 0.00, 51, 4, 0.00);
+INSERT INTO `account_type` VALUES (66, 'ค่าน้ำ', '80', 'รายเดือน', NULL, '2', 0, 0.00, 52, 5, 0.00);
+INSERT INTO `account_type` VALUES (67, 'ค่าไฟ', '350', 'รายเดือน', NULL, '3', 0, 0.00, 52, 5, 0.00);
+INSERT INTO `account_type` VALUES (68, 'ค่าบ้าน', '1400', 'รายเดือน', NULL, '4', 0, 0.00, 52, 5, 0.00);
+INSERT INTO `account_type` VALUES (69, 'ค่าอาหารเช้า', '30', 'ข้าวเช้า', NULL, '21', 0, 0.00, 53, 5, 0.00);
+INSERT INTO `account_type` VALUES (70, 'มะพร้าวปั่นนนน', '35', 'เพิ่มน้ำตาลในเลือด', NULL, '21', 0, 0.00, 53, 5, 0.00);
+INSERT INTO `account_type` VALUES (71, 'อาหารกลางวัน', '50', 'ข้าวเที่ยงง', NULL, '22', 0, 0.00, 53, 5, 0.00);
+INSERT INTO `account_type` VALUES (72, 'อาหารเย็น', '50', 'อาจจะกินบ้างไม่่กินบ้าง', NULL, '20', 0, 0.00, 53, 5, 0.00);
+INSERT INTO `account_type` VALUES (73, 'บัวหลวง', '21000', 'บัญชีหลัก', NULL, '41', 0, 0.00, 54, 7, 0.00);
+INSERT INTO `account_type` VALUES (74, 'true money', '5', 'ไว้ใช้สมัครเน็ต', NULL, '25', 0, 0.00, 54, 7, 0.00);
+INSERT INTO `account_type` VALUES (75, 'กรุงไทย', '500', 'ธนาคารของมหาลัย', NULL, '31', 0, 0.00, 54, 7, 0.00);
 
 -- ----------------------------
 -- Table structure for account_user
@@ -178,14 +250,15 @@ CREATE TABLE `account_user`  (
   `account_user_username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   `account_user_password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   `account_user_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
-  PRIMARY KEY (`account_user_id` DESC) USING BTREE,
+  PRIMARY KEY (`account_user_id`) USING BTREE,
   UNIQUE INDEX `account_user_username`(`account_user_username` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of account_user
 -- ----------------------------
-INSERT INTO `account_user` VALUES (11, 'banz@gmail.com', '$2a$12$Gyf8cLLw0nVt0KsZq.jXj.kyosEniBKabTuvkBwXfO8Elcd2pQihm', NULL);
 INSERT INTO `account_user` VALUES (9, 'accout@gmail.com', '$2a$12$.sWGS.KAS66WzrLI96DhBOXSpWh3nP/ywZ.z/NshbXNNA9lG7gdTy', 'admin_');
+INSERT INTO `account_user` VALUES (11, 'banz@gmail.com', '$2a$12$Gyf8cLLw0nVt0KsZq.jXj.kyosEniBKabTuvkBwXfO8Elcd2pQihm', 'อจ.บ');
+INSERT INTO `account_user` VALUES (12, 'thod@gmail.com', '$2a$12$RK/VliUBegwsv0yxCMrSKeNdaIfyhnJ2v7I8KHQDULKHE.RmXWQ8C', 'ทศนะ');
 
 SET FOREIGN_KEY_CHECKS = 1;
