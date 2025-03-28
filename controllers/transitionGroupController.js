@@ -179,7 +179,7 @@ exports.getType_from_id = async (req, res) => {
                               ON
                                   account_type.account_type_icon = account_icon.account_icon_id
                               WHERE 
-                                  account_type.account_type_important = 1 AND account_group.account_user_id = ${account_user_id}
+                                  account_group.account_category_id in (1,7) AND account_group.account_user_id = ${account_user_id}
                                 `);
 
   res.json({ result });

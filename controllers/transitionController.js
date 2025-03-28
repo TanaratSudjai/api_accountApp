@@ -326,25 +326,18 @@ exports.getSumValueGroupOne = async (req, res) => {
     const account_user_id = user.account_user_id;
     const [res_transitiongroup] = await sql.query(
       `
-      SELECT
-    SUM(account_transition.account_transition_value) AS total_transition_value,
-    account_group.account_category_id
-      FROM
-          account_transition
-      INNER JOIN
-          account_type
-      ON 
-          account_transition.account_type_id = account_type.account_type_id
-      INNER JOIN
-          account_group
-      ON 
-          account_type.account_group_id = account_group.account_group_id
-      WHERE
-          account_group.account_category_id in (1,6,7) AND 
-          account_transition.account_transition_submit IS NULL AND
-          account_group.account_user_id = ? 
-      GROUP BY
-          account_group.account_category_id;
+      SELECT 
+    SUM(account_transition.account_transition_value) AS total_transition_value
+FROM 
+    account_transition
+INNER JOIN account_type 
+    ON account_transition.account_type_id = account_type.account_type_id
+INNER JOIN account_group 
+    ON account_type.account_group_id = account_group.account_group_id
+WHERE 
+    account_group.account_category_id IN (1,6,7) 
+    AND account_transition.account_transition_submit IS NULL
+    AND account_group.account_user_id = ?;
     `,
       [account_user_id]
     );
