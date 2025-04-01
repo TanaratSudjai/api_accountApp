@@ -38,22 +38,22 @@ exports.openAccount = async (req, res) => {
           ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
         `;
         break;
-        case 6:
-          query = `
+      case 6:
+        query = `
             INSERT INTO account_transition 
             (account_type_id, account_transition_value, account_transition_datetime, account_transition_start, account_type_dr_id)
             VALUES (?, ?, NOW(), ?, ?) 
             ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
           `;
-          break;
-          case 7:
-            query = `
+        break;
+      case 7:
+        query = `
               INSERT INTO account_transition 
               (account_type_id, account_transition_value, account_transition_datetime, account_transition_start, account_type_dr_id)
               VALUES (?, ?, NOW(), ?, ?) 
               ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
             `;
-            break;
+        break;
       default:
         return res.status(400).json({ error: "Invalid account category." });
     }
@@ -95,7 +95,7 @@ exports.sumAccount = async (req, res) => {
         account_transition_start, 
         account_transition_submit
         )
-        VALUES (57, ?, NOW(), ?, 1) 
+        VALUES (57, ?, NOW(), ?, 0) 
       `;
 
     await sql.query(query, [account_transition_value, newStartValue]);
@@ -183,6 +183,7 @@ exports.sumbitTransition = async (req, res) => {
   }
 };
 
+// debug getTransaction
 exports.getTransaction = async (req, res) => {
   try {
     const user = getUserFromToken(req);
@@ -242,7 +243,7 @@ exports.getTransaction = async (req, res) => {
 
 exports.getGroupTwoTransition = async (req, res) => {
   const user = getUserFromToken(req);
-    const account_user_id = user.account_user_id;
+  const account_user_id = user.account_user_id;
   try {
     const user = getUserFromToken(req);
     const account_user_id = user.account_user_id;
@@ -273,7 +274,7 @@ exports.getGroupTwoTransition = async (req, res) => {
         account_transition.account_transition_submit IS NULL AND
         account_group.account_user_id = ? 
         `,
-        [account_user_id]
+      [account_user_id]
     );
     res.json(res_transitiongroup);
   } catch (error) {

@@ -73,16 +73,23 @@ exports.openAccountGroup_bankTransition = async (req, res) => {
       params_type_id_end,
     ]);
 
+    // ดึง account_transition_id debug null
     const res_account_transition_id = `SELECT account_transition_id 
                                         FROM  account_transition 
                                         WHERE account_transition_submit IS NULL 
                                         LIMIT 1;
-                                        `
+                                        `;
 
-    const [pull_account_transition_id] = await sql.query(res_account_transition_id);
-    const account_transition_id =  pull_account_transition_id[0].account_transition_id;
+    const [pull_account_transition_id] = await sql.query(
+      res_account_transition_id
+    );
+    // debug transitionbank
+    console.log("pull_account_transition_id ==>", pull_account_transition_id);
 
-
+    const account_transition_id =
+      pull_account_transition_id[0].account_transition_id;
+    // debug transitionbank
+    console.log("account_transition_id == ", account_transition_id);
 
     const query = `
         INSERT INTO account_transition 
@@ -101,30 +108,26 @@ exports.openAccountGroup_bankTransition = async (req, res) => {
       account_transition_value,
     ]);
 
-
     // อัพเดตปลายทางในการ duplicate
     const update_account_type_form_id = `UPDATE account_transition 
                                         SET account_type_from_id = ? , account_type_dr_id = ?
-                                        WHERE account_transition_id  = ?`
+                                        WHERE account_transition_id  = ?`;
 
     const res__ = await sql.query(update_account_type_form_id, [
       params_type_id_end,
       params_type_id_end,
-      account_transition_id
-    ])
-
+      account_transition_id,
+    ]);
 
     console.log(res__);
 
     console.log("value is :", params_type_id_end, account_transition_id);
 
-
-
     res
       .status(200)
       .json({ message: "Account transition inserted/updated successfully." });
   } catch (error) {
-    console.error("Error inserting account transition:", error);
+    console.error("Error inserting account transition:", error.message);
     res.status(500).json({ error: "Error inserting account transition." });
   }
 };
@@ -479,11 +482,9 @@ exports.delFor_return_objectvalue = async (req, res) => {
   }
 };
 
-
-//return back transition 
+//return back transition
 exports.delFor_return_bank = async (req, res) => {
   // const { account_transition_id } = req.params;
-
 
   const select_transition_latest = `SELECT *
                                     FROM account_transition
@@ -491,35 +492,41 @@ exports.delFor_return_bank = async (req, res) => {
                                     ORDER BY account_transition_id DESC
                                     LIMIT 1;
                                     ;
-                                                `
-    ;
-
+                                                `;
   // transition_latest data
   const [result_select_transition_latest] = await sql.query(
-    select_transition_latest,
+    select_transition_latest
   );
 
   if (!result_select_transition_latest[0]) {
     console.log("transition not found");
+  }
+  console.log(result_select_transition_latest[0].account_type_id);
 
-  } console.log(result_select_transition_latest[0].account_type_id);
-
-  // account_type_id 
+  // account_type_id
   const rollback_id = result_select_transition_latest[0].account_type_id;
-  const rollback_value = result_select_transition_latest[0].account_transition_value;
-  const rollback_transition = "UPDATE account_type SET account_type_total = account_type_total + ? WHERE account_type_id = ?";
-  await sql.query(rollback_transition, [rollback_value, rollback_id])
+  const rollback_value =
+    result_select_transition_latest[0].account_transition_value;
+  const rollback_transition =
+    "UPDATE account_type SET account_type_total = account_type_total + ? WHERE account_type_id = ?";
+  await sql.query(rollback_transition, [rollback_value, rollback_id]);
 
-  // account_type_from_id 
-  const rollback_id_from = result_select_transition_latest[0].account_type_from_id;
-  const rollback_transition_from = "UPDATE account_type SET account_type_total = account_type_total - ? WHERE account_type_id = ?";
+  // account_type_from_id
+  const rollback_id_from =
+    result_select_transition_latest[0].account_type_from_id;
+  const rollback_transition_from =
+    "UPDATE account_type SET account_type_total = account_type_total - ? WHERE account_type_id = ?";
 
   await sql.query(rollback_transition_from, [rollback_value, rollback_id_from]);
 
-  const account_transition_id = result_select_transition_latest[0].account_transition_id
-  await sql.query("DELETE FROM account_transition WHERE account_transition_id = ?", [account_transition_id])
+  const account_transition_id =
+    result_select_transition_latest[0].account_transition_id;
+  await sql.query(
+    "DELETE FROM account_transition WHERE account_transition_id = ?",
+    [account_transition_id]
+  );
 
   res.json({
-    data: result_select_transition_latest[0]
-  })
-}
+    data: result_select_transition_latest[0],
+  });
+};

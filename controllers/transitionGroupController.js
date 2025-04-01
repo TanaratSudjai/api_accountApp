@@ -454,6 +454,7 @@ exports.deleteTransition = async (req, res) => {
 
 exports.get_Bank_Transition = async (req, res) => {
   try {
+    // const user = getUserFromToken(req);
     const query = `SELECT
                       at.account_type_id,
                       at.account_type_name,
@@ -480,8 +481,11 @@ exports.get_Bank_Transition = async (req, res) => {
                   ORDER BY
                       at_trans.account_transition_id DESC;
                     `;
-
     const [data_transition_bank] = await sql.query(query);
+    if (!data_transition_bank && data_transition_bank.length === 0) {
+      return res.status(404).json({ error: "Transition not found" });
+    }
+
     res.json({ data_transition_bank }).status(200);
   } catch (err) {
     res.json({ err: err.massage });
