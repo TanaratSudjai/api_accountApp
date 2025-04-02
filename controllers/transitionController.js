@@ -92,10 +92,9 @@ exports.sumAccount = async (req, res) => {
         (
         account_type_id, account_transition_value, 
         account_transition_datetime, 
-        account_transition_start, 
-        account_transition_submit
+        account_transition_start
         )
-        VALUES (57, ?, NOW(), ?, 0) 
+        VALUES (57, ?, NOW(), ?) 
       `;
 
     await sql.query(query, [account_transition_value, newStartValue]);
