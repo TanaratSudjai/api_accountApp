@@ -77,6 +77,40 @@ exports.openAccount = async (req, res) => {
 exports.sumAccount = async (req, res) => {
   try {
     const { account_transition_value } = req.body;
+    // get user_id
+    const user = getUserFromToken(req);
+
+    // user_id
+    if (!user || !user.account_user_id) {
+      return res.status(401).json({ error: "Unauthorized or missing user ID" });
+    }
+
+    const account_user_id = user.account_user_id;
+    const account_group_id = `SELECT
+                                account_group.account_group_id, 
+                                account_group.account_user_id
+                              FROM
+                                account_group
+                              WHERE
+                                account_group.account_user_id = ? 
+                                AND
+                                account_group.account_category_id = 3 `;
+    const [group] = await sql.query(account_group_id, [account_user_id]);
+    const account_group_id_select = group[0].account_group_id;
+
+    const account_type_id_query = `SELECT
+                                    account_type.account_type_id, 
+                                    account_type.account_group_id
+                                  FROM
+                                    account_type
+                                  WHERE
+                                    account_type.account_group_id = ?`;
+
+    const [type] = await sql.query(account_type_id_query, [
+      account_group_id_select,
+    ]);
+
+    const account_type_id = type[0].account_type_id;
 
     const maxQuery = `
       SELECT COALESCE(MAX(account_transition_start), 0)+1 AS max_start
@@ -90,14 +124,19 @@ exports.sumAccount = async (req, res) => {
     const query = `
         INSERT INTO account_transition 
         (
-        account_type_id, account_transition_value, 
+        account_type_id, 
+        account_transition_value, 
         account_transition_datetime, 
         account_transition_start
         )
-        VALUES (57, ?, NOW(), ?) 
+        VALUES (?, ?, NOW(), ?) 
       `;
 
-    await sql.query(query, [account_transition_value, newStartValue]);
+    await sql.query(query, [
+      account_type_id,
+      account_transition_value,
+      newStartValue,
+    ]);
 
     res
       .status(200)

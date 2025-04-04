@@ -46,10 +46,30 @@ exports.register = async (req, res) => {
     const hashPassword = await bcrypt.hash(account_user_password, 12);
 
     // เพิ่มข้อมูลลง database
-    const result = await pool.query(
+    const [result] = await pool.query(
       "INSERT INTO account_user (account_user_username, account_user_password, account_user_name) VALUES (?, ?, ?)",
       [account_user_username, hashPassword, account_user_name]
     );
+
+    // ดึง ID ที่เพิ่งถูกเพิ่ม
+    const userId = result.insertId;
+    console.log("New user ID:", userId);
+
+    const [open_group_private] = await pool.query(
+      "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?) ",
+      ["ส่วนของเจ้าของ", userId, 3]
+    );
+
+    // ดึง ID ที่เพิ่งถูกเพิ่ม
+    const new_group_id = open_group_private.insertId;
+
+    // open type group
+    const [type_private] = await pool.query(
+      "INSERT INTO account_type (account_group_id,account_category_id,account_type_icon, account_type_name, account_type_important, account_type_sum,account_type_total) VALUES (?, ?,?,?,?, ?,?) ",
+      [new_group_id, 3, 1, `ทุน ${account_user_name}`, 0, 0,0]
+    );
+
+    console.log(type_private);
 
     // ส่ง response
     res.status(201).json({
@@ -144,7 +164,7 @@ exports.login = async (req, res) => {
         username: user.account_user_username,
         name: user.account_user_name,
       },
-      status: 200
+      status: 200,
     });
   } catch (error) {
     res.json({ error: error.message });
