@@ -210,13 +210,17 @@ exports.getCreditor = async (req, res) => {
                               ON 
                                   account_type.account_group_id = account_group.account_group_id
                               WHERE 
-                                  account_type.account_category_id = 2 AND account_group.account_user_id = ${account_user_id}
+                                  account_type.account_category_id = 2 
+                                  AND 
+                                  account_group.account_user_id = ${account_user_id}
                                 `);
 
   res.json({ result });
 };
 
 exports.getDebtor = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
   const [result] = await sql.query(`SELECT
                                 account_type.account_type_id, 
                                 account_category.account_category_name, 
@@ -238,7 +242,8 @@ exports.getDebtor = async (req, res) => {
                               ON 
                                   account_type.account_group_id = account_group.account_group_id
                               WHERE 
-                                  account_type.account_category_id = 1 AND account_type.account_group_id = 3
+                                  account_type.account_category_id = 6 
+                                  AND account_group.account_user_id = ${account_user_id}
                                 `);
 
   res.json({ result });

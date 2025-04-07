@@ -226,6 +226,9 @@ exports.getTransaction = async (req, res) => {
   try {
     const user = getUserFromToken(req);
     const account_user_id = user.account_user_id;
+    if (!user || !user.account_user_id) {
+      return res.status(401).json({ error: "Unauthorized or missing user ID" });
+    }
     const [res_transition] = await sql.query(
       `SELECT
         account_transition.*, 
@@ -270,12 +273,68 @@ exports.getTransaction = async (req, res) => {
        `,
       [account_user_id]
     );
-    res.json({ res_transition });
-  } catch (err) {
-    res.status(401).json({
-      message: err.message,
-      error: "Error occurred while fetching transactions!",
+
+    // debter count
+    const [sql_debterCount] = await sql.query(
+      `SELECT
+                                            COUNT(account_type.account_type_id) as count_debter
+                                            FROM
+                                              account_group
+                                              INNER JOIN
+                                              account_category
+                                            ON 
+                                                account_group.account_category_id = account_category.account_category_id
+                                            INNER JOIN
+                                              account_type
+                                            ON 
+                                                account_type.account_group_id = account_group.account_group_id
+                                            WHERE 
+                                                account_type.account_category_id = ? AND account_group.account_user_id = ?`,
+      [6, account_user_id]
+    );
+
+    // crediter count
+    const [sql_crediterCount] = await sql.query(
+      `SELECT
+                                            COUNT(account_type.account_type_id) as count_creaditer
+                                            FROM
+                                              account_group
+                                              INNER JOIN
+                                              account_category
+                                            ON 
+                                                account_group.account_category_id = account_category.account_category_id
+                                            INNER JOIN
+                                              account_type
+                                            ON 
+                                                account_type.account_group_id = account_group.account_group_id
+                                            WHERE 
+                                                account_type.account_category_id = ? AND account_group.account_user_id = ?`,
+
+      [2, account_user_id]
+    );
+
+    // return data to client
+    res.json({
+      res_transition,
+      data: [
+        {
+          type: "Debter",
+          value: sql_debterCount[0].count_debter,
+        },
+        {
+          type: "Crediter",
+          value: sql_crediterCount[0].count_creaditer,
+        },
+      ],
     });
+  } catch (err) {
+    // unauthorized
+    if (err.name === "UnauthorizedError") {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+    if (err) {
+      res.status(500).json({ message: err.message });
+    }
   }
 };
 
