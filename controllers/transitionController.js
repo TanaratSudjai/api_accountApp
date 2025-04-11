@@ -10,67 +10,84 @@ exports.openAccount = async (req, res) => {
       account_category_from_id,
     } = req.body;
 
+    // Optional: calculate max start value
     const maxQuery = `
       SELECT COALESCE(MAX(account_transition_start), 0) + 1 AS max_start
       FROM account_transition
       WHERE account_transition_submit = 1
     `;
-
     const [maxResult] = await sql.query(maxQuery);
     const newStartValue = maxResult[0].max_start || account_transition_start;
 
-    let query;
-    switch (account_category_from_id) {
-      case 1:
-        query = `
-          INSERT INTO account_transition 
-          (account_type_id, account_transition_value, account_transition_datetime, account_transition_start, account_type_dr_id)
-          VALUES (?, ?, NOW(), ?, ?) 
-          ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
-        `;
-        break;
-      case 2:
-      case 3:
-        query = `
-          INSERT INTO account_transition 
-          (account_type_id, account_transition_value, account_transition_datetime, account_transition_start, account_type_cr_id)
-          VALUES (?, ?, NOW(), ?, ?) 
-          ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
-        `;
-        break;
-      case 6:
-        query = `
+    // Step 1: Check for duplicate
+    const [existing] = await sql.query(
+      `SELECT * FROM account_transition WHERE account_type_id = ? AND account_transition_start = ?`,
+      [account_type_id, newStartValue]
+    );
+
+    let query, values;
+
+    // Step 2: Build query
+    if (existing.length > 0) {
+      // Record exists → UPDATE
+      switch (account_category_from_id) {
+        case 1:
+        case 6:
+        case 7:
+          query = `
+            UPDATE account_transition
+            SET account_transition_value = ?, account_transition_datetime = NOW(), account_type_dr_id = ?
+            WHERE account_type_id = ? AND account_transition_start = ?
+          `;
+          values = [account_transition_value, account_type_id, account_type_id, newStartValue];
+          break;
+        case 2:
+        case 3:
+          query = `
+            UPDATE account_transition
+            SET account_transition_value = ?, account_transition_datetime = NOW(), account_type_cr_id = ?
+            WHERE account_type_id = ? AND account_transition_start = ?
+          `;
+          values = [account_transition_value, account_type_id, account_type_id, newStartValue];
+          break;
+        default:
+          return res.status(400).json({ error: "Invalid account category." });
+      }
+    } else {
+      // Record does not exist → INSERT
+      switch (account_category_from_id) {
+        case 1:
+        case 6:
+        case 7:
+          query = `
             INSERT INTO account_transition 
             (account_type_id, account_transition_value, account_transition_datetime, account_transition_start, account_type_dr_id)
-            VALUES (?, ?, NOW(), ?, ?) 
-            ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
+            VALUES (?, ?, NOW(), ?, ?)
           `;
-        break;
-      case 7:
-        query = `
-              INSERT INTO account_transition 
-              (account_type_id, account_transition_value, account_transition_datetime, account_transition_start, account_type_dr_id)
-              VALUES (?, ?, NOW(), ?, ?) 
-              ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
-            `;
-        break;
-      default:
-        return res.status(400).json({ error: "Invalid account category." });
+          values = [account_type_id, account_transition_value, newStartValue, account_type_id];
+          break;
+        case 2:
+        case 3:
+          query = `
+            INSERT INTO account_transition 
+            (account_type_id, account_transition_value, account_transition_datetime, account_transition_start, account_type_cr_id)
+            VALUES (?, ?, NOW(), ?, ?)
+          `;
+          values = [account_type_id, account_transition_value, newStartValue, account_type_id];
+          break;
+        default:
+          return res.status(400).json({ error: "Invalid account category." });
+      }
     }
-    await sql.query(query, [
-      account_type_id,
-      account_transition_value,
-      newStartValue,
-      account_type_id,
-      account_transition_value,
-    ]);
 
-    res
-      .status(200)
-      .json({ message: "Account transition inserted/updated successfully." });
+    // Step 3: Execute insert or update
+    await sql.query(query, values);
+
+    res.status(200).json({ message: existing.length > 0 ? "Account transition updated." : "Account transition inserted." });
+
   } catch (error) {
-    console.error("Error inserting account transition:", error);
-    res.status(500).json({ error: "Error inserting account transition." });
+    console.error("Error inserting/updating account transition:", error);
+    res.status(500).json({ error: "Server error processing account transition." });
   }
 };
 
