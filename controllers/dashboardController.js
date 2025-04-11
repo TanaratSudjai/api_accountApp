@@ -4,10 +4,7 @@ exports.getDashboard_forsubmition_transition = async (req, res) => {
   try {
     const query_transition_data = `
                                     SELECT
-                                        account_type.account_type_id, 
-                                        account_type.account_type_name, 
-                                        account_type.account_type_total, 
-                                        account_type.account_type_sum
+                                        *
                                     FROM
                                         account_type
                                     WHERE 
