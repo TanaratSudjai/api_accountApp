@@ -66,7 +66,7 @@ exports.register = async (req, res) => {
     // open type group
     const [type_private] = await pool.query(
       "INSERT INTO account_type (account_group_id,account_category_id,account_type_icon, account_type_name, account_type_important, account_type_sum,account_type_total) VALUES (?, ?,?,?,?, ?,?) ",
-      [new_group_id, 3, 1, `ทุน ${account_user_name}`, 0, 0,0]
+      [new_group_id, 3, 1, `ทุน ${account_user_name}`, 0, 0, 0]
     );
 
     console.log(type_private);
@@ -75,7 +75,7 @@ exports.register = async (req, res) => {
     const [default_group_cat_1] = await pool.query(
       "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?) ",
       ["เงินคงมือ", userId, 1]
-    )
+    );
     const group_id_cat_1 = default_group_cat_1.insertId;
     const [default_type_cat_1] = await pool.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ",
@@ -87,7 +87,7 @@ exports.register = async (req, res) => {
     const [default_group_cat_2] = await pool.query(
       "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?) ",
       ["หนี้รายเดือน", userId, 2]
-    )
+    );
     const group_id_cat_2 = default_group_cat_2.insertId;
     const [default_type_cat_2] = await pool.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ",
@@ -99,7 +99,7 @@ exports.register = async (req, res) => {
     const [default_group_cat_4] = await pool.query(
       "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?) ",
       ["รายได้รายเดือน", userId, 4]
-    )
+    );
     const group_id_cat_4 = default_group_cat_4.insertId;
     const [default_type_cat_4] = await pool.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ",
@@ -111,7 +111,7 @@ exports.register = async (req, res) => {
     const [default_group_cat_5] = await pool.query(
       "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?) ",
       ["ค่าใช้จ่ายรายเดือน", userId, 5]
-    )
+    );
     const group_id_cat_5 = default_group_cat_5.insertId;
     const [default_type_cat_5] = await pool.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ",
@@ -127,12 +127,11 @@ exports.register = async (req, res) => {
     );
     // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 1 ---->
 
-
     // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 2 ---->
     const [default_group_cat_5_2] = await pool.query(
       "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?) ",
       ["ค่่าใช้จ่ายประจำวัน", userId, 5]
-    )
+    );
     const group_id_cat_5_2 = default_group_cat_5_2.insertId;
     const [default_type_cat_5_2_1] = await pool.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ",
@@ -152,7 +151,7 @@ exports.register = async (req, res) => {
     const [default_group_cat_6] = await pool.query(
       "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?) ",
       ["ลูกหนี้ทั่วไป", userId, 6]
-    )
+    );
     const group_id_cat_6 = default_group_cat_6.insertId;
     const [default_type_cat_6] = await pool.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ",
@@ -164,7 +163,7 @@ exports.register = async (req, res) => {
     const [default_group_cat_7] = await pool.query(
       "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?) ",
       ["ธนาคารทั่วไป", userId, 7]
-    )
+    );
     const group_id_cat_7 = default_group_cat_7.insertId;
     const [default_type_cat_7] = await pool.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ",
