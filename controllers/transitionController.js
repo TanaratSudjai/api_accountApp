@@ -190,6 +190,8 @@ exports.sumbitTransition = async (req, res) => {
     const [results_type_id] = await sql.query(account_type_id_query);
     const account_type_cr_id = results_type_id[0].account_type_id;
 
+    console.log("account_type_cr_id", account_type_cr_id);
+
     const submit_cr_type_query = `
       UPDATE account_transition
       SET account_type_cr_id = ?
@@ -211,12 +213,13 @@ exports.sumbitTransition = async (req, res) => {
         account_transition
       ON 
         account_type.account_type_id = account_transition.account_type_id
+      
       GROUP BY account_type.account_type_id
     `;
     const [results] = await sql.query(query_sumvalueType);
 
     const updateQuery =
-      "UPDATE account_type SET account_type_sum = account_type_sum + ?, account_type_total = ? WHERE account_type_id = ?";
+      "UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?";
 
     // loop id มา update
     for (const result of results) {

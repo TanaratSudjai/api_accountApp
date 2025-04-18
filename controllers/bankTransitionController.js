@@ -122,7 +122,7 @@ exports.openAccountGroup_bankTransition = async (req, res) => {
 
     // console.log(res__);
 
-    console.log("value is :", params_type_id_end, account_transition_id);
+    console.log("value is :", params_type_id_end);
 
     res
       .status(200)
