@@ -488,7 +488,7 @@ exports.get_Bank_Transition = async (req, res) => {
                 ORDER BY
                   at_trans.account_transition_id DESC;
                     `;
-    const [data_transition_bank] = await sql.query(query, [1, 1, user_id]);
+    const [data_transition_bank] = await sql.query(query, [7, 1, user_id]);
     if (!data_transition_bank && data_transition_bank.length === 0) {
       return res.status(404).json({ error: "Transition not found" });
     }

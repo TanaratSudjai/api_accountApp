@@ -489,7 +489,7 @@ exports.delFor_return_bank = async (req, res) => {
 
   const select_transition_latest = `SELECT *
                                     FROM account_transition
-                                    WHERE account_category_id = 1 AND account_category_from_id = 1
+                                    WHERE account_category_id = 7 AND account_category_from_id = 1
                                     ORDER BY account_transition_id DESC
                                     LIMIT 1;
                                     ;
