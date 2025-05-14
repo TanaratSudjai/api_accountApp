@@ -4,11 +4,13 @@ exports.getDashboard_forsubmition_transition = async (req, res) => {
   try {
     const query_transition_data = `
                                     SELECT
-                                        *
+                                        *,
+                                         account_type.account_type_total - account_type.account_type_sum AS account_type_difference
                                     FROM
                                         account_type
                                     WHERE 
-                                        account_type.account_type_sum - account_type.account_type_total <> 0 
+                                        account_type.account_type_sum - account_type.account_type_total <> 0
+
                                     `;
 
     const [result] = await sql.query(query_transition_data);

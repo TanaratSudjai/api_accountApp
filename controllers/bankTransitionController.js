@@ -334,6 +334,206 @@ exports.creditor_return_bankTransition = async (req, res) => {
   }
 };
 
+exports.debtor_borrow_bankTransition = async (req, res) => {
+  try {
+    const {
+      account_type_id,
+      account_type_from_id,
+      account_category_id,
+      account_transition_start,
+      account_transition_value: initialTransitionValue, // ใช้ตัวแปรที่แตกต่าง
+    } = req.body;
+
+    // คำสั่ง SQL เพื่อดึง account_type_sum
+    const readValueQuery = `SELECT account_type_total FROM account_type WHERE account_type_id = ?`;
+    const [readValueResult] = await sql.query(readValueQuery, [
+      account_type_id,
+    ]);
+
+    // ตรวจสอบว่าได้ค่า account_type_sum หรือไม่
+    if (readValueResult.length === 0) {
+      return res.status(404).json({ error: "Account type not found." });
+    }
+
+    const value_type = readValueResult[0].account_type_total;
+    //console.log("ใส่เเทนยอดเกิน " + value_type);
+
+    // กำหนดค่า account_transition_value
+    let account_transition_value = initialTransitionValue; // ใช้ let แทน const
+
+    // ถ้า account_transition_value มากกว่า account_type_sum
+    // if (account_transition_value > value_type) {
+    //   account_transition_value = value_type; // ตั้งค่า account_transition_value เป็น account_type_sum
+    // }
+
+    const maxQuery = `
+        SELECT COALESCE(MAX(account_transition_start), 0) + 1 AS max_start
+        FROM account_transition
+        WHERE account_transition_submit = 1
+      `;
+
+    const [maxResult] = await sql.query(maxQuery);
+    const newStartValue = maxResult[0].max_start || account_transition_start;
+
+    //  กรอง id ของ type เเละ from type id เพื่อ หา ต้น-ปลายทาง เเละ value ที่ทำรายการไป
+    const account_transition_value_transition = account_transition_value; //ยอดทำรายการ
+    const params_type_id_start = account_type_id; // id ของต้นทาง
+    const params_type_id_end = account_type_from_id; // id ของปลายทาง
+    console.log("start " + params_type_id_start);
+    console.log("end " + params_type_id_end);
+    console.log("values " + account_transition_value_transition);
+
+    // นำค่ามากรองเอา value ไป บวก ที่ปลายทาง เเละ หัก ลบต้นทาง
+
+    // ตัดยอดของ ต้นทาง
+    const query_value_process_strat_transition = `
+                                                  UPDATE account_type 
+                                                  SET account_type_total = account_type_total - ? 
+                                                  WHERE account_type_id = ? 
+                                                  `;
+    await sql.query(query_value_process_strat_transition, [
+      account_transition_value_transition,
+      params_type_id_start,
+      account_transition_value_transition,
+    ]);
+
+    // เติมยอดของ ปลายทาง
+    const query_value_process_end_transition = `UPDATE account_type 
+                                                SET account_type_total = account_type_total + ? 
+                                                WHERE account_type_id = ?
+                                                `;
+    await sql.query(query_value_process_end_transition, [
+      account_transition_value,
+      params_type_id_end,
+    ]);
+
+    const query = `
+        INSERT INTO account_transition 
+        (account_type_id, account_category_id, account_transition_value, account_transition_datetime, account_type_from_id, account_transition_start, account_category_from_id, account_type_cr_id, account_type_dr_id)
+        VALUES (?, ?, ?, NOW(), ?, ?, 6,?,?) 
+        ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
+      `;
+
+    await sql.query(query, [
+      account_type_id,
+      account_category_id,
+      account_transition_value,
+      account_type_from_id,
+      newStartValue,
+      account_type_id,
+      account_type_from_id,
+      account_transition_value,
+    ]);
+
+    res
+      .status(200)
+      .json({ message: "Account transition inserted/updated successfully." });
+  } catch (error) {
+    console.error("Error inserting account transition:", error);
+    res.status(500).json({ error: "Error inserting account transition." });
+  }
+};
+
+exports.debtor_return_bankTransition = async (req, res) => {
+  try {
+    const {
+      account_type_id,
+      account_type_from_id,
+      account_category_id,
+      account_transition_start,
+      account_transition_value: initialTransitionValue, // ใช้ตัวแปรที่แตกต่าง
+    } = req.body;
+
+    // คำสั่ง SQL เพื่อดึง account_type_sum
+    const readValueQuery = `SELECT account_type_total FROM account_type WHERE account_type_id = ?`;
+    const [readValueResult] = await sql.query(readValueQuery, [
+      account_type_id,
+    ]);
+
+    // ตรวจสอบว่าได้ค่า account_type_sum หรือไม่
+    if (readValueResult.length === 0) {
+      return res.status(404).json({ error: "Account type not found." });
+    }
+
+    const value_type = readValueResult[0].account_type_total;
+    //console.log("ใส่เเทนยอดเกิน " + value_type);
+
+    // กำหนดค่า account_transition_value
+    let account_transition_value = initialTransitionValue; // ใช้ let แทน const
+
+    // ถ้า account_transition_value มากกว่า account_type_sum
+    // if (account_transition_value > value_type) {
+    //   account_transition_value = value_type; // ตั้งค่า account_transition_value เป็น account_type_sum
+    // }
+
+    const maxQuery = `
+        SELECT COALESCE(MAX(account_transition_start), 0) + 1 AS max_start
+        FROM account_transition
+        WHERE account_transition_submit = 1
+      `;
+
+    const [maxResult] = await sql.query(maxQuery);
+    const newStartValue = maxResult[0].max_start || account_transition_start;
+
+    //  กรอง id ของ type เเละ from type id เพื่อ หา ต้น-ปลายทาง เเละ value ที่ทำรายการไป
+    const account_transition_value_transition = account_transition_value; //ยอดทำรายการ
+    const params_type_id_start = account_type_id; // id ของต้นทาง
+    const params_type_id_end = account_type_from_id; // id ของปลายทาง
+    console.log("start " + params_type_id_start);
+    console.log("end " + params_type_id_end);
+    console.log("values " + account_transition_value_transition);
+
+    // นำค่ามากรองเอา value ไป บวก ที่ปลายทาง เเละ หัก ลบต้นทาง
+
+    // ตัดยอดของ ต้นทาง
+    const query_value_process_strat_transition = `
+                                                  UPDATE account_type 
+                                                  SET account_type_total = account_type_total - ? 
+                                                  WHERE account_type_id = ? 
+                                                  `;
+    await sql.query(query_value_process_strat_transition, [
+      account_transition_value_transition,
+      params_type_id_start,
+      account_transition_value_transition,
+    ]);
+
+    // เติมยอดของ ปลายทาง
+    const query_value_process_end_transition = `UPDATE account_type 
+                                                SET account_type_total = account_type_total + ? 
+                                                WHERE account_type_id = ?
+                                                `;
+    await sql.query(query_value_process_end_transition, [
+      account_transition_value,
+      params_type_id_end,
+    ]);
+
+    const query = `
+        INSERT INTO account_transition 
+        (account_type_id, account_category_id, account_transition_value, account_transition_datetime, account_type_from_id, account_transition_start, account_category_from_id, account_type_cr_id, account_type_dr_id)
+        VALUES (?, ?, ?, NOW(), ?, ?, 1,?,?) 
+        ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
+      `;
+
+    await sql.query(query, [
+      account_type_id,
+      account_category_id,
+      account_transition_value,
+      account_type_from_id,
+      newStartValue,
+      account_type_id,
+      account_type_from_id,
+      account_transition_value,
+    ]);
+
+    res
+      .status(200)
+      .json({ message: "Account transition inserted/updated successfully." });
+  } catch (error) {
+    console.error("Error inserting account transition:", error);
+    res.status(500).json({ error: "Error inserting account transition." });
+  }
+};
+
 // bank debtor
 exports.delTransition_bank_objectvalue = async (req, res) => {
   const { account_transition_id } = req.params;
@@ -531,3 +731,151 @@ exports.delFor_return_bank = async (req, res) => {
     data: result_select_transition_latest[0],
   });
 };
+
+exports.delFor_Creditor = async (req, res) => {
+  const { account_transition_id } = req.params;
+
+  try {
+    const check_cat_and_cat_from_id = `
+    SELECT *
+    FROM account_transition
+    WHERE account_transition_id = ?;
+    `
+    const [rows] = await sql.query(check_cat_and_cat_from_id, [
+    account_transition_id,
+    ]);
+
+    const result = rows[0];
+
+    if (!result) {
+      return res.status(404).json({ error: "Transaction not found." });
+    }
+
+    if(result.account_category_id === 2 && result.account_category_from_id === 1){ //การยิมจากเจ้าหนี้
+      const return_value_of_creditor = `
+      UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
+      `
+      await sql.query(return_value_of_creditor, [
+        parseInt(result.account_transition_value),
+        result.account_type_cr_id,
+      ]);
+
+      const return_value_of_owner = `
+      UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
+      `
+      await sql.query(return_value_of_owner, [
+        parseInt(result.account_transition_value),
+        result.account_type_dr_id,
+      ]);
+
+      const delete_transition = `
+      DELETE FROM account_transition WHERE account_transition_id = ?;
+      `
+      await sql.query(delete_transition, [
+        account_transition_id,
+      ]);
+} if(result.account_category_id === 1 && result.account_category_from_id === 2){ //การคืนจากเจ้าหนี้
+      const return_value_of_creditor = `
+      UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
+      `
+      await sql.query(return_value_of_creditor, [
+        parseInt(result.account_transition_value),
+        result.account_type_cr_id,
+      ]);
+
+      const return_value_of_owner = `
+      UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
+      `
+      await sql.query(return_value_of_owner, [
+        parseInt(result.account_transition_value),
+        result.account_type_dr_id,
+      ]);
+
+      const delete_transition = `
+      DELETE FROM account_transition WHERE account_transition_id = ?;
+      `
+      await sql.query(delete_transition, [
+        account_transition_id,
+      ]);
+    }
+
+    res.status(200).json({ message: "Account transition deleted successfully." });
+}catch (error) {
+    console.error("Error deleting account transition:", error);
+    res.status(500).json({ error: "Error deleting account transition." });
+  }
+}
+
+exports.delFor_Debtor = async (req, res) => {
+  const { account_transition_id } = req.params;
+
+  try {
+    const check_cat_and_cat_from_id = `
+    SELECT *
+    FROM account_transition
+    WHERE account_transition_id = ?;
+    `
+    const [rows] = await sql.query(check_cat_and_cat_from_id, [
+    account_transition_id,
+    ]);
+
+    const result = rows[0];
+
+    if (!result) {
+      return res.status(404).json({ error: "Transaction not found." });
+    }
+
+    if(result.account_category_id === 1 && result.account_category_from_id === 6){ //การยิมจากเจ้าหนี้
+      const return_value_of_creditor = `
+      UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
+      `
+      await sql.query(return_value_of_creditor, [
+        parseInt(result.account_transition_value),
+        result.account_type_cr_id,
+      ]);
+
+      const return_value_of_owner = `
+      UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
+      `
+      await sql.query(return_value_of_owner, [
+        parseInt(result.account_transition_value),
+        result.account_type_dr_id,
+      ]);
+
+      const delete_transition = `
+      DELETE FROM account_transition WHERE account_transition_id = ?;
+      `
+      await sql.query(delete_transition, [
+        account_transition_id,
+      ]);
+} if(result.account_category_id === 6 && result.account_category_from_id === 1){ //การคืนจากเจ้าหนี้
+      const return_value_of_creditor = `
+      UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
+      `
+      await sql.query(return_value_of_creditor, [
+        parseInt(result.account_transition_value),
+        result.account_type_cr_id,
+      ]);
+
+      const return_value_of_owner = `
+      UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
+      `
+      await sql.query(return_value_of_owner, [
+        parseInt(result.account_transition_value),
+        result.account_type_dr_id,
+      ]);
+
+      const delete_transition = `
+      DELETE FROM account_transition WHERE account_transition_id = ?;
+      `
+      await sql.query(delete_transition, [
+        account_transition_id,
+      ]);
+    }
+
+    res.status(200).json({ message: "Account transition deleted successfully." });
+}catch (error) {
+    console.error("Error deleting account transition:", error);
+    res.status(500).json({ error: "Error deleting account transition." });
+  }
+}

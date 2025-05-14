@@ -295,7 +295,7 @@ exports.openAccountGroup_expense = async (req, res) => {
       account_type_from_id,
     ]);
 
-    const history_sum = `UPDATE account_type SET account_type_total = ? WHERE account_type_id = ?`;
+    const history_sum = `UPDATE account_type SET account_type_total = account_type_total + ? WHERE account_type_id = ?`;
     await sql.query(history_sum, [account_transition_value, account_type_id]);
     res
       .status(200)
@@ -498,6 +498,83 @@ exports.get_Bank_Transition = async (req, res) => {
   }
 };
 
+exports.get_Creditor_Transition = async (req, res) => {
+  const user_auth = getUserFromToken(req);
+  const user_id = user_auth.account_user_id;
+  try {
+    const query = `
+      SELECT
+        \`at\`.account_type_id, 
+        \`at\`.account_type_name, 
+        at_trans.account_type_from_id, 
+        at_trans.account_transition_id, 
+        at_trans.account_type_id, 
+        at_trans.account_transition_value, 
+        at_trans.account_category_id, 
+        at_trans.account_category_from_id, 
+        at_from.account_type_name AS account_type_from_name
+      FROM
+        account_transition AS at_trans
+        INNER JOIN account_type AS \`at\` ON at_trans.account_type_id = \`at\`.account_type_id
+        INNER JOIN account_type AS at_from ON at_trans.account_type_from_id = at_from.account_type_id
+        INNER JOIN account_user
+        INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+          AND \`at\`.account_group_id = account_group.account_group_id
+      WHERE
+        at_trans.account_category_id IN (?, ?)
+        AND at_trans.account_category_from_id IN (?, ?)
+        AND account_group.account_user_id = ? 
+      ORDER BY
+        at_trans.account_transition_id DESC
+    `;
+    
+    const [data_transition_bank] = await sql.query(query, [2, 1, 2, 1, user_id]);
+
+    res.status(200).json({ data_transition_bank });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+};
+
+exports.get_Debtor_Transition = async (req, res) => {
+  const user_auth = getUserFromToken(req);
+  const user_id = user_auth.account_user_id;
+  try {
+    const query = `
+      SELECT
+        \`at\`.account_type_id, 
+        \`at\`.account_type_name, 
+        at_trans.account_type_from_id, 
+        at_trans.account_transition_id, 
+        at_trans.account_type_id, 
+        at_trans.account_transition_value, 
+        at_trans.account_category_id, 
+        at_trans.account_category_from_id, 
+        at_from.account_type_name AS account_type_from_name
+      FROM
+        account_transition AS at_trans
+        INNER JOIN account_type AS \`at\` ON at_trans.account_type_id = \`at\`.account_type_id
+        INNER JOIN account_type AS at_from ON at_trans.account_type_from_id = at_from.account_type_id
+        INNER JOIN account_user
+        INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+          AND \`at\`.account_group_id = account_group.account_group_id
+      WHERE
+        at_trans.account_category_id IN (?, ?)
+        AND at_trans.account_category_from_id IN (?, ?)
+        AND account_group.account_user_id = ? 
+      ORDER BY
+        at_trans.account_transition_id DESC
+    `;
+    
+    const [data_transition_bank] = await sql.query(query, [6, 1, 6, 1, user_id]);
+
+    res.status(200).json({ data_transition_bank });
+  } catch (err) {
+    res.status(500).json({ err: err.message });
+  }
+};
+
+
 exports.delete_transition_expense = async (req, res) => {
   const { account_transition_id } = req.params;
   const { account_transition_value } = req.body;
@@ -539,8 +616,8 @@ exports.delete_transition_expense = async (req, res) => {
       const type_type_id_reuse_value = res_type_type_id[0].account_type_id;
 
       const update_type_total =
-        "UPDATE account_type SET account_type_total = account_type_total = 0 WHERE account_type_id  = ?";
-      await sql.query(update_type_total, [type_type_id_reuse_value]);
+        "UPDATE account_type SET account_type_total = account_type_total - ? WHERE account_type_id  = ?";
+      await sql.query(update_type_total, [account_transition_value,type_type_id_reuse_value]);
 
       const query = `DELETE FROM account_transition WHERE account_transition_id = ?`;
       const [result, err] = await sql.query(query, [account_transition_id]);

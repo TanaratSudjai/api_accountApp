@@ -428,6 +428,7 @@ exports.getGroupOneTransition = async (req, res) => {
         account_group.account_category_id in (1,6,7) AND
         account_transition_value > 0 AND
         account_transition.account_transition_submit IS NULL AND
+        account_transition.account_category_id IS NULL AND
         account_group.account_user_id = ? 
         `,
       [account_user_id]
