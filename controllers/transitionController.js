@@ -39,7 +39,12 @@ exports.openAccount = async (req, res) => {
             SET account_transition_value = ?, account_transition_datetime = NOW(), account_type_dr_id = ?
             WHERE account_type_id = ? AND account_transition_start = ?
           `;
-          values = [account_transition_value, account_type_id, account_type_id, newStartValue];
+          values = [
+            account_transition_value,
+            account_type_id,
+            account_type_id,
+            newStartValue,
+          ];
           break;
         case 2:
         case 3:
@@ -48,7 +53,12 @@ exports.openAccount = async (req, res) => {
             SET account_transition_value = ?, account_transition_datetime = NOW(), account_type_cr_id = ?
             WHERE account_type_id = ? AND account_transition_start = ?
           `;
-          values = [account_transition_value, account_type_id, account_type_id, newStartValue];
+          values = [
+            account_transition_value,
+            account_type_id,
+            account_type_id,
+            newStartValue,
+          ];
           break;
         default:
           return res.status(400).json({ error: "Invalid account category." });
@@ -64,7 +74,12 @@ exports.openAccount = async (req, res) => {
             (account_type_id, account_transition_value, account_transition_datetime, account_transition_start, account_type_dr_id)
             VALUES (?, ?, NOW(), ?, ?)
           `;
-          values = [account_type_id, account_transition_value, newStartValue, account_type_id];
+          values = [
+            account_type_id,
+            account_transition_value,
+            newStartValue,
+            account_type_id,
+          ];
           break;
         case 2:
         case 3:
@@ -73,7 +88,12 @@ exports.openAccount = async (req, res) => {
             (account_type_id, account_transition_value, account_transition_datetime, account_transition_start, account_type_cr_id)
             VALUES (?, ?, NOW(), ?, ?)
           `;
-          values = [account_type_id, account_transition_value, newStartValue, account_type_id];
+          values = [
+            account_type_id,
+            account_transition_value,
+            newStartValue,
+            account_type_id,
+          ];
           break;
         default:
           return res.status(400).json({ error: "Invalid account category." });
@@ -83,11 +103,19 @@ exports.openAccount = async (req, res) => {
     // Step 3: Execute insert or update
     await sql.query(query, values);
 
-    res.status(200).json({ message: existing.length > 0 ? "Account transition updated." : "Account transition inserted." });
-
+    res
+      .status(200)
+      .json({
+        message:
+          existing.length > 0
+            ? "Account transition updated."
+            : "Account transition inserted.",
+      });
   } catch (error) {
     console.error("Error inserting/updating account transition:", error);
-    res.status(500).json({ error: "Server error processing account transition." });
+    res
+      .status(500)
+      .json({ error: "Server error processing account transition." });
   }
 };
 
@@ -135,23 +163,55 @@ exports.sumAccount = async (req, res) => {
       WHERE account_transition_submit = 1
     `;
 
+    const get_income = `
+        SELECT account_transition_value FROM account_transition
+        WHERE account_transition_submit IS NULL AND account_category_id = 4
+      `;
+
+    const [incomeRows] = await sql.query(get_income);
+
+    const get_expense = `
+        SELECT account_transition_value FROM account_transition
+        WHERE account_transition_submit IS NULL AND account_category_id = 5
+      `;
+
+    const [expenseRows] = await sql.query(get_expense);
+
+    // ใช้ 0 ถ้าไม่มีรายได้ล่าสุด
+    const incomeValue =
+      incomeRows.length > 0 ? incomeRows[0].account_transition_value : 0;
+
+    const expenseValue = 
+      expenseRows.length > 0 ? expenseRows[0].account_transition_value : 0;
+
+    // หา max start value
     const [maxResult] = await sql.query(maxQuery);
     const newStartValue = maxResult[0].max_start;
 
+    // ทำการ INSERT
     const query = `
-        INSERT INTO account_transition 
-        (
+      INSERT INTO account_transition 
+      (
         account_type_id, 
         account_transition_value, 
         account_transition_datetime, 
         account_transition_start
-        )
-        VALUES (?, ?, NOW(), ?) 
-      `;
+      )
+      VALUES (?, ?, NOW(), ?)
+    `;
+
+    const accountValue = parseInt(account_transition_value);
+    const incomeVal = parseInt(incomeValue);
+    const expenseVal = parseInt(expenseValue);
+
+    // ถ้า accountValue หรือ incomeVal เป็น NaN ให้ใช้ 0 แทน
+    const safeAccountValue = isNaN(accountValue) ? 0 : accountValue;
+    const safeIncomeValue = isNaN(incomeVal) ? 0 : incomeVal;
+    const safeExpenseValue = isNaN(expenseVal) ? 0 : expenseVal;
 
     await sql.query(query, [
       account_type_id,
-      account_transition_value,
+      safeAccountValue + safeIncomeValue - safeExpenseValue,
       newStartValue,
     ]);
 
@@ -166,43 +226,33 @@ exports.sumAccount = async (req, res) => {
 
 exports.sumbitTransition = async (req, res) => {
   try {
-    const query = `
-      UPDATE account_transition
-      SET account_transition_submit = 1
-      WHERE account_transition.account_type_from_id IS NULL
-      AND account_transition.account_category_from_id IS NULL;
-    `;
-    await sql.query(query);
+    // Submit all transitions
+    await sql.query(`UPDATE account_transition SET account_transition_submit = 1`);
 
-    const account_type_id_query = `SELECT
-                                        at.account_type_id
-                                      FROM
-                                          account_transition AS at
-                                      JOIN (
-                                          SELECT 
-                                              MAX(account_transition_id) AS latest_id
-                                          FROM 
-                                              account_transition
-                                      ) AS latest ON at.account_transition_id = latest.latest_id
-                                      JOIN
-                                          account_type AS act ON at.account_type_id = act.account_type_id
-                                      GROUP BY 
-                                          act.account_type_name, at.account_type_id;
-          `;
+    // Get latest account_type_id used in transition
+    const account_type_id_query = `
+      SELECT at.account_type_id
+      FROM account_transition AS at
+      JOIN (
+        SELECT MAX(account_transition_id) AS latest_id FROM account_transition
+      ) AS latest ON at.account_transition_id = latest.latest_id
+      LIMIT 1;
+    `;
     const [results_type_id] = await sql.query(account_type_id_query);
-    const account_type_cr_id = results_type_id[0].account_type_id;
+    const account_type_cr_id = results_type_id[0]?.account_type_id;
 
-    console.log("account_type_cr_id", account_type_cr_id);
+    if (!account_type_cr_id) {
+      return res.status(400).json({ error: "No latest account_type_id found." });
+    }
 
-    const submit_cr_type_query = `
-      UPDATE account_transition
-      SET account_type_cr_id = ?
-      WHERE account_type_id = ?;
-    `;
-    await sql.query(submit_cr_type_query, [
-      account_type_cr_id,
-      account_type_cr_id,
-    ]);
+    // Update account_type_cr_id for the transitions
+    await sql.query(
+      `UPDATE account_transition SET account_type_cr_id = ? WHERE account_type_id = ?`,
+      [account_type_cr_id, account_type_cr_id]
+    );
+
+    // Calculate sums per account_type
+    //       
 
     const query_sumvalueType = `
       SELECT
@@ -212,26 +262,58 @@ exports.sumbitTransition = async (req, res) => {
       FROM
         account_type
       INNER JOIN
-        account_transition
-      ON 
-        account_type.account_type_id = account_transition.account_type_id
-      
+        account_transition ON account_type.account_type_id = account_transition.account_type_id
       GROUP BY account_type.account_type_id
     `;
-    const [results] = await sql.query(query_sumvalueType);
+    const [results] = await sql.query(query_sumvalueType, [latestStart]);
 
-    const updateQuery =
-      "UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?";
-
-    // loop id มา update
+    // Update each account_type based on category
     for (const result of results) {
-      // รับ ตัวแปล ที่เป็น Database ได้ แบบนี้ กูพึ่งรู้
       const { SUMGROUP_TYPE, account_type_id } = result;
-      await sql.query(updateQuery, [
-        SUMGROUP_TYPE,
-        SUMGROUP_TYPE,
-        account_type_id,
-      ]);
+
+      // Check account_category_id
+      const [categoryResult] = await sql.query(
+        `SELECT account_category_id, account_type_total FROM account_type WHERE account_type_id = ?`,
+        [account_type_id]
+      );
+
+      const [checkCategory] = await sql.query(
+        `SELECT account_type_from_id,account_category_from_id FROM account_transition WHERE account_type_id = ?`,
+        [account_type_id]
+      );
+      
+      console.log(account_type_id);
+      console.log(checkCategory[0]);
+
+      const { account_category_id, account_type_total } = categoryResult[0] || {};
+      const { account_type_from_id, account_category_from_id } = checkCategory[0] || {};
+
+      // if(account_category === 1 && account_from_category === 6){
+      //   await sql.query(
+      //     `UPDATE account_type SET account_type_sum = account_type_total WHERE account_type_from_id = ?`,
+      //     [account_type_from_id]
+      //   );
+      // }
+
+        if (account_category_id === 3) {
+        console.log("IF: category_id === 3");
+        await sql.query(
+          `UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?`,
+          [SUMGROUP_TYPE, SUMGROUP_TYPE, account_type_id]
+        );
+      } if (account_type_from_id === null && account_category_from_id === null && account_category_id != 3) {
+        console.log("IF: total == 0");
+        await sql.query(
+          `UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?`,
+          [SUMGROUP_TYPE, SUMGROUP_TYPE, account_type_id]
+        );
+      }else {
+        console.log("ELSE");
+        await sql.query(
+          `UPDATE account_type SET account_type_sum = account_type_total WHERE account_type_id = ?`,
+          [account_type_id]
+        );
+      }
     }
 
     res.status(200).json({
@@ -242,6 +324,7 @@ exports.sumbitTransition = async (req, res) => {
     res.status(500).json({ error: "Error inserting account transition." });
   }
 };
+
 
 // debug getTransaction
 exports.getTransaction = async (req, res) => {

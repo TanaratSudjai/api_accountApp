@@ -335,12 +335,12 @@ exports.openAccountGroup_income = async (req, res) => {
     await sql.query(query, [
       account_type_id,
       account_category_id,
-      account_transition_value,
+      parseInt(account_transition_value) ,
       account_type_from_id,
       newStartValue,
       account_type_id,
       account_type_from_id,
-      account_transition_value,
+      parseInt(account_transition_value) ,
     ]);
 
     const update_type_total =
@@ -348,11 +348,11 @@ exports.openAccountGroup_income = async (req, res) => {
     // loop id มา update
 
     await sql.query(update_type_total, [
-      account_transition_value,
+      parseInt(account_transition_value),
       account_type_from_id,
     ]);
-    const history_sum = `UPDATE account_type SET account_type_total = ? WHERE account_type_id = ?`;
-    await sql.query(history_sum, [account_transition_value, account_type_id]);
+    const history_sum = `UPDATE account_type SET account_type_total = account_type_total + ? WHERE account_type_id = ?`;
+    await sql.query(history_sum, [parseInt(account_transition_value), account_type_id]);
     res
       .status(200)
       .json({ message: "Account transition inserted/updated successfully." });
