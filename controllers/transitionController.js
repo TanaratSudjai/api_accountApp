@@ -168,7 +168,9 @@ exports.sumbitTransition = async (req, res) => {
   try {
     const query = `
       UPDATE account_transition
-      SET account_transition_submit = 1;
+      SET account_transition_submit = 1
+      WHERE account_transition.account_type_from_id IS NULL
+      AND account_transition.account_category_from_id IS NULL;
     `;
     await sql.query(query);
 
@@ -456,6 +458,8 @@ INNER JOIN account_group
 WHERE 
     account_group.account_category_id IN (1,6,7) 
     AND account_transition.account_transition_submit IS NULL
+    AND account_transition.account_type_from_id IS NULL
+    AND account_transition.account_category_from_id IS NULL
     AND account_group.account_user_id = ?;
     `,
       [account_user_id]
@@ -488,6 +492,8 @@ exports.getSumValueGroupTwo = async (req, res) => {
       WHERE
           account_group.account_category_id = 2 AND 
           account_transition.account_transition_submit IS NULL AND
+          account_transition.account_type_from_id IS NULL AND
+          account_transition.account_category_from_id IS NULL AND
           account_group.account_user_id = ? 
       GROUP BY
           account_group.account_category_id;
