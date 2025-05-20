@@ -122,7 +122,6 @@ exports.openAccount = async (req, res) => {
   }
 };
 
-
 exports.sumAccount = async (req, res) => {
   try {
     const { account_transition_value } = req.body;
@@ -172,7 +171,7 @@ exports.sumAccount = async (req, res) => {
     const get_income = `
       SELECT account_transition_value 
       FROM account_transition
-      WHERE account_transition_submit IS NULL AND account_category_id = 4
+      WHERE account_transition_submit IS NULL AND account_category_id = 4 
     `;
     const [incomeRows] = await sql.query(get_income);
 
@@ -339,26 +338,32 @@ exports.sumbitTransition = async (req, res) => {
           `UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?`,
           [SUMGROUP_TYPE, SUMGROUP_TYPE, account_type_id]
         );
-      } else if (!wasUsedAsSource && account_category_id !== 3) {
-        // First-time insert
-        await sql.query(
-          `UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?`,
-          [SUMGROUP_TYPE, SUMGROUP_TYPE, account_type_id]
-        );
-      } else {
-        console.log("ELSE: copy total to sum");
+      // } else if (!wasUsedAsSource && account_category_id !== 3) {
+      //   // First-time insert
+      //   await sql.query(
+      //     `UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?`,
+      //     [SUMGROUP_TYPE, SUMGROUP_TYPE, account_type_id]
+      //   );
+      // } else {
+      //   console.log("ELSE: copy total to sum");
 
-        const matched = account_type_total_all.find(
-          (item) => item.account_type_id === account_type_id
-        );
-        const totalToUse = matched ? matched.account_type_total : 0;
+      //   const matched = account_type_total_all.find(
+      //     (item) => item.account_type_id === account_type_id
+      //   );
+      //   const totalToUse = matched ? matched.account_type_total : 0;
 
-        await sql.query(
-          `UPDATE account_type SET account_type_sum = ? WHERE account_type_id = ?`,
-          [totalToUse, account_type_id]
-        );
-      }
+      //   await sql.query(
+      //     `UPDATE account_type SET account_type_sum = ? WHERE account_type_id = ?`,
+      //     [totalToUse, account_type_id]
+      //   );
+      // }
     }
+  }
+
+    await sql.query(
+      `UPDATE account_type SET account_type_sum = account_type_total WHERE account_category_id != 3`
+    );
+
 
     res.status(200).json({
       message: "Account transition submitted and sums updated successfully.",
