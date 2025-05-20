@@ -265,7 +265,7 @@ exports.sumbitTransition = async (req, res) => {
         account_transition ON account_type.account_type_id = account_transition.account_type_id
       GROUP BY account_type.account_type_id
     `;
-    const [results] = await sql.query(query_sumvalueType, [latestStart]);
+    const [results] = await sql.query(query_sumvalueType);
 
     // Update each account_type based on category
     for (const result of results) {
