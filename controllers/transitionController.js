@@ -225,6 +225,9 @@ exports.sumAccount = async (req, res) => {
 
 
 exports.sumbitTransition = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
+
   try {
     // Submit all transitions
     await sql.query(
@@ -292,72 +295,98 @@ exports.sumbitTransition = async (req, res) => {
 
     const updatedAccountTypeIds = new Set();
 
+    const get_lasted_account_transition = `
+      SELECT 
+          account_transition.account_transition_id,
+          account_transition.account_type_id,
+          account_transition.account_transition_value 
+      FROM
+          account_user
+          INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+          INNER JOIN account_type ON account_group.account_group_id = account_type.account_group_id
+          INNER JOIN account_transition ON account_type.account_type_id = account_transition.account_type_id
+      WHERE
+          account_user.account_user_id = ?
+          AND account_group.account_category_id = 3
+      ORDER BY
+          account_transition.account_transition_id DESC
+      LIMIT 1;
+    `;
+
+    const [lasted_account_transition] = await sql.query(
+      get_lasted_account_transition,
+      [account_user_id]
+    );
+
+    const { account_transition_value, account_type_id } = lasted_account_transition[0] || {};
+
+    await sql.query(
+      `UPDATE account_type SET account_type_sum = account_type_sum + ?, account_type_total = account_type_total + ? WHERE account_type_id = ?`,
+      [account_transition_value, account_transition_value, account_type_id]
+    );
+
     for (const result of results) {
-      const { SUMGROUP_TYPE, account_type_id } = result;
+    //   const { SUMGROUP_TYPE, account_type_id } = result;
 
-      // Avoid processing duplicate account_type_id
-      if (updatedAccountTypeIds.has(account_type_id)) continue;
-      updatedAccountTypeIds.add(account_type_id);
+    //   // Avoid processing duplicate account_type_id
+    //   if (updatedAccountTypeIds.has(account_type_id)) continue;
+    //   updatedAccountTypeIds.add(account_type_id);
 
-      const [categoryResult] = await sql.query(
-        `SELECT account_category_id, account_type_total FROM account_type WHERE account_type_id = ?`,
-        [account_type_id]
-      );
+    //   const [categoryResult] = await sql.query(
+    //     `SELECT account_category_id, account_type_total FROM account_type WHERE account_type_id = ?`,
+    //     [account_type_id]
+    //   );
 
-      const [checkCategory] = await sql.query(
-        `SELECT account_type_from_id, account_category_from_id
-     FROM account_transition
-     WHERE account_type_id = ?
-     LIMIT 1`,
-        [account_type_id]
-      );
+    //   const [checkCategory] = await sql.query(
+    //     `SELECT account_type_from_id, account_category_from_id
+    //  FROM account_transition
+    //  WHERE account_type_id = ?
+    //  LIMIT 1`,
+    //     [account_type_id]
+    //   );
 
-      const { account_category_id, account_type_total } =
-        categoryResult[0] || {};
-      const { account_type_from_id, account_category_from_id } =
-        checkCategory[0] || {};
+    //   const { account_category_id, account_type_total } =
+    //     categoryResult[0] || {};
+    //   const { account_type_from_id, account_category_from_id } =
+    //     checkCategory[0] || {};
 
-      console.log("account_type_id:", account_type_id);
-      console.log("account_category_id:", account_category_id);
-      console.log("account_type_from_id:", account_type_from_id);
-      console.log("account_category_from_id:", account_category_from_id);
+    //   const [isFromInOther] = await sql.query(
+    //     `
+    //     SELECT 1 FROM account_transition
+    //     WHERE account_type_from_id = ? LIMIT 1
+    //   `,
+    //     [account_type_id]
+    //   );
 
-      const [isFromInOther] = await sql.query(
-        `
-        SELECT 1 FROM account_transition
-        WHERE account_type_from_id = ? LIMIT 1
-      `,
-        [account_type_id]
-      );
+    //   const wasUsedAsSource = isFromInOther.length > 0;
+    //   console.log(SUMGROUP_TYPE);
 
-      const wasUsedAsSource = isFromInOther.length > 0;
+    //   if (account_category_id === 3) {
+    //     console.log("IF: category_id === 3");
+    //     await sql.query(
+    //       `UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?`,
+    //       [SUMGROUP_TYPE, SUMGROUP_TYPE, account_type_id]
+    //     );
+    //   // } else if (!wasUsedAsSource && account_category_id !== 3) {
+    //   //   // First-time insert
+    //   //   await sql.query(
+    //   //     `UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?`,
+    //   //     [SUMGROUP_TYPE, SUMGROUP_TYPE, account_type_id]
+    //   //   );
+    //   // } else {
+    //   //   console.log("ELSE: copy total to sum");
 
-      if (account_category_id === 3) {
-        console.log("IF: category_id === 3");
-        await sql.query(
-          `UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?`,
-          [SUMGROUP_TYPE, SUMGROUP_TYPE, account_type_id]
-        );
-      // } else if (!wasUsedAsSource && account_category_id !== 3) {
-      //   // First-time insert
-      //   await sql.query(
-      //     `UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?`,
-      //     [SUMGROUP_TYPE, SUMGROUP_TYPE, account_type_id]
-      //   );
-      // } else {
-      //   console.log("ELSE: copy total to sum");
+    //   //   const matched = account_type_total_all.find(
+    //   //     (item) => item.account_type_id === account_type_id
+    //   //   );
+    //   //   const totalToUse = matched ? matched.account_type_total : 0;
 
-      //   const matched = account_type_total_all.find(
-      //     (item) => item.account_type_id === account_type_id
-      //   );
-      //   const totalToUse = matched ? matched.account_type_total : 0;
-
-      //   await sql.query(
-      //     `UPDATE account_type SET account_type_sum = ? WHERE account_type_id = ?`,
-      //     [totalToUse, account_type_id]
-      //   );
-      // }
-    }
+    //   //   await sql.query(
+    //   //     `UPDATE account_type SET account_type_sum = ? WHERE account_type_id = ?`,
+    //   //     [totalToUse, account_type_id]
+    //   //   );
+    //   // }
+    // }
   }
 
     await sql.query(
