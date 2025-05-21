@@ -363,6 +363,8 @@ exports.openAccountGroup_income = async (req, res) => {
 };
 
 exports.get_expense_transition = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
   try {
     const [res_transitiongroup] = await sql.query(`
       SELECT
@@ -384,11 +386,16 @@ exports.get_expense_transition = async (req, res) => {
         account_group
         ON 
           account_type.account_group_id = account_group.account_group_id
+        INNER JOIN
+        account_user
+        ON 
+          account_group.account_user_id = account_user.account_user_id
       WHERE
         account_group.account_category_id = 5
         AND (account_transition.account_transition_submit = 0 OR
              account_transition.account_transition_submit IS NULL)
-    `);
+        AND account_user.account_user_id = ?
+    `,[account_user_id]);
     res.json(res_transitiongroup);
   } catch (error) {
     res.json({
@@ -399,6 +406,8 @@ exports.get_expense_transition = async (req, res) => {
 };
 
 exports.get_income_transition = async (req, res) => {
+   const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
   try {
     const [res_transitiongroup] = await sql.query(`
       SELECT
@@ -420,11 +429,15 @@ exports.get_income_transition = async (req, res) => {
         account_group
         ON 
           account_type.account_group_id = account_group.account_group_id
+        INNER JOIN
+        account_user
+        ON account_group.account_user_id = account_user.account_user_id
       WHERE
         account_group.account_category_id = 4
         AND (account_transition.account_transition_submit = 0 OR
              account_transition.account_transition_submit IS NULL)
-    `);
+        AND account_user.account_user_id = ?
+    `,[account_user_id]);
     res.json(res_transitiongroup);
   } catch (error) {
     res.json({

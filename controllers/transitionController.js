@@ -169,18 +169,38 @@ exports.sumAccount = async (req, res) => {
     const newStartValue = maxResult[0].max_start;
 
     const get_income = `
-      SELECT account_transition_value 
-      FROM account_transition
-      WHERE account_transition_submit IS NULL AND account_category_id = 4 
+      SELECT 
+          account_transition.account_transition_id,
+          account_transition.account_type_id,
+          account_transition.account_transition_value 
+      FROM
+          account_user
+          INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+          INNER JOIN account_type ON account_group.account_group_id = account_type.account_group_id
+          INNER JOIN account_transition ON account_type.account_type_id = account_transition.account_type_id
+      WHERE
+          account_user.account_user_id = ?
+          AND account_transition.account_transition_submit IS NULL
+          AND account_transition.account_category_id = 4 
     `;
-    const [incomeRows] = await sql.query(get_income);
+    const [incomeRows] = await sql.query(get_income, [account_user_id]);
 
     const get_expense = `
-      SELECT account_transition_value 
-      FROM account_transition
-      WHERE account_transition_submit IS NULL AND account_category_id = 5
+      SELECT 
+          account_transition.account_transition_id,
+          account_transition.account_type_id,
+          account_transition.account_transition_value 
+      FROM
+          account_user
+          INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+          INNER JOIN account_type ON account_group.account_group_id = account_type.account_group_id
+          INNER JOIN account_transition ON account_type.account_type_id = account_transition.account_type_id
+      WHERE
+          account_user.account_user_id = ?
+          AND account_transition.account_transition_submit IS NULL
+          AND account_transition.account_category_id = 5
     `;
-    const [expenseRows] = await sql.query(get_expense);
+    const [expenseRows] = await sql.query(get_expense, [account_user_id]);
 
     const totalIncome = incomeRows.reduce(
       (sum, row) => sum + (parseFloat(row.account_transition_value) || 0),
@@ -231,7 +251,14 @@ exports.sumbitTransition = async (req, res) => {
   try {
     // Submit all transitions
     await sql.query(
-      `UPDATE account_transition SET account_transition_submit = 1`
+      `UPDATE account_transition 
+      JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+      JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+      SET account_transition_submit = 1 
+      WHERE
+          account_user.account_user_id = ? 
+      `,[account_user_id]
     );
 
     // Get latest account_type_id used in transition
@@ -254,8 +281,13 @@ exports.sumbitTransition = async (req, res) => {
 
     // Update account_type_cr_id for the transitions
     await sql.query(
-      `UPDATE account_transition SET account_type_cr_id = ? WHERE account_type_id = ?`,
-      [account_type_cr_id, account_type_cr_id]
+      `UPDATE account_transition 
+      JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+      JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+      SET account_transition.account_type_cr_id = ? 
+      WHERE account_transition.account_type_id = ? AND account_user.account_user_id = ? `,
+      [account_type_cr_id, account_type_cr_id, account_user_id]
     );
 
     // const [latestStartRow] = await sql.query(`
@@ -271,29 +303,29 @@ exports.sumbitTransition = async (req, res) => {
     //     return res.status(400).json({ error: "No unsubmitted transitions found." });
     // }
 
-    const query_sumvalueType = `
-      SELECT
-        account_type.account_type_name, 
-        account_transition.account_type_id, 
-        SUM(account_transition.account_transition_value) AS SUMGROUP_TYPE
-      FROM
-        account_type
-      INNER JOIN
-        account_transition ON account_type.account_type_id = account_transition.account_type_id
+    // const query_sumvalueType = `
+    //   SELECT
+    //     account_type.account_type_name, 
+    //     account_transition.account_type_id, 
+    //     SUM(account_transition.account_transition_value) AS SUMGROUP_TYPE
+    //   FROM
+    //     account_type
+    //   INNER JOIN
+    //     account_transition ON account_type.account_type_id = account_transition.account_type_id
 
-      GROUP BY account_type.account_type_id
-    `;
-    const [results] = await sql.query(query_sumvalueType);
+    //   GROUP BY account_type.account_type_id
+    // `;
+    // const [results] = await sql.query(query_sumvalueType);
 
-    // Get existing totals (exclude category_id = 3)
-    const get_account_type_total = `
-      SELECT account_type_id, account_type_total
-      FROM account_type
-      WHERE account_category_id != 3
-    `;
-    const [account_type_total_all] = await sql.query(get_account_type_total);
+    // // Get existing totals (exclude category_id = 3)
+    // const get_account_type_total = `
+    //   SELECT account_type_id, account_type_total
+    //   FROM account_type
+    //   WHERE account_category_id != 3
+    // `;
+    // const [account_type_total_all] = await sql.query(get_account_type_total);
 
-    const updatedAccountTypeIds = new Set();
+    // const updatedAccountTypeIds = new Set();
 
     const get_lasted_account_transition = `
       SELECT 
@@ -325,7 +357,7 @@ exports.sumbitTransition = async (req, res) => {
       [account_transition_value, account_transition_value, account_type_id]
     );
 
-    for (const result of results) {
+    // for (const result of results) {
     //   const { SUMGROUP_TYPE, account_type_id } = result;
 
     //   // Avoid processing duplicate account_type_id
@@ -387,10 +419,15 @@ exports.sumbitTransition = async (req, res) => {
     //   //   );
     //   // }
     // }
-  }
+  // }
 
     await sql.query(
-      `UPDATE account_type SET account_type_sum = account_type_total WHERE account_category_id != 3`
+      `UPDATE account_type 
+      JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+      SET account_type.account_type_sum = account_type.account_type_total 
+      WHERE account_type.account_category_id != 3 AND account_user.account_user_id = ?`,
+      [account_user_id]
     );
 
 
@@ -551,7 +588,9 @@ exports.getGroupTwoTransition = async (req, res) => {
         account_group.account_category_id = 2 AND
         account_transition_value > 0 AND
         account_transition.account_transition_submit IS NULL AND
-        account_group.account_user_id = ? 
+        account_group.account_user_id = ? AND
+        account_transition.account_category_from_id IS NULL AND
+        account_transition.account_type_from_id IS NULL
         `,
       [account_user_id]
     );
@@ -591,7 +630,9 @@ exports.getGroupOneTransition = async (req, res) => {
         account_transition_value > 0 AND
         account_transition.account_transition_submit IS NULL AND
         account_transition.account_category_id IS NULL AND
-        account_group.account_user_id = ? 
+        account_group.account_user_id = ? AND
+        account_transition.account_category_from_id IS NULL AND
+        account_transition.account_type_from_id IS NULL
         `,
       [account_user_id]
     );
