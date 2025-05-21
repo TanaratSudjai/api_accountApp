@@ -152,36 +152,38 @@ exports.GetAccountTypeCount_groupID = async (req, res) => {
   const user = getUserFromToken(req);
   const account_user_id = user.account_user_id;
 
-  console.log(
-    "category : ",
-    account_category_id,
-    " user id :",
-    account_user_id
-  );
+  console.log("category : ", account_category_id, " user id :", account_user_id);
 
   try {
     const query = `
-    SELECT ag.account_group_id ,ag.account_group_name, at.account_type_important,COUNT(at.account_type_id) AS type_count
-    FROM account_group ag
-    LEFT JOIN account_type at ON ag.account_group_id = at.account_group_id
-    WHERE ag.account_category_id = ? AND ag.account_user_id = ?
-    GROUP BY ag.account_group_id;
-  `;
+      SELECT 
+        ag.account_group_id, 
+        ag.account_group_name, 
+        at.account_type_important,
+        COUNT(at.account_type_id) AS type_count
+      FROM account_group ag
+      LEFT JOIN account_type at ON ag.account_group_id = at.account_group_id
+      WHERE ag.account_category_id = ? AND ag.account_user_id = ?
+      GROUP BY ag.account_group_id, ag.account_group_name, at.account_type_important;
+    `;
 
     const [count_type_at_group] = await sql.query(query, [
       account_category_id,
       account_user_id,
     ]);
+
     console.log(count_type_at_group);
 
-    res.status(201).json({
-      message: "Group geting successfully",
+    res.status(200).json({
+      message: "Group retrieved successfully",
       count_type_at_group,
     });
   } catch (err) {
+    console.error("SQL Error:", err);
     res.status(500).json({
-      massage: "Error for geting account!",
+      message: "Error fetching account data!",
       error: err.message,
     });
   }
 };
+

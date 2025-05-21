@@ -1,17 +1,17 @@
 /*
  Navicat Premium Dump SQL
 
- Source Server         : Accounting
+ Source Server         : db_account
  Source Server Type    : MySQL
- Source Server Version : 100432 (10.4.32-MariaDB)
- Source Host           : localhost:3306
- Source Schema         : u713302023_accounting
+ Source Server Version : 80100 (8.1.0)
+ Source Host           : localhost:3366
+ Source Schema         : accounting
 
  Target Server Type    : MySQL
- Target Server Version : 100432 (10.4.32-MariaDB)
+ Target Server Version : 80100 (8.1.0)
  File Encoding         : 65001
 
- Date: 27/03/2025 20:48:04
+ Date: 02/04/2025 16:18:02
 */
 
 SET NAMES utf8mb4;
@@ -97,59 +97,60 @@ DROP TABLE IF EXISTS `account_icon`;
 CREATE TABLE `account_icon`  (
   `account_icon_id` int NOT NULL,
   `account_icon_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `account_icon_category` int NULL DEFAULT NULL,
   PRIMARY KEY (`account_icon_id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of account_icon
 -- ----------------------------
-INSERT INTO `account_icon` VALUES (1, '1738697574598.png');
-INSERT INTO `account_icon` VALUES (2, '1738697400316.png');
-INSERT INTO `account_icon` VALUES (3, '1738697395707.png');
-INSERT INTO `account_icon` VALUES (4, '1738697388747.png');
-INSERT INTO `account_icon` VALUES (5, '1738661939639.png');
-INSERT INTO `account_icon` VALUES (6, '1738661933643.png');
-INSERT INTO `account_icon` VALUES (7, '1738661927854.png');
-INSERT INTO `account_icon` VALUES (8, '1738661921515.png');
-INSERT INTO `account_icon` VALUES (9, '1738661916449.png');
-INSERT INTO `account_icon` VALUES (10, '1738661911239.png');
-INSERT INTO `account_icon` VALUES (11, '1738661906637.png');
-INSERT INTO `account_icon` VALUES (12, '1738661901939.png');
-INSERT INTO `account_icon` VALUES (13, '1738661897275.png');
-INSERT INTO `account_icon` VALUES (14, '1738661891753.png');
-INSERT INTO `account_icon` VALUES (15, '1738661881718.png');
-INSERT INTO `account_icon` VALUES (16, '1738661875575.png');
-INSERT INTO `account_icon` VALUES (17, '1738661869351.png');
-INSERT INTO `account_icon` VALUES (18, '1738661864488.png');
-INSERT INTO `account_icon` VALUES (19, '1738661858457.png');
-INSERT INTO `account_icon` VALUES (20, '1738661852932.png');
-INSERT INTO `account_icon` VALUES (21, '1738661845971.png');
-INSERT INTO `account_icon` VALUES (22, '1738661840804.png');
-INSERT INTO `account_icon` VALUES (23, '1738661829820.png');
-INSERT INTO `account_icon` VALUES (24, '1738661823154.png');
-INSERT INTO `account_icon` VALUES (25, '1738661816352.png');
-INSERT INTO `account_icon` VALUES (26, '1738661809085.png');
-INSERT INTO `account_icon` VALUES (27, '1738661801861.png');
-INSERT INTO `account_icon` VALUES (28, '1738661792290.png');
-INSERT INTO `account_icon` VALUES (29, '1738661785863.png');
-INSERT INTO `account_icon` VALUES (30, '1738661778577.png');
-INSERT INTO `account_icon` VALUES (31, '1738661769893.png');
-INSERT INTO `account_icon` VALUES (32, '1738661762446.png');
-INSERT INTO `account_icon` VALUES (33, '1738661755097.png');
-INSERT INTO `account_icon` VALUES (34, '1738661746289.png');
-INSERT INTO `account_icon` VALUES (35, '1738661737430.png');
-INSERT INTO `account_icon` VALUES (36, '1738661728391.png');
-INSERT INTO `account_icon` VALUES (37, '1738661713820.png');
-INSERT INTO `account_icon` VALUES (38, '1738661708178.png');
-INSERT INTO `account_icon` VALUES (39, '1738661702835.png');
-INSERT INTO `account_icon` VALUES (40, '1738661697078.png');
-INSERT INTO `account_icon` VALUES (41, '1738661691697.png');
-INSERT INTO `account_icon` VALUES (42, '1738661685845.png');
-INSERT INTO `account_icon` VALUES (43, '1738661679769.png');
-INSERT INTO `account_icon` VALUES (44, '1738661671837.png');
-INSERT INTO `account_icon` VALUES (45, '1738661666457.png');
-INSERT INTO `account_icon` VALUES (46, '1738661422907.png');
-INSERT INTO `account_icon` VALUES (47, '1738660914049.png');
+INSERT INTO `account_icon` VALUES (1, '1738697574598.png', 5);
+INSERT INTO `account_icon` VALUES (2, '1738697400316.png', 5);
+INSERT INTO `account_icon` VALUES (3, '1738697395707.png', 5);
+INSERT INTO `account_icon` VALUES (4, '1738697388747.png', 5);
+INSERT INTO `account_icon` VALUES (5, '1738661939639.png', 2);
+INSERT INTO `account_icon` VALUES (6, '1738661933643.png', 2);
+INSERT INTO `account_icon` VALUES (7, '1738661927854.png', 2);
+INSERT INTO `account_icon` VALUES (8, '1738661921515.png', 2);
+INSERT INTO `account_icon` VALUES (9, '1738661916449.png', 2);
+INSERT INTO `account_icon` VALUES (10, '1738661911239.png', 2);
+INSERT INTO `account_icon` VALUES (11, '1738661906637.png', 2);
+INSERT INTO `account_icon` VALUES (12, '1738661901939.png', 2);
+INSERT INTO `account_icon` VALUES (13, '1738661897275.png', 2);
+INSERT INTO `account_icon` VALUES (14, '1738661891753.png', 2);
+INSERT INTO `account_icon` VALUES (15, '1738661881718.png', 4);
+INSERT INTO `account_icon` VALUES (16, '1738661875575.png', 4);
+INSERT INTO `account_icon` VALUES (17, '1738661869351.png', 4);
+INSERT INTO `account_icon` VALUES (18, '1738661864488.png', 1);
+INSERT INTO `account_icon` VALUES (19, '1738661858457.png', 4);
+INSERT INTO `account_icon` VALUES (20, '1738661852932.png', 5);
+INSERT INTO `account_icon` VALUES (21, '1738661845971.png', 5);
+INSERT INTO `account_icon` VALUES (22, '1738661840804.png', 5);
+INSERT INTO `account_icon` VALUES (23, '1738661829820.png', 7);
+INSERT INTO `account_icon` VALUES (24, '1738661823154.png', 7);
+INSERT INTO `account_icon` VALUES (25, '1738661816352.png', 7);
+INSERT INTO `account_icon` VALUES (26, '1738661809085.png', 7);
+INSERT INTO `account_icon` VALUES (27, '1738661801861.png', 7);
+INSERT INTO `account_icon` VALUES (28, '1738661792290.png', 7);
+INSERT INTO `account_icon` VALUES (29, '1738661785863.png', 7);
+INSERT INTO `account_icon` VALUES (30, '1738661778577.png', 7);
+INSERT INTO `account_icon` VALUES (31, '1738661769893.png', 7);
+INSERT INTO `account_icon` VALUES (32, '1738661762446.png', 7);
+INSERT INTO `account_icon` VALUES (33, '1738661755097.png', 7);
+INSERT INTO `account_icon` VALUES (34, '1738661746289.png', 7);
+INSERT INTO `account_icon` VALUES (35, '1738661737430.png', 7);
+INSERT INTO `account_icon` VALUES (36, '1738661728391.png', 7);
+INSERT INTO `account_icon` VALUES (37, '1738661713820.png', 7);
+INSERT INTO `account_icon` VALUES (38, '1738661708178.png', 7);
+INSERT INTO `account_icon` VALUES (39, '1738661702835.png', 7);
+INSERT INTO `account_icon` VALUES (40, '1738661697078.png', 7);
+INSERT INTO `account_icon` VALUES (41, '1738661691697.png', 7);
+INSERT INTO `account_icon` VALUES (42, '1738661685845.png', 7);
+INSERT INTO `account_icon` VALUES (43, '1738661679769.png', 7);
+INSERT INTO `account_icon` VALUES (44, '1738661671837.png', 1);
+INSERT INTO `account_icon` VALUES (45, '1738661666457.png', 1);
+INSERT INTO `account_icon` VALUES (46, '1738661422907.png', 3);
+INSERT INTO `account_icon` VALUES (47, '1738660914049.png', 3);
 
 -- ----------------------------
 -- Table structure for account_transition
@@ -169,11 +170,14 @@ CREATE TABLE `account_transition`  (
   `account_type_cr_id` int NULL DEFAULT NULL COMMENT 'CR',
   PRIMARY KEY (`account_transition_id`) USING BTREE,
   UNIQUE INDEX `acccount_check`(`account_type_id` ASC, `account_transition_start` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1045 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1087 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of account_transition
 -- ----------------------------
+INSERT INTO `account_transition` VALUES (1084, 61, NULL, 2000.00, '2025-04-02 07:43:22', 1, 1, NULL, NULL, 61, NULL);
+INSERT INTO `account_transition` VALUES (1085, 62, NULL, 1333.00, '2025-04-02 07:43:23', 1, 1, NULL, NULL, NULL, 62);
+INSERT INTO `account_transition` VALUES (1086, 57, NULL, 667.00, '2025-04-02 07:43:24', 1, NULL, NULL, NULL, NULL, NULL);
 
 -- ----------------------------
 -- Table structure for account_type
@@ -224,9 +228,9 @@ INSERT INTO `account_type` VALUES (24, 'นักศึกษา - ทศ', NULL
 INSERT INTO `account_type` VALUES (25, 'นักศึกษา - เจ', NULL, NULL, NULL, '1', 0, 0.00, 11, 2, 0.00);
 INSERT INTO `account_type` VALUES (26, 'นักศึกษา - เนม', NULL, NULL, NULL, '1', 0, 0.00, 10, 2, 0.00);
 INSERT INTO `account_type` VALUES (27, 'นักศึกษา - ต้า', NULL, '', NULL, '1', 0, 0.00, 11, 2, 0.00);
-INSERT INTO `account_type` VALUES (57, 'ทุน - เบนซ์ ', NULL, NULL, NULL, '1', 0, 0.00, 12, 3, 0.00);
-INSERT INTO `account_type` VALUES (61, 'เงินสด', '2000', 'เงินไว้จ่าย', NULL, '44', 0, 0.00, 47, 1, 0.00);
-INSERT INTO `account_type` VALUES (62, 'จอคอม', '1333', 'จ่ายทุกเดือน', NULL, '19', 0, 0.00, 48, 2, 0.00);
+INSERT INTO `account_type` VALUES (57, 'ทุน - เบนซ์ ', NULL, NULL, NULL, '1', 0, 667.00, 12, 3, 667.00);
+INSERT INTO `account_type` VALUES (61, 'เงินสด', '2000', 'เงินไว้จ่าย', 73, '13', 0, 2000.00, 47, 1, 2000.00);
+INSERT INTO `account_type` VALUES (62, 'จอคอม', '1333', 'จ่ายทุกเดือน', NULL, '19', 0, 1333.00, 48, 2, 1333.00);
 INSERT INTO `account_type` VALUES (63, 'ลูกหนี้มิก', '6250', 'จ่ายยยย', NULL, '8', 0, 0.00, 49, 6, 0.00);
 INSERT INTO `account_type` VALUES (64, 'เงินเดือน', '10000', 'พ่อแม่ให้', NULL, '17', 0, 0.00, 50, 4, 0.00);
 INSERT INTO `account_type` VALUES (65, 'รายได้จากการสอน', '1000', 'สอนเด็กโว้นยยยยยย', NULL, '16', 0, 0.00, 51, 4, 0.00);

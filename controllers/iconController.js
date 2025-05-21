@@ -22,15 +22,20 @@ exports.insertIcons = async (req, res) => {
 };
 
 exports.getIcons = async (req, res) => {
+    const categoryID = req.params.categoryID;
+    console.log("Group ID:", categoryID);
+
     try {
-        const [icons] = await sql.query("SELECT * FROM account_icon");
+        const [icons] = await sql.query(
+            "SELECT * FROM account_icon WHERE account_icon_category = ?",
+            [categoryID]
+        );
 
         res.status(200).json({
             data: icons
         });
     } catch (err) {
         console.error("Error fetching icons:", err);
-
 
         res.status(500).json({
             message: "An error occurred while fetching the icons.",

@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.1
+    container_name: my_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 12334
+      MYSQL_DATABASE: accounting
+      MYSQL_USER: accounting_myadmin
+      MYSQL_PASSWORD: 12334
+    ports:
+      - "3366:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - my_network
+
+volumes:
+  mysql_data:
+
+networks:
+  my_network:
+    driver: bridge

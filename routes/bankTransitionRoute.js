@@ -50,6 +50,14 @@ router.post(
   bankControllers.creditor_return_bankTransition
 );
 
+router.post(
+  "/debtor_borrow",
+  bankControllers.debtor_borrow_bankTransition
+);
+router.post(
+  "/debtor_return",
+  bankControllers.debtor_return_bankTransition
+);
 /**
  * @swagger
  * /reuse_return_bank/{account_transition_id}:
@@ -76,4 +84,8 @@ router.delete(
 router.patch(
   "/return_transition_bank", bankControllers.delFor_return_bank
 )
+router.put("/return_creditor/:account_transition_id", bankControllers.delFor_Creditor);
+router.put("/return_debtor/:account_transition_id", bankControllers.delFor_Debtor);
+
+
 module.exports = router;

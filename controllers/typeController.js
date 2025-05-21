@@ -28,8 +28,8 @@ exports.CreateAccountType = async (req, res) => {
   try {
     const query = `
         INSERT INTO account_type 
-        (account_type_name, account_type_value, account_type_description, account_type_from_id, account_type_icon, account_group_id, account_category_id) 
-        VALUES (?, ?, ?,  ?, ?, ?,?)
+        (account_type_name, account_type_value, account_type_description, account_type_from_id, account_type_icon, account_type_important ,account_type_sum ,account_group_id, account_category_id, account_type_total) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?)
       `;
 
     const [new_account_type] = await sql.query(query, [
@@ -38,8 +38,11 @@ exports.CreateAccountType = async (req, res) => {
       account_type_description,
       account_type_from_id,
       account_type_icon,
+      0,
+      0,
       account_group_id,
-      account_category_id
+      account_category_id,
+      0,
     ]);
 
     res.status(201).json({
@@ -113,7 +116,7 @@ exports.GetAccountType = async (req, res) => {
   try {
     const query = `SELECT * FROM account_type at 
     JOIN account_group ag ON at.account_group_id = ag.account_group_id
-    WHERE account_type_important = 1 AND account_user_id = ?`;
+    WHERE ag.account_category_id in (1,7) AND account_user_id = ?`;
 
     const [account_type] = await sql.query(query, account_user_id);
 

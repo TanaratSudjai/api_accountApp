@@ -289,5 +289,7 @@ router.put(
  *         description: Successfully retrieved bank transitions.
  */
 router.get("/transition_bank", transitionGroupController.get_Bank_Transition);
+router.get("/creditor_transition", transitionGroupController.get_Creditor_Transition);
+router.get("/debtor_transition", transitionGroupController.get_Debtor_Transition);
 
 module.exports = router;
