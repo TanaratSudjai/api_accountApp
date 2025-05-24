@@ -168,52 +168,52 @@ exports.sumAccount = async (req, res) => {
     const [maxResult] = await sql.query(maxQuery);
     const newStartValue = maxResult[0].max_start;
 
-    const get_income = `
-      SELECT 
-          account_transition.account_transition_id,
-          account_transition.account_type_id,
-          account_transition.account_transition_value 
-      FROM
-          account_user
-          INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
-          INNER JOIN account_type ON account_group.account_group_id = account_type.account_group_id
-          INNER JOIN account_transition ON account_type.account_type_id = account_transition.account_type_id
-      WHERE
-          account_user.account_user_id = ?
-          AND account_transition.account_transition_submit IS NULL
-          AND account_transition.account_category_id = 4 
-    `;
-    const [incomeRows] = await sql.query(get_income, [account_user_id]);
+    // const get_income = `
+    //   SELECT 
+    //       account_transition.account_transition_id,
+    //       account_transition.account_type_id,
+    //       account_transition.account_transition_value 
+    //   FROM
+    //       account_user
+    //       INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+    //       INNER JOIN account_type ON account_group.account_group_id = account_type.account_group_id
+    //       INNER JOIN account_transition ON account_type.account_type_id = account_transition.account_type_id
+    //   WHERE
+    //       account_user.account_user_id = ?
+    //       AND account_transition.account_transition_submit IS NULL
+    //       AND account_transition.account_category_id = 4 
+    // `;
+    // const [incomeRows] = await sql.query(get_income, [account_user_id]);
 
-    const get_expense = `
-      SELECT 
-          account_transition.account_transition_id,
-          account_transition.account_type_id,
-          account_transition.account_transition_value 
-      FROM
-          account_user
-          INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
-          INNER JOIN account_type ON account_group.account_group_id = account_type.account_group_id
-          INNER JOIN account_transition ON account_type.account_type_id = account_transition.account_type_id
-      WHERE
-          account_user.account_user_id = ?
-          AND account_transition.account_transition_submit IS NULL
-          AND account_transition.account_category_id = 5
-    `;
-    const [expenseRows] = await sql.query(get_expense, [account_user_id]);
+    // const get_expense = `
+    //   SELECT 
+    //       account_transition.account_transition_id,
+    //       account_transition.account_type_id,
+    //       account_transition.account_transition_value 
+    //   FROM
+    //       account_user
+    //       INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+    //       INNER JOIN account_type ON account_group.account_group_id = account_type.account_group_id
+    //       INNER JOIN account_transition ON account_type.account_type_id = account_transition.account_type_id
+    //   WHERE
+    //       account_user.account_user_id = ?
+    //       AND account_transition.account_transition_submit IS NULL
+    //       AND account_transition.account_category_id = 5
+    // `;
+    // const [expenseRows] = await sql.query(get_expense, [account_user_id]);
 
-    const totalIncome = incomeRows.reduce(
-      (sum, row) => sum + (parseFloat(row.account_transition_value) || 0),
-      0
-    );
+    // const totalIncome = incomeRows.reduce(
+    //   (sum, row) => sum + (parseFloat(row.account_transition_value) || 0),
+    //   0
+    // );
 
-    const totalExpense = expenseRows.reduce(
-      (sum, row) => sum + (parseFloat(row.account_transition_value) || 0),
-      0
-    );
+    // const totalExpense = expenseRows.reduce(
+    //   (sum, row) => sum + (parseFloat(row.account_transition_value) || 0),
+    //   0
+    // );
 
     const accountValue = parseFloat(account_transition_value) || 0;
-    const finalValue = accountValue + totalIncome - totalExpense;
+    const finalValue = accountValue;
 
     const insertQuery = `
       INSERT INTO account_transition 
@@ -232,8 +232,6 @@ exports.sumAccount = async (req, res) => {
       message: "Account transition inserted/updated successfully.",
       finalValue,
       details: {
-        income: totalIncome,
-        expense: totalExpense,
         base: accountValue
       }
     });
@@ -351,6 +349,8 @@ exports.sumbitTransition = async (req, res) => {
     );
 
     const { account_transition_value, account_type_id } = lasted_account_transition[0] || {};
+
+    console.log(account_transition_value, account_type_id);
 
     await sql.query(
       `UPDATE account_type SET account_type_sum = account_type_sum + ?, account_type_total = account_type_total + ? WHERE account_type_id = ?`,
@@ -677,35 +677,31 @@ exports.getSumValueGroupTwo = async (req, res) => {
     const account_user_id = user.account_user_id;
     const [res_transitiongroup] = await sql.query(
       `
-      SELECT
-    SUM(account_transition.account_transition_value) AS total_transition_value,
-    account_group.account_category_id
-      FROM
-          account_transition
-      INNER JOIN
-          account_type
-      ON 
-          account_transition.account_type_id = account_type.account_type_id
-      INNER JOIN
-          account_group
-      ON 
-          account_type.account_group_id = account_group.account_group_id
-      WHERE
-          account_group.account_category_id = 2 AND 
-          account_transition.account_transition_submit IS NULL AND
-          account_transition.account_type_from_id IS NULL AND
-          account_transition.account_category_from_id IS NULL AND
-          account_group.account_user_id = ? 
-      GROUP BY
-          account_group.account_category_id;
+      SELECT 
+    SUM(account_transition.account_transition_value) AS total_transition_value
+FROM 
+    account_transition
+INNER JOIN account_type 
+    ON account_transition.account_type_id = account_type.account_type_id
+INNER JOIN account_group 
+    ON account_type.account_group_id = account_group.account_group_id
+WHERE 
+    account_group.account_category_id IN (2)
+
+    AND account_transition.account_transition_submit IS NULL
+    AND account_transition.account_type_from_id IS NULL
+    AND account_transition.account_category_from_id IS NULL
+    AND account_group.account_user_id = ?;
     `,
       [account_user_id]
     );
-    res.json(res_transitiongroup).status(200);
+    res.json(res_transitiongroup);
   } catch (error) {
     res.json({ massage: error.massage, text: "Error geted data group Two !" });
   }
 };
+
+
 
 exports.getOnedeTwo = async (req, res) => {
   try {

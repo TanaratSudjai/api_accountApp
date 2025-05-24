@@ -696,8 +696,8 @@ exports.delete_transition_income = async (req, res) => {
       const type_type_id_reuse_value = res_type_type_id[0].account_type_id;
 
       const update_type_total =
-        "UPDATE account_type SET account_type_total = account_type_total = 0 WHERE account_type_id  = ?";
-      await sql.query(update_type_total, [type_type_id_reuse_value]);
+        "UPDATE account_type SET account_type_total = account_type_total - ?  WHERE account_type_id  = ?";
+      await sql.query(update_type_total, [account_transition_value,type_type_id_reuse_value]);
 
       const query = `DELETE FROM account_transition WHERE account_transition_id = ?`;
       const [result, err] = await sql.query(query, [account_transition_id]);
