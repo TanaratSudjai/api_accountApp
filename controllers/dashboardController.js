@@ -7,18 +7,21 @@ exports.getDashboard_forsubmition_transition = async (req, res) => {
   try {
     const query_transition_data = `
                                     SELECT
-                                        *,
-                                         account_type.account_type_total - account_type.account_type_sum AS account_type_difference
-                                    FROM
-                                        account_type
-                                        JOIN account_group ON account_type.account_group_id = account_group.account_group_id
-                                        JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-                                    WHERE 
-                                        account_type.account_type_sum - account_type.account_type_total <> 0 AND account_user.account_user_id = ?
+    *,
+    account_type.account_type_total - account_type.account_type_sum AS account_type_difference
+FROM
+    account_type
+    JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+    JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+WHERE 
+    account_type.account_type_sum - account_type.account_type_total <> 0
+    AND account_user.account_user_id = ?
+ORDER BY
+    FIELD(account_type.account_category_id, 1, 6, 7, 4, 5, 2)
 
                                     `;
 
-    const [result] = await sql.query(query_transition_data,[account_user_id]);
+    const [result] = await sql.query(query_transition_data, [account_user_id]);
 
     // ตรวจสอบว่าผลลัพธ์มีข้อมูลหรือไม่
     // if (!result || result.length === 0) {

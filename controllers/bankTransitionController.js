@@ -357,7 +357,7 @@ exports.debtor_borrow_bankTransition = async (req, res) => {
     //console.log("ใส่เเทนยอดเกิน " + value_type);
 
     // กำหนดค่า account_transition_value
-    let account_transition_value = initialTransitionValue; // ใช้ let แทน const
+    let account_transition_value = parseFloat(initialTransitionValue); // ใช้ let แทน const
 
     // ถ้า account_transition_value มากกว่า account_type_sum
     // if (account_transition_value > value_type) {
@@ -777,7 +777,7 @@ exports.delFor_Creditor = async (req, res) => {
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
       `;
       await sql.query(return_value_of_creditor, [
-        parseInt(result.account_transition_value),
+        parseFloat(result.account_transition_value),
         result.account_type_cr_id,
       ]);
 
@@ -785,7 +785,7 @@ exports.delFor_Creditor = async (req, res) => {
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
       `;
       await sql.query(return_value_of_owner, [
-        parseInt(result.account_transition_value),
+        parseFloat(result.account_transition_value),
         result.account_type_dr_id,
       ]);
 
@@ -803,7 +803,7 @@ exports.delFor_Creditor = async (req, res) => {
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
       `;
       await sql.query(return_value_of_creditor, [
-        parseInt(result.account_transition_value),
+        parseFloat(result.account_transition_value),
         result.account_type_cr_id,
       ]);
 
@@ -811,7 +811,7 @@ exports.delFor_Creditor = async (req, res) => {
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
       `;
       await sql.query(return_value_of_owner, [
-        parseInt(result.account_transition_value),
+        parseFloat(result.account_transition_value),
         result.account_type_dr_id,
       ]);
 
@@ -858,7 +858,7 @@ exports.delFor_Debtor = async (req, res) => {
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
       `;
       await sql.query(return_value_of_creditor, [
-        parseInt(result.account_transition_value),
+        parseFloat(result.account_transition_value),
         result.account_type_cr_id,
       ]);
 
@@ -866,7 +866,7 @@ exports.delFor_Debtor = async (req, res) => {
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
       `;
       await sql.query(return_value_of_owner, [
-        parseInt(result.account_transition_value),
+        parseFloat(result.account_transition_value),
         result.account_type_dr_id,
       ]);
 
@@ -884,7 +884,7 @@ exports.delFor_Debtor = async (req, res) => {
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
       `;
       await sql.query(return_value_of_creditor, [
-        parseInt(result.account_transition_value),
+        parseFloat(result.account_transition_value),
         result.account_type_cr_id,
       ]);
 
@@ -892,7 +892,7 @@ exports.delFor_Debtor = async (req, res) => {
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
       `;
       await sql.query(return_value_of_owner, [
-        parseInt(result.account_transition_value),
+        parseFloat(result.account_transition_value),
         result.account_type_dr_id,
       ]);
 
