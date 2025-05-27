@@ -241,7 +241,6 @@ exports.sumAccount = async (req, res) => {
   }
 };
 
-
 exports.sumbitTransition = async (req, res) => {
   const user = getUserFromToken(req);
   const account_user_id = user.account_user_id;
@@ -700,8 +699,6 @@ WHERE
     res.json({ massage: error.massage, text: "Error geted data group Two !" });
   }
 };
-
-
 
 exports.getOnedeTwo = async (req, res) => {
   try {

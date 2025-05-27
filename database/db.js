@@ -14,5 +14,6 @@ const pool = mysql.createPool({
   queueLimit: 0,
   onnectTimeout: 10000,   // 10 seconds
   enableKeepAlive: true,
+  dateStrings: true,
 });
 module.exports = pool;

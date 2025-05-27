@@ -2,17 +2,35 @@ const sql = require("../database/db");
 const { getUserFromToken } = require("../utils/authUtils");
 
 exports.get_three_type = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
     try{
         const [get_sum_cat_one_six_seven] = await sql.query(
-            `SELECT SUM(account_type_sum) as total_owner FROM account_type WHERE account_category_id IN (1, 6, 7)`
+            `SELECT SUM(account_type_sum) as total_owner FROM account_type 
+            JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+            JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+            WHERE account_type.account_category_id IN (1, 6, 7)
+            AND account_user.account_user_id = ?`,
+            [account_user_id]
         );
 
         const [get_sum_cat_two] = await sql.query(
-            `SELECT SUM(account_type_sum) as total_debt FROM account_type WHERE account_category_id IN (2)`
+            `SELECT SUM(account_type_sum) as total_debt FROM account_type 
+            JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+            JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+            WHERE account_type.account_category_id IN (2)
+            AND account_user.account_user_id = ?`,
+            [account_user_id]
         );
 
         const [get_sum_cat_three] = await sql.query(
-            `SELECT SUM(account_type_total) as total_fund FROM account_type WHERE account_category_id IN (3)`
+            `SELECT SUM(account_type_total) as total_fund FROM account_type 
+            JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+            JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+            WHERE account_type.account_category_id IN (3)
+            AND account_user.account_user_id = ?
+            `,
+            [account_user_id]
         );
 
         return res.status(200).json({
