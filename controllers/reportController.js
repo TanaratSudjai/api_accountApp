@@ -73,3 +73,22 @@ exports.sumExpense = async (req, res) => {
   }
 };
 
+exports.sumExpenseDaily = async (req, res) => {
+  try {
+    // Base query
+    let query = `
+            SELECT 
+            DATE(account_transition.account_transition_datetime) AS date,
+            SUM(account_transition.account_transition_value) AS total
+          FROM account_transition 
+          WHERE account_transition.account_category_id = 5
+          GROUP BY DATE(account_transition.account_transition_datetime)
+          ORDER BY date ASC;
+    `;
+
+    const [result] = await sql.query(query);
+    res.json(result);
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+};
