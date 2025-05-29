@@ -30,5 +30,6 @@ const report = require("../controllers/reportController");
  *         description: Server error while fetching the report.
  */
 router.get("/report", report.reportAccount);
+router.get("/expense_chart", report.sumExpense);
 
 module.exports = router;

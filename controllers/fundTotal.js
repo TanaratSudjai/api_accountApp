@@ -86,15 +86,15 @@ exports.sumbitPerDay = async (req, res) => {
 
     // Update account_type_cr_id for the transitions
 
-    await sql.query(
-      `UPDATE account_transition 
-      JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
-      JOIN account_group ON account_type.account_group_id = account_group.account_group_id
-      JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-      SET account_transition.account_type_cr_id = ? 
-      WHERE account_transition.account_type_id = ? AND account_user.account_user_id = ? `,
-      [account_type_cr_id, account_type_cr_id, account_user_id]
-    );
+    // await sql.query(
+    //   `UPDATE account_transition 
+    //   JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+    //   JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+    //   JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+    //   SET account_transition.account_type_cr_id = ? 
+    //   WHERE account_transition.account_type_id = ? AND account_user.account_user_id = ? `,
+    //   [account_type_cr_id, account_type_cr_id, account_user_id]
+    // );
 
     // const [latestStartRow] = await sql.query(`
     //     SELECT MAX(account_transition_start) AS latest_start

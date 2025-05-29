@@ -33,3 +33,43 @@ exports.reportAccount = async (req, res) => {
     res.json({ error: err.message });
   }
 };
+
+exports.sumExpense = async (req, res) => {
+  try {
+    const { day, month, year } = req.query;
+
+    // Base query
+    let query = `
+      SELECT SUM(account_transition.account_transition_value) AS total_expense, account_type.account_type_name 
+      FROM account_transition 
+      LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
+      WHERE account_transition.account_category_id = 5
+    `;
+
+    const queryParams = [];
+
+    // Add filters dynamically
+    if (year) {
+      query += ` AND YEAR(account_transition.account_transition_datetime) = ?`;
+      queryParams.push(year);
+    }
+
+    if (month) {
+      query += ` AND MONTH(account_transition.account_transition_datetime) = ?`;
+      queryParams.push(month);
+    }
+
+    if (day) {
+      query += ` AND DAY(account_transition.account_transition_datetime) = ?`;
+      queryParams.push(day);
+    }
+
+    query += ` GROUP BY account_type.account_type_name`;
+
+    const [result] = await sql.query(query, queryParams);
+    res.json(result);
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+};
+
