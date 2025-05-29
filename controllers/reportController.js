@@ -1,4 +1,5 @@
 const sql = require("../database/db");
+const { getUserFromToken } = require("../utils/authUtils");
 
 exports.reportAccount = async (req, res) => {
   try {
@@ -35,6 +36,8 @@ exports.reportAccount = async (req, res) => {
 };
 
 exports.sumExpense = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
   try {
     const { day, month, year } = req.query;
 
@@ -43,7 +46,9 @@ exports.sumExpense = async (req, res) => {
       SELECT SUM(account_transition.account_transition_value) AS total_expense, account_type.account_type_name 
       FROM account_transition 
       LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
-      WHERE account_transition.account_category_id = 5
+      LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+      WHERE account_transition.account_category_id = 5 AND account_user.account_user_id = ${account_user_id}
     `;
 
     const queryParams = [];
@@ -74,6 +79,8 @@ exports.sumExpense = async (req, res) => {
 };
 
 exports.sumExpenseDaily = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user.account_user_id;
   try {
     // Base query
     let query = `
@@ -81,7 +88,10 @@ exports.sumExpenseDaily = async (req, res) => {
             DATE(account_transition.account_transition_datetime) AS date,
             SUM(account_transition.account_transition_value) AS total
           FROM account_transition 
-          WHERE account_transition.account_category_id = 5
+          LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
+          LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+          LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+          WHERE account_transition.account_category_id = 5 AND account_user.account_user_id = ${account_user_id}
           GROUP BY DATE(account_transition.account_transition_datetime)
           ORDER BY date ASC;
     `;
