@@ -169,9 +169,8 @@ CREATE TABLE `account_transition`  (
   `account_type_dr_id` int NULL DEFAULT NULL COMMENT 'DR',
   `account_type_cr_id` int NULL DEFAULT NULL COMMENT 'CR',
   PRIMARY KEY (`account_transition_id`) USING BTREE,
-  UNIQUE INDEX `acccount_check`(`account_type_id` ASC, `account_transition_start` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1087 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
-
+-- UNIQUE INDEX `acccount_check`(`account_type_id` ASC, `account_transition_start` ASC) USING BTREE
 -- ----------------------------
 -- Records of account_transition
 -- ----------------------------

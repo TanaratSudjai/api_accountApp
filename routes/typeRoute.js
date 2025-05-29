@@ -1,6 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const typeController = require("../controllers/typeController");
+const fundTotalControllers = require("../controllers/fundTotal");
+
+router.get(
+  "/total_fund",
+  fundTotalControllers.get_three_type
+);
+
+router.put(
+  "/sumbitPerDay",
+  fundTotalControllers.sumbitPerDay
+);
 
 /**
  * @swagger
