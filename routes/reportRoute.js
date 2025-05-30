@@ -31,6 +31,8 @@ const report = require("../controllers/reportController");
  */
 router.get("/report", report.reportAccount);
 router.get("/expense_chart", report.sumExpense);
+router.get("/income_chart", report.sumIncome);
 router.get("/daily_expense_totals", report.sumExpenseDaily);
+router.get("/daily_income_totals", report.sumIncomeDaily);
 
 module.exports = router;
