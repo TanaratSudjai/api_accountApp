@@ -34,5 +34,7 @@ router.get("/expense_chart", report.sumExpense);
 router.get("/income_chart", report.sumIncome);
 router.get("/daily_expense_totals", report.sumExpenseDaily);
 router.get("/daily_income_totals", report.sumIncomeDaily);
+router.get("/MonthAndYear_expense_totals", report.sumExpenseMonthAndYear);
+router.get("/MonthAndYear_income_totals", report.sumIncomeMonthAndYear);
 
 module.exports = router;
