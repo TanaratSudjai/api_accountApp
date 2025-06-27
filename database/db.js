@@ -13,9 +13,11 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  connectTimeout: 10000,   // <-- ถูกต้อง
+  connectTimeout: 10000,
   enableKeepAlive: true,
+  keepAliveInitialDelay: 0, // เพิ่มเข้าไป
   dateStrings: true,
 });
+
 
 module.exports = pool;

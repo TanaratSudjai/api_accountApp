@@ -94,6 +94,18 @@ if (isDBConnected) {
   console.error("❌ Server not started due to database connection failure.");
 }
 
+setInterval(async () => {
+  try {
+    const conn = await pool.getConnection();
+    await conn.query("SELECT 1"); // dummy ping
+    conn.release();
+    console.log("✅ Keep-alive ping successful");
+  } catch (err) {
+    console.error("❌ Keep-alive ping failed:", err.message);
+  }
+}, 5 * 60 * 1000); // ทุก 5 นาที
+
+
 // ใช้ router กับ /api path
 server.use("/api", router);
 
