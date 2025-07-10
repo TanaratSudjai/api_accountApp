@@ -11,7 +11,7 @@ exports.CreateAccountGroup = async (req, res) => {
   }
   try {
     const user = getUserFromToken(req);
-    const account_user_id = user.account_user_id;
+    const account_user_id = user?.account_user_id;
 
     const query = `INSERT INTO account_group (account_group_name , account_category_id, account_user_id) 
     VALUES (? ,?, ?)`;
@@ -150,7 +150,7 @@ exports.GetAccountTypeCount_group = async (req, res) => {
 exports.GetAccountTypeCount_groupID = async (req, res) => {
   const { account_category_id } = req.params;
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
 
   console.log("category : ", account_category_id, " user id :", account_user_id);
 

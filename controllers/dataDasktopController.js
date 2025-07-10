@@ -15,7 +15,7 @@ exports.getNameType = async (req, res) => {
 
 exports.get_sumvalue_type = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
 
   const query = `
     SELECT
@@ -62,7 +62,7 @@ ORDER BY
 
 exports.get_zero_value = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   
   const query = `
       SELECT

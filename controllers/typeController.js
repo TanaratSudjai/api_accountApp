@@ -112,7 +112,7 @@ exports.UpdateAccountType = async (req, res) => {
 
 exports.GetAccountType = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   try {
     const query = `SELECT * FROM account_type at 
     JOIN account_group ag ON at.account_group_id = ag.account_group_id

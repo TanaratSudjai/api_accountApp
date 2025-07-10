@@ -37,7 +37,7 @@ exports.reportAccount = async (req, res) => {
 
 exports.sumExpense = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   try {
     const { day, month, year } = req.query;
 
@@ -79,7 +79,7 @@ exports.sumExpense = async (req, res) => {
 };
 exports.sumIncome = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   try {
     const { day, month, year } = req.query;
 
@@ -122,7 +122,7 @@ exports.sumIncome = async (req, res) => {
 
 exports.sumExpenseDaily = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   try {
     // Base query
     let query = `
@@ -146,7 +146,7 @@ exports.sumExpenseDaily = async (req, res) => {
 };
 exports.sumIncomeDaily = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   try {
     // Base query
     let query = `
@@ -171,7 +171,7 @@ exports.sumIncomeDaily = async (req, res) => {
 
 exports.sumExpenseMonthAndYear = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   const { day, month, year } = req.query;
 
   try {
@@ -217,7 +217,7 @@ exports.sumExpenseMonthAndYear = async (req, res) => {
 
 exports.sumIncomeMonthAndYear = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   const { day, month, year } = req.query;
 
   try {

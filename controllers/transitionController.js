@@ -132,7 +132,7 @@ exports.sumAccount = async (req, res) => {
       return res.status(401).json({ error: "Unauthorized or missing user ID" });
     }
 
-    const account_user_id = user.account_user_id;
+    const account_user_id = user?.account_user_id;
 
     const account_group_id_query = `
       SELECT account_group_id
@@ -243,7 +243,7 @@ exports.sumAccount = async (req, res) => {
 
 exports.sumbitTransition = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
 
   try {
     // Submit all transitions
@@ -443,7 +443,7 @@ exports.sumbitTransition = async (req, res) => {
 exports.getTransaction = async (req, res) => {
   try {
     const user = getUserFromToken(req);
-    const account_user_id = user.account_user_id;
+    const account_user_id = user?.account_user_id;
     if (!user || !user.account_user_id) {
       return res.status(401).json({ error: "Unauthorized or missing user ID" });
     }
@@ -558,10 +558,10 @@ exports.getTransaction = async (req, res) => {
 
 exports.getGroupTwoTransition = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   try {
     const user = getUserFromToken(req);
-    const account_user_id = user.account_user_id;
+    const account_user_id = user?.account_user_id;
     const [res_transitiongroup] = await sql.query(
       `SELECT
         account_transition.account_transition_id, 
@@ -602,7 +602,7 @@ exports.getGroupTwoTransition = async (req, res) => {
 exports.getGroupOneTransition = async (req, res) => {
   try {
     const user = getUserFromToken(req);
-    const account_user_id = user.account_user_id;
+    const account_user_id = user?.account_user_id;
     const [res_transitiongroup] = await sql.query(
       `SELECT
         account_transition.account_transition_id, 
@@ -644,7 +644,7 @@ exports.getGroupOneTransition = async (req, res) => {
 exports.getSumValueGroupOne = async (req, res) => {
   try {
     const user = getUserFromToken(req);
-    const account_user_id = user.account_user_id;
+    const account_user_id = user?.account_user_id;
     const [res_transitiongroup] = await sql.query(
       `
       SELECT 
@@ -673,7 +673,7 @@ WHERE
 exports.getSumValueGroupTwo = async (req, res) => {
   try {
     const user = getUserFromToken(req);
-    const account_user_id = user.account_user_id;
+    const account_user_id = user?.account_user_id;
     const [res_transitiongroup] = await sql.query(
       `
       SELECT 

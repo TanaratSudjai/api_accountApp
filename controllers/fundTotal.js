@@ -3,7 +3,7 @@ const { getUserFromToken } = require("../utils/authUtils");
 
 exports.get_three_type = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
     try{
         const [get_sum_cat_one_six_seven] = await sql.query(
             `SELECT SUM(account_type_sum) as total_owner FROM account_type 
@@ -51,7 +51,7 @@ exports.get_three_type = async (req, res) => {
 
 exports.sumbitPerDay = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
 
   try {
     // Submit all transitions

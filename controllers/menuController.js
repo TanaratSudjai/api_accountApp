@@ -3,7 +3,7 @@ const { getUserFromToken } = require("../utils/authUtils");
 exports.getMenuWhereCat = async (req, res) => {
   try {
     const user = getUserFromToken(req);
-    const account_user_id = user.account_user_id;
+    const account_user_id = user?.account_user_id;
     const qurey = `SELECT
                     account_type.account_type_id, 
                     account_type.account_type_name, 

@@ -1,9 +1,13 @@
 const sql = require("../database/db");
+// const { getUserFromToken } = require("../utils/authUtils");
+const jwt = require('jsonwebtoken')
 const { getUserFromToken } = require("../utils/authUtils");
+
+
 
 exports.getMenuGroup_expense = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
 
   const query = `
       SELECT
@@ -35,7 +39,7 @@ exports.getMenuGroup_expense = async (req, res) => {
 
 exports.getMenuGroup_income = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   const query = `
       SELECT
           account_type.account_type_id, 
@@ -152,7 +156,7 @@ exports.submit_transition_group_income_extend = async (req, res) => {
 
 exports.getType_from_id = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   const [result] = await sql.query(`SELECT
                                 account_type.account_type_id, 
                                 account_category.account_category_name, 
@@ -187,7 +191,7 @@ exports.getType_from_id = async (req, res) => {
 
 exports.getCreditor = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
 
   const [result] = await sql.query(`SELECT
                                 account_type.account_type_id, 
@@ -220,7 +224,7 @@ exports.getCreditor = async (req, res) => {
 
 exports.getDebtor = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   const [result] = await sql.query(`SELECT
                                 account_type.account_type_id, 
                                 account_category.account_category_name, 
@@ -335,12 +339,12 @@ exports.openAccountGroup_income = async (req, res) => {
     await sql.query(query, [
       account_type_id,
       account_category_id,
-      parseFloat(account_transition_value) ,
+      parseFloat(account_transition_value),
       account_type_from_id,
       newStartValue,
       account_type_id,
       account_type_from_id,
-      parseFloat(account_transition_value) ,
+      parseFloat(account_transition_value),
     ]);
 
     const update_type_total =
@@ -363,9 +367,15 @@ exports.openAccountGroup_income = async (req, res) => {
 };
 
 exports.get_expense_transition = async (req, res) => {
+  // const token = req.cookies?.token;
+  // const user = jwt.decode(token);
+  // const account_user_id = user?.account_user_id
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
+  
+
   try {
+
     const [res_transitiongroup] = await sql.query(`
       SELECT
         account_transition.account_transition_id, 
@@ -395,7 +405,7 @@ exports.get_expense_transition = async (req, res) => {
         AND (account_transition.account_transition_submit = 0 OR
              account_transition.account_transition_submit IS NULL)
         AND account_user.account_user_id = ?
-    `,[account_user_id]);
+    `, [account_user_id]);
     res.json(res_transitiongroup);
   } catch (error) {
     res.json({
@@ -406,8 +416,8 @@ exports.get_expense_transition = async (req, res) => {
 };
 
 exports.get_income_transition = async (req, res) => {
-   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const user = getUserFromToken(req);
+  const account_user_id = user?.account_user_id;
   try {
     const [res_transitiongroup] = await sql.query(`
       SELECT
@@ -437,7 +447,7 @@ exports.get_income_transition = async (req, res) => {
         AND (account_transition.account_transition_submit = 0 OR
              account_transition.account_transition_submit IS NULL)
         AND account_user.account_user_id = ?
-    `,[account_user_id]);
+    `, [account_user_id]);
     res.json(res_transitiongroup);
   } catch (error) {
     res.json({
@@ -540,7 +550,7 @@ exports.get_Creditor_Transition = async (req, res) => {
       ORDER BY
         at_trans.account_transition_id DESC
     `;
-    
+
     const [data_transition_bank] = await sql.query(query, [2, 1, 2, 1, user_id]);
 
     res.status(200).json({ data_transition_bank });
@@ -578,7 +588,7 @@ exports.get_Debtor_Transition = async (req, res) => {
       ORDER BY
         at_trans.account_transition_id DESC
     `;
-    
+
     const [data_transition_bank] = await sql.query(query, [6, 1, 6, 1, user_id]);
 
     res.status(200).json({ data_transition_bank });
@@ -630,7 +640,7 @@ exports.delete_transition_expense = async (req, res) => {
 
       const update_type_total =
         "UPDATE account_type SET account_type_total = account_type_total - ? WHERE account_type_id  = ?";
-      await sql.query(update_type_total, [account_transition_value,type_type_id_reuse_value]);
+      await sql.query(update_type_total, [account_transition_value, type_type_id_reuse_value]);
 
       const query = `DELETE FROM account_transition WHERE account_transition_id = ?`;
       const [result, err] = await sql.query(query, [account_transition_id]);
@@ -697,7 +707,7 @@ exports.delete_transition_income = async (req, res) => {
 
       const update_type_total =
         "UPDATE account_type SET account_type_total = account_type_total - ?  WHERE account_type_id  = ?";
-      await sql.query(update_type_total, [account_transition_value,type_type_id_reuse_value]);
+      await sql.query(update_type_total, [account_transition_value, type_type_id_reuse_value]);
 
       const query = `DELETE FROM account_transition WHERE account_transition_id = ?`;
       const [result, err] = await sql.query(query, [account_transition_id]);

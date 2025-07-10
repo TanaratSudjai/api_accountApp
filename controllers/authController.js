@@ -196,7 +196,7 @@ exports.gettingSession = async (req, res) => {
     if (!user || !user.account_user_id) {
       return res.status(401).json({ error: "Unauthorized or missing user ID" });
     }
-    const account_user_id = user.account_user_id;
+    const account_user_id = user?.account_user_id;
     console.log("Account User ID:", account_user_id);
 
     const query = `SELECT * FROM account_user WHERE account_user_id = ?`;

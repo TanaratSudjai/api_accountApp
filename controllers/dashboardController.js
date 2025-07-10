@@ -3,7 +3,7 @@ const { getUserFromToken } = require("../utils/authUtils");
 
 exports.getDashboard_forsubmition_transition = async (req, res) => {
   const user = getUserFromToken(req);
-  const account_user_id = user.account_user_id;
+  const account_user_id = user?.account_user_id;
   try {
     const query_transition_data = `
                                     SELECT
