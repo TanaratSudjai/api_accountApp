@@ -22,7 +22,7 @@ const loggingMiddleware = require("./middleware/loggingMiddleware");
 // CORS ต้องมาก่อน middleware อื่นๆ
 server.use(
   cors({
-    origin: [process.env.CLIENT_ORIGIN, "http://localhost:3000"] ,
+    origin: [process.env.CLIENT_ORIGIN, "http://localhost:3000"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
@@ -54,15 +54,13 @@ router.post("/auth/login", authController.login);
 router.post("/auth/logout", authController.logout);
 router.get("/auth/get_session", authController.gettingSession);
 
-
-
 // โหลด route files
 const routesPath = path.join(__dirname, "routes");
 fs.readdirSync(routesPath).forEach((file) => {
   try {
     if (file.endsWith(".js")) {
       const route = require(path.join(routesPath, file));
-      console.log("♻️  Loaded Route ➜ ", file ,"  🔥");
+      console.log("♻️  Loaded Route ➜ ", file, "  🔥");
 
       if (route.requiresAuth) {
         router.use("/", middleware, route);
@@ -73,38 +71,6 @@ fs.readdirSync(routesPath).forEach((file) => {
     console.error(`Error loading route from file ${file}:`, error.message);
   }
 });
-
-async function checkDatabaseConnection() {
-  try {
-    const connection = await pool.getConnection();
-    console.log("✅ Database connected successfully!");
-    connection.release();
-    return true;
-  } catch (error) {
-    console.error("❌ Database connection failed:", error.message);
-    return false;
-  }
-}
-
-const isDBConnected = checkDatabaseConnection();
-
-if (isDBConnected) {
-  console.error("✅ Connnected successfullly.");
-} else {
-  console.error("❌ Server not started due to database connection failure.");
-}
-
-setInterval(async () => {
-  try {
-    const conn = await pool.getConnection();
-    await conn.query("SELECT 1"); // dummy ping
-    conn.release();
-    console.log("✅ Keep-alive ping successful");
-  } catch (err) {
-    console.error("❌ Keep-alive ping failed:", err.message);
-  }
-}, 5 * 60 * 1000); // ทุก 5 นาที
-
 
 // ใช้ router กับ /api path
 server.use("/api", router);
