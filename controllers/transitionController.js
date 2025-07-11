@@ -2,7 +2,9 @@ const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
 const { getUserFromToken } = require("../utils/authUtils");
 exports.openAccount = async (req, res) => {
+  const connection = await sql.getConnection();
   try {
+    await connection.beginTransaction();
     const {
       account_type_id,
       account_transition_value,
@@ -15,11 +17,11 @@ exports.openAccount = async (req, res) => {
       FROM account_transition
       WHERE account_transition_submit = 1
     `;
-    const [maxResult] = await sql.query(maxQuery);
+    const [maxResult] = await connection.query(maxQuery);
     const newStartValue = maxResult[0].max_start || account_transition_start;
 
     // Step 1: Check for duplicate
-    const [existing] = await sql.query(
+    const [existing] = await connection.query(
       `SELECT * FROM account_transition WHERE account_type_id = ? AND account_transition_start = ?`,
       [account_type_id, newStartValue]
     );
@@ -98,7 +100,7 @@ exports.openAccount = async (req, res) => {
     }
 
     // Step 3: Execute insert or update
-    await sql.query(query, values);
+    await connection.query(query, values);
 
     // Step 4: Update account_type_total
     const updateTotalQuery = `
@@ -106,8 +108,8 @@ exports.openAccount = async (req, res) => {
       SET account_type_total = account_type_total + ?
       WHERE account_type_id = ?
     `;
-    await sql.query(updateTotalQuery, [account_transition_value, account_type_id]);
-
+    await connection.query(updateTotalQuery, [account_transition_value, account_type_id]);
+    await connection.commit();
     res.status(200).json({
       message:
         existing.length > 0
@@ -115,15 +117,20 @@ exports.openAccount = async (req, res) => {
           : "Account transition inserted and total increased.",
     });
   } catch (error) {
+    await connection.rollback();
     console.error("Error inserting/updating account transition:", error);
     res
       .status(500)
       .json({ error: "Server error processing account transition." });
+  } finally {
+    connection.release();
   }
 };
 
 exports.sumAccount = async (req, res) => {
+  const connection = await sql.getConnection();
   try {
+    await connection.beginTransaction();
     const { account_transition_value } = req.body;
 
     const user = getUserFromToken(req);
@@ -139,7 +146,7 @@ exports.sumAccount = async (req, res) => {
       FROM account_group
       WHERE account_user_id = ? AND account_category_id = 3
     `;
-    const [group] = await sql.query(account_group_id_query, [account_user_id]);
+    const [group] = await connection.query(account_group_id_query, [account_user_id]);
 
     if (!group.length) {
       return res.status(404).json({ error: "No account group found" });
@@ -152,7 +159,7 @@ exports.sumAccount = async (req, res) => {
       FROM account_type
       WHERE account_group_id = ?
     `;
-    const [type] = await sql.query(account_type_id_query, [account_group_id_select]);
+    const [type] = await connection.query(account_type_id_query, [account_group_id_select]);
 
     if (!type.length) {
       return res.status(404).json({ error: "No account type found" });
@@ -165,52 +172,8 @@ exports.sumAccount = async (req, res) => {
       FROM account_transition
       WHERE account_transition_submit = 1
     `;
-    const [maxResult] = await sql.query(maxQuery);
+    const [maxResult] = await connection.query(maxQuery);
     const newStartValue = maxResult[0].max_start;
-
-    // const get_income = `
-    //   SELECT 
-    //       account_transition.account_transition_id,
-    //       account_transition.account_type_id,
-    //       account_transition.account_transition_value 
-    //   FROM
-    //       account_user
-    //       INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
-    //       INNER JOIN account_type ON account_group.account_group_id = account_type.account_group_id
-    //       INNER JOIN account_transition ON account_type.account_type_id = account_transition.account_type_id
-    //   WHERE
-    //       account_user.account_user_id = ?
-    //       AND account_transition.account_transition_submit IS NULL
-    //       AND account_transition.account_category_id = 4 
-    // `;
-    // const [incomeRows] = await sql.query(get_income, [account_user_id]);
-
-    // const get_expense = `
-    //   SELECT 
-    //       account_transition.account_transition_id,
-    //       account_transition.account_type_id,
-    //       account_transition.account_transition_value 
-    //   FROM
-    //       account_user
-    //       INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
-    //       INNER JOIN account_type ON account_group.account_group_id = account_type.account_group_id
-    //       INNER JOIN account_transition ON account_type.account_type_id = account_transition.account_type_id
-    //   WHERE
-    //       account_user.account_user_id = ?
-    //       AND account_transition.account_transition_submit IS NULL
-    //       AND account_transition.account_category_id = 5
-    // `;
-    // const [expenseRows] = await sql.query(get_expense, [account_user_id]);
-
-    // const totalIncome = incomeRows.reduce(
-    //   (sum, row) => sum + (parseFloat(row.account_transition_value) || 0),
-    //   0
-    // );
-
-    // const totalExpense = expenseRows.reduce(
-    //   (sum, row) => sum + (parseFloat(row.account_transition_value) || 0),
-    //   0
-    // );
 
     const accountValue = parseFloat(account_transition_value) || 0;
     const finalValue = accountValue;
@@ -226,8 +189,8 @@ exports.sumAccount = async (req, res) => {
       VALUES (?, ?, NOW(), ?)
     `;
 
-    await sql.query(insertQuery, [account_type_id, finalValue, newStartValue]);
-
+    await connection.query(insertQuery, [account_type_id, finalValue, newStartValue]);
+    await connection.commit();
     res.status(200).json({
       message: "Account transition inserted/updated successfully.",
       finalValue,
@@ -236,18 +199,22 @@ exports.sumAccount = async (req, res) => {
       }
     });
   } catch (error) {
+    await connection.rollback();
     console.error("Error inserting account transition:", error);
     res.status(500).json({ error: "Error inserting account transition." });
+  } finally {
+    connection.release();
   }
 };
 
 exports.sumbitTransition = async (req, res) => {
   const user = getUserFromToken(req);
   const account_user_id = user?.account_user_id;
-
+  const connection = await sql.getConnection();
   try {
+    await connection.beginTransaction();
     // Submit all transitions
-    await sql.query(
+    await connection.query(
       `UPDATE account_transition 
       JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
@@ -267,7 +234,7 @@ exports.sumbitTransition = async (req, res) => {
       ) AS latest ON at.account_transition_id = latest.latest_id
       LIMIT 1;
     `;
-    const [results_type_id] = await sql.query(account_type_id_query);
+    const [results_type_id] = await connection.query(account_type_id_query);
     const account_type_cr_id = results_type_id[0]?.account_type_id;
 
     if (!account_type_cr_id) {
@@ -277,7 +244,7 @@ exports.sumbitTransition = async (req, res) => {
     }
 
     // Update account_type_cr_id for the transitions
-    await sql.query(
+    await connection.query(
       `UPDATE account_transition 
       JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
@@ -286,43 +253,6 @@ exports.sumbitTransition = async (req, res) => {
       WHERE account_transition.account_type_id = ? AND account_user.account_user_id = ? `,
       [account_type_cr_id, account_type_cr_id, account_user_id]
     );
-
-    // const [latestStartRow] = await sql.query(`
-    //     SELECT MAX(account_transition_start) AS latest_start
-    //     FROM account_transition
-    //     WHERE account_transition_submit IS NULL
-    //       AND account_transition_start IS NOT NULL
-    //   `);
-
-    //   const latestStart = latestStartRow[0]?.latest_start;
-
-    //   if (latestStart === null || latestStart === undefined) {
-    //     return res.status(400).json({ error: "No unsubmitted transitions found." });
-    // }
-
-    // const query_sumvalueType = `
-    //   SELECT
-    //     account_type.account_type_name, 
-    //     account_transition.account_type_id, 
-    //     SUM(account_transition.account_transition_value) AS SUMGROUP_TYPE
-    //   FROM
-    //     account_type
-    //   INNER JOIN
-    //     account_transition ON account_type.account_type_id = account_transition.account_type_id
-
-    //   GROUP BY account_type.account_type_id
-    // `;
-    // const [results] = await sql.query(query_sumvalueType);
-
-    // // Get existing totals (exclude category_id = 3)
-    // const get_account_type_total = `
-    //   SELECT account_type_id, account_type_total
-    //   FROM account_type
-    //   WHERE account_category_id != 3
-    // `;
-    // const [account_type_total_all] = await sql.query(get_account_type_total);
-
-    // const updatedAccountTypeIds = new Set();
 
     const get_lasted_account_transition = `
       SELECT 
@@ -342,7 +272,7 @@ exports.sumbitTransition = async (req, res) => {
       LIMIT 1;
     `;
 
-    const [lasted_account_transition] = await sql.query(
+    const [lasted_account_transition] = await connection.query(
       get_lasted_account_transition,
       [account_user_id]
     );
@@ -351,76 +281,12 @@ exports.sumbitTransition = async (req, res) => {
 
     console.log(account_transition_value, account_type_id);
 
-    await sql.query(
+    await connection.query(
       `UPDATE account_type SET account_type_sum = account_type_sum + ?, account_type_total = account_type_total + ? WHERE account_type_id = ?`,
       [account_transition_value, account_transition_value, account_type_id]
     );
 
-    // for (const result of results) {
-    //   const { SUMGROUP_TYPE, account_type_id } = result;
-
-    //   // Avoid processing duplicate account_type_id
-    //   if (updatedAccountTypeIds.has(account_type_id)) continue;
-    //   updatedAccountTypeIds.add(account_type_id);
-
-    //   const [categoryResult] = await sql.query(
-    //     `SELECT account_category_id, account_type_total FROM account_type WHERE account_type_id = ?`,
-    //     [account_type_id]
-    //   );
-
-    //   const [checkCategory] = await sql.query(
-    //     `SELECT account_type_from_id, account_category_from_id
-    //  FROM account_transition
-    //  WHERE account_type_id = ?
-    //  LIMIT 1`,
-    //     [account_type_id]
-    //   );
-
-    //   const { account_category_id, account_type_total } =
-    //     categoryResult[0] || {};
-    //   const { account_type_from_id, account_category_from_id } =
-    //     checkCategory[0] || {};
-
-    //   const [isFromInOther] = await sql.query(
-    //     `
-    //     SELECT 1 FROM account_transition
-    //     WHERE account_type_from_id = ? LIMIT 1
-    //   `,
-    //     [account_type_id]
-    //   );
-
-    //   const wasUsedAsSource = isFromInOther.length > 0;
-    //   console.log(SUMGROUP_TYPE);
-
-    //   if (account_category_id === 3) {
-    //     console.log("IF: category_id === 3");
-    //     await sql.query(
-    //       `UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?`,
-    //       [SUMGROUP_TYPE, SUMGROUP_TYPE, account_type_id]
-    //     );
-    //   // } else if (!wasUsedAsSource && account_category_id !== 3) {
-    //   //   // First-time insert
-    //   //   await sql.query(
-    //   //     `UPDATE account_type SET account_type_sum = ?, account_type_total = ? WHERE account_type_id = ?`,
-    //   //     [SUMGROUP_TYPE, SUMGROUP_TYPE, account_type_id]
-    //   //   );
-    //   // } else {
-    //   //   console.log("ELSE: copy total to sum");
-
-    //   //   const matched = account_type_total_all.find(
-    //   //     (item) => item.account_type_id === account_type_id
-    //   //   );
-    //   //   const totalToUse = matched ? matched.account_type_total : 0;
-
-    //   //   await sql.query(
-    //   //     `UPDATE account_type SET account_type_sum = ? WHERE account_type_id = ?`,
-    //   //     [totalToUse, account_type_id]
-    //   //   );
-    //   // }
-    // }
-  // }
-
-    await sql.query(
+    await connection.query(
       `UPDATE account_type 
       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
       JOIN account_user ON account_group.account_user_id = account_user.account_user_id
@@ -429,13 +295,16 @@ exports.sumbitTransition = async (req, res) => {
       [account_user_id]
     );
 
-
+    await connection.commit();
     res.status(200).json({
       message: "Account transition submitted and sums updated successfully.",
     });
   } catch (error) {
+    await connection.rollback();
     console.error("Error inserting account transition:", error);
     res.status(500).json({ error: "Error inserting account transition." });
+  } finally {
+    connection.release();
   }
 };
 

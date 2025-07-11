@@ -1,7 +1,9 @@
 const sql = require("../database/db");
 
 exports.openAccountGroup_bankTransition = async (req, res) => {
+  const connection = await sql.getConnection();
   try {
+    await connection.beginTransaction();
     const {
       account_type_id,
       account_type_from_id,
@@ -12,7 +14,7 @@ exports.openAccountGroup_bankTransition = async (req, res) => {
 
     // คำสั่ง SQL เพื่อดึง account_type_sum
     const readValueQuery = `SELECT account_type_total FROM account_type WHERE account_type_id = ?`;
-    const [readValueResult] = await sql.query(readValueQuery, [
+    const [readValueResult] = await connection.query(readValueQuery, [
       account_type_id,
     ]);
 
@@ -38,7 +40,7 @@ exports.openAccountGroup_bankTransition = async (req, res) => {
         WHERE account_transition_submit = 1
       `;
 
-    const [maxResult] = await sql.query(maxQuery);
+    const [maxResult] = await connection.query(maxQuery);
     const newStartValue = maxResult[0].max_start || account_transition_start;
 
     //  กรอง id ของ type เเละ from type id เพื่อ หา ต้น-ปลายทาง เเละ value ที่ทำรายการไป
@@ -57,7 +59,7 @@ exports.openAccountGroup_bankTransition = async (req, res) => {
                                                   SET account_type_total = account_type_total - ? 
                                                   WHERE account_type_id = ? AND account_type_total >= ?
                                                   `;
-    await sql.query(query_value_process_strat_transition, [
+    await connection.query(query_value_process_strat_transition, [
       account_transition_value_transition,
       params_type_id_start,
       account_transition_value_transition,
@@ -68,7 +70,7 @@ exports.openAccountGroup_bankTransition = async (req, res) => {
                                                 SET account_type_total = account_type_total + ? 
                                                 WHERE account_type_id = ?
                                                 `;
-    await sql.query(query_value_process_end_transition, [
+    await connection.query(query_value_process_end_transition, [
       account_transition_value_transition,
       params_type_id_end,
     ]);
@@ -78,7 +80,7 @@ exports.openAccountGroup_bankTransition = async (req, res) => {
         (account_type_id, account_category_id, account_transition_value, account_transition_datetime, account_type_from_id, account_transition_start, account_category_from_id, account_type_cr_id, account_type_dr_id)
         VALUES (?, ?, ?, NOW(), ?, ?, 1,?,?) `;
     //ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
-    await sql.query(query, [
+    await connection.query(query, [
       account_type_id,
       account_category_id,
       account_transition_value,
@@ -88,52 +90,26 @@ exports.openAccountGroup_bankTransition = async (req, res) => {
       account_type_from_id,
       account_transition_value,
     ]);
-
-    // ดึง account_transition_id debug null
-    // const res_account_transition_id = `SELECT account_transition_id
-    //                                     FROM  account_transition
-    //                                     WHERE account_transition_submit IS NULL
-    //                                     LIMIT 1;
-    //                                     `;
-
-    // const [pull_account_transition_id] = await sql.query(
-    //   res_account_transition_id
-    // );
-    // // debug transitionbank
-    // console.log("pull_account_transition_id ==>", pull_account_transition_id);
-
-    // const account_transition_id =
-    //   pull_account_transition_id[0].account_transition_id;
-    // // debug transitionbank
-    // console.log("account_transition_id == ", account_transition_id);
-
-    // อัพเดตปลายทางในการ duplicate
-    // const update_account_type_form_id = `UPDATE account_transition
-    //                                     SET account_type_from_id = ? , account_type_dr_id = ?
-    //                                     WHERE account_transition_id  = ?`;
-
-    // const res__ = await sql.query(update_account_type_form_id, [
-    //   params_type_id_end,
-    //   params_type_id_end,
-    //   account_transition_id,
-    // ]);
-
-    // console.log(res__);
-
+    await connection.commit();
     console.log("value is :", params_type_id_end);
 
     res
       .status(200)
       .json({ message: "Account transition inserted/updated successfully." });
   } catch (error) {
+    await connection.rollback();
     console.error("Error inserting account transition:", error.message);
     res.status(500).json({ error: "Error inserting account transition." });
+  } finally {
+    connection.release();
   }
 };
 
 // success
 exports.creditor_borrow_bankTransition = async (req, res) => {
+  const connection = await sql.getConnection();
   try {
+    await connection.beginTransaction();
     const {
       account_type_id,
       account_type_from_id,
@@ -144,7 +120,7 @@ exports.creditor_borrow_bankTransition = async (req, res) => {
 
     // คำสั่ง SQL เพื่อดึง account_type_sum
     const readValueQuery = `SELECT account_type_total FROM account_type WHERE account_type_id = ?`;
-    const [readValueResult] = await sql.query(readValueQuery, [
+    const [readValueResult] = await connection.query(readValueQuery, [
       account_type_id,
     ]);
 
@@ -170,7 +146,7 @@ exports.creditor_borrow_bankTransition = async (req, res) => {
         WHERE account_transition_submit = 1
       `;
 
-    const [maxResult] = await sql.query(maxQuery);
+    const [maxResult] = await connection.query(maxQuery);
     const newStartValue = maxResult[0].max_start || account_transition_start;
 
     //  กรอง id ของ type เเละ from type id เพื่อ หา ต้น-ปลายทาง เเละ value ที่ทำรายการไป
@@ -189,7 +165,7 @@ exports.creditor_borrow_bankTransition = async (req, res) => {
                                                   SET account_type_total = account_type_total + ? 
                                                   WHERE account_type_id = ? 
                                                   `;
-    await sql.query(query_value_process_strat_transition, [
+    await connection.query(query_value_process_strat_transition, [
       account_transition_value_transition,
       params_type_id_start,
       account_transition_value_transition,
@@ -200,7 +176,7 @@ exports.creditor_borrow_bankTransition = async (req, res) => {
                                                 SET account_type_total = account_type_total + ? 
                                                 WHERE account_type_id = ?
                                                 `;
-    await sql.query(query_value_process_end_transition, [
+    await connection.query(query_value_process_end_transition, [
       account_transition_value,
       params_type_id_end,
     ]);
@@ -212,7 +188,7 @@ exports.creditor_borrow_bankTransition = async (req, res) => {
         ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
       `;
 
-    await sql.query(query, [
+    await connection.query(query, [
       account_type_id,
       account_category_id,
       account_transition_value,
@@ -222,18 +198,23 @@ exports.creditor_borrow_bankTransition = async (req, res) => {
       account_type_from_id,
       account_transition_value,
     ]);
-
+    await connection.commit();
     res
       .status(200)
       .json({ message: "Account transition inserted/updated successfully." });
   } catch (error) {
+    await connection.rollback();
     console.error("Error inserting account transition:", error);
     res.status(500).json({ error: "Error inserting account transition." });
+  } finally {
+    connection.release();
   }
 };
 // success
 exports.creditor_return_bankTransition = async (req, res) => {
+  const connection = await sql.getConnection();
   try {
+    await connection.beginTransaction();
     const {
       account_type_id,
       account_type_from_id,
@@ -244,7 +225,7 @@ exports.creditor_return_bankTransition = async (req, res) => {
 
     // คำสั่ง SQL เพื่อดึง account_type_sum
     const readValueQuery = `SELECT account_type_total FROM account_type WHERE account_type_id = ?`;
-    const [readValueResult] = await sql.query(readValueQuery, [
+    const [readValueResult] = await connection.query(readValueQuery, [
       account_type_id,
     ]);
 
@@ -270,7 +251,7 @@ exports.creditor_return_bankTransition = async (req, res) => {
         WHERE account_transition_submit = 1
       `;
 
-    const [maxResult] = await sql.query(maxQuery);
+    const [maxResult] = await connection.query(maxQuery);
     const newStartValue = maxResult[0].max_start || account_transition_start;
 
     //  กรอง id ของ type เเละ from type id เพื่อ หา ต้น-ปลายทาง เเละ value ที่ทำรายการไป
@@ -289,7 +270,7 @@ exports.creditor_return_bankTransition = async (req, res) => {
                                                   SET account_type_total = account_type_total - ? 
                                                   WHERE account_type_id = ? 
                                                   `;
-    await sql.query(query_value_process_strat_transition, [
+    await connection.query(query_value_process_strat_transition, [
       account_transition_value_transition,
       params_type_id_start,
       account_transition_value_transition,
@@ -300,7 +281,7 @@ exports.creditor_return_bankTransition = async (req, res) => {
                                                 SET account_type_total = account_type_total - ? 
                                                 WHERE account_type_id = ?
                                                 `;
-    await sql.query(query_value_process_end_transition, [
+    await connection.query(query_value_process_end_transition, [
       account_transition_value,
       params_type_id_end,
     ]);
@@ -312,7 +293,7 @@ exports.creditor_return_bankTransition = async (req, res) => {
         ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
       `;
 
-    await sql.query(query, [
+    await connection.query(query, [
       account_type_id,
       account_category_id,
       account_transition_value,
@@ -322,18 +303,23 @@ exports.creditor_return_bankTransition = async (req, res) => {
       account_type_from_id,
       account_transition_value,
     ]);
-
+    await connection.commit();
     res
       .status(200)
       .json({ message: "Account transition inserted/updated successfully." });
   } catch (error) {
+    await connection.rollback();
     console.error("Error inserting account transition:", error);
     res.status(500).json({ error: "Error inserting account transition." });
+  } finally {
+    connection.release();
   }
 };
 
 exports.debtor_borrow_bankTransition = async (req, res) => {
+  const connection = await sql.getConnection();
   try {
+    await connection.beginTransaction();
     const {
       account_type_id,
       account_type_from_id,
@@ -344,7 +330,7 @@ exports.debtor_borrow_bankTransition = async (req, res) => {
 
     // คำสั่ง SQL เพื่อดึง account_type_sum
     const readValueQuery = `SELECT account_type_total FROM account_type WHERE account_type_id = ?`;
-    const [readValueResult] = await sql.query(readValueQuery, [
+    const [readValueResult] = await connection.query(readValueQuery, [
       account_type_id,
     ]);
 
@@ -370,7 +356,7 @@ exports.debtor_borrow_bankTransition = async (req, res) => {
         WHERE account_transition_submit = 1
       `;
 
-    const [maxResult] = await sql.query(maxQuery);
+    const [maxResult] = await connection.query(maxQuery);
     const newStartValue = maxResult[0].max_start || account_transition_start;
 
     //  กรอง id ของ type เเละ from type id เพื่อ หา ต้น-ปลายทาง เเละ value ที่ทำรายการไป
@@ -389,7 +375,7 @@ exports.debtor_borrow_bankTransition = async (req, res) => {
                                                   SET account_type_total = account_type_total - ? 
                                                   WHERE account_type_id = ? 
                                                   `;
-    await sql.query(query_value_process_strat_transition, [
+    await connection.query(query_value_process_strat_transition, [
       account_transition_value_transition,
       params_type_id_start,
       account_transition_value_transition,
@@ -400,7 +386,7 @@ exports.debtor_borrow_bankTransition = async (req, res) => {
                                                 SET account_type_total = account_type_total + ? 
                                                 WHERE account_type_id = ?
                                                 `;
-    await sql.query(query_value_process_end_transition, [
+    await connection.query(query_value_process_end_transition, [
       account_transition_value,
       params_type_id_end,
     ]);
@@ -412,7 +398,7 @@ exports.debtor_borrow_bankTransition = async (req, res) => {
         ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
       `;
 
-    await sql.query(query, [
+    await connection.query(query, [
       account_type_id,
       account_category_id,
       account_transition_value,
@@ -422,18 +408,23 @@ exports.debtor_borrow_bankTransition = async (req, res) => {
       account_type_from_id,
       account_transition_value,
     ]);
-
+    await connection.commit();
     res
       .status(200)
       .json({ message: "Account transition inserted/updated successfully." });
   } catch (error) {
+    await connection.rollback();
     console.error("Error inserting account transition:", error);
     res.status(500).json({ error: "Error inserting account transition." });
+  } finally {
+    connection.release();
   }
 };
 
 exports.debtor_return_bankTransition = async (req, res) => {
+  const connection = await sql.getConnection();
   try {
+    await connection.beginTransaction();
     const {
       account_type_id,
       account_type_from_id,
@@ -444,7 +435,7 @@ exports.debtor_return_bankTransition = async (req, res) => {
 
     // คำสั่ง SQL เพื่อดึง account_type_sum
     const readValueQuery = `SELECT account_type_total FROM account_type WHERE account_type_id = ?`;
-    const [readValueResult] = await sql.query(readValueQuery, [
+    const [readValueResult] = await connection.query(readValueQuery, [
       account_type_id,
     ]);
 
@@ -470,7 +461,7 @@ exports.debtor_return_bankTransition = async (req, res) => {
         WHERE account_transition_submit = 1
       `;
 
-    const [maxResult] = await sql.query(maxQuery);
+    const [maxResult] = await connection.query(maxQuery);
     const newStartValue = maxResult[0].max_start || account_transition_start;
 
     //  กรอง id ของ type เเละ from type id เพื่อ หา ต้น-ปลายทาง เเละ value ที่ทำรายการไป
@@ -489,7 +480,7 @@ exports.debtor_return_bankTransition = async (req, res) => {
                                                   SET account_type_total = account_type_total - ? 
                                                   WHERE account_type_id = ? 
                                                   `;
-    await sql.query(query_value_process_strat_transition, [
+    await connection.query(query_value_process_strat_transition, [
       account_transition_value_transition,
       params_type_id_start,
       account_transition_value_transition,
@@ -500,7 +491,7 @@ exports.debtor_return_bankTransition = async (req, res) => {
                                                 SET account_type_total = account_type_total + ? 
                                                 WHERE account_type_id = ?
                                                 `;
-    await sql.query(query_value_process_end_transition, [
+    await connection.query(query_value_process_end_transition, [
       account_transition_value,
       params_type_id_end,
     ]);
@@ -512,7 +503,7 @@ exports.debtor_return_bankTransition = async (req, res) => {
         ON DUPLICATE KEY UPDATE account_transition_value = ?, account_transition_datetime = NOW()
       `;
 
-    await sql.query(query, [
+    await connection.query(query, [
       account_type_id,
       account_category_id,
       account_transition_value,
@@ -522,21 +513,26 @@ exports.debtor_return_bankTransition = async (req, res) => {
       account_type_from_id,
       account_transition_value,
     ]);
-
+    await connection.commit();
     res
       .status(200)
       .json({ message: "Account transition inserted/updated successfully." });
   } catch (error) {
+    await connection.rollback();
     console.error("Error inserting account transition:", error);
     res.status(500).json({ error: "Error inserting account transition." });
+  } finally {
+    connection.release();
   }
 };
 
 // bank debtor
 exports.delTransition_bank_objectvalue = async (req, res) => {
   const { account_transition_id } = req.params;
+  const connection = await sql.getConnection();
   //const { account_transition_values } = req.body;
   try {
+    await connection.beginTransaction();
     //กรองค่า value ที่ทำรายการของ id transition ที่จะลบเพื่อนำไปคืนค่า
     const get_value_transition = `
                                 SELECT 
@@ -545,7 +541,7 @@ exports.delTransition_bank_objectvalue = async (req, res) => {
                                   account_type_from_id AS transition_end 
                                 FROM account_transition 
                                 WHERE account_transition_id = ?`;
-    const [result] = await sql.query(get_value_transition, [
+    const [result] = await connection.query(get_value_transition, [
       account_transition_id,
     ]);
 
@@ -567,14 +563,14 @@ exports.delTransition_bank_objectvalue = async (req, res) => {
 
     // query คืนค่าก่อนให้ต้นทาง ค่อยทำการลบ
     const reuse_value_query = `UPDATE account_type SET account_type_total = account_type_total + ? WHERE account_type_id = ?`;
-    await sql.query(reuse_value_query, [value_reuse, transition_start_id]);
+    await connection.query(reuse_value_query, [value_reuse, transition_start_id]);
     //ดึงค่าคืน จากปลายทาง เพื่อยกเลิก transition
     const move_value_query = `UPDATE account_type SET account_type_total = account_type_total - ? WHERE account_type_id = ?`;
-    await sql.query(move_value_query, [value_reuse, transition_end_id]);
+    await connection.query(move_value_query, [value_reuse, transition_end_id]);
 
     // view code
     // const check_list_transition_formove = `SELECT account_transition_value , account_transition_id  FROM account_transition WHERE account_type_id = ?`;
-    // const [response_transition_node] = await sql.query(
+    // const [response_transition_node] = await connection.query(
     //   check_list_transition_formove,
     //   [transition_start_id]
     // );
@@ -588,24 +584,29 @@ exports.delTransition_bank_objectvalue = async (req, res) => {
 
     //คืนค่าเสร็จเเล้ว ทำการลบ transition นั่น ออกไปด้วย id
     const delete_transition = `DELETE FROM account_transition WHERE account_transition_id = ? `;
-    await sql.query(delete_transition, [account_transition_id]);
+    await connection.query(delete_transition, [account_transition_id]);
 
     // คืนสองค่า --- ต้นทาง ปลายทาง
-
+    await connection.commit();
     res.status(200).json({ message: "Transition deleted successfully." });
   } catch (err) {
+    await connection.rollback();
     res.status(500).json({
       error: err.message,
       warning: "Error deleting transition bank!",
     });
+  } finally {
+    connection.release();
   }
 };
 
 // เจ้าหนี้ ลบ  แก้
 exports.delFor_return_objectvalue = async (req, res) => {
   const { account_transition_id } = req.params;
+  const connection = await sql.getConnection();
   //const { account_transition_values } = req.body;
   try {
+    await connection.beginTransaction();
     const serch_category_id_with_transition_id = `SELECT
                                                   account_category.account_category_id,
                                                   account_transition.account_transition_id,
@@ -618,12 +619,12 @@ exports.delFor_return_objectvalue = async (req, res) => {
                                               WHERE
                                                 account_transition.account_transition_id = ? ;
                                               `;
-    const [category_id_borrow] = await sql.query(
+    const [category_id_borrow] = await connection.query(
       serch_category_id_with_transition_id,
       [account_transition_id]
     );
 
-    const [result] = await sql.query(
+    const [result] = await connection.query(
       `SELECT 
                                         account_transition_value , 
                                         account_type_id AS transition_start ,
@@ -666,54 +667,59 @@ exports.delFor_return_objectvalue = async (req, res) => {
         reuse_value_query = `UPDATE account_type SET account_type_total = account_type_total - ? WHERE account_type_id = ?`;
     }
 
-    await sql.query(transition_query, [value_reuse, transition_end_id]);
-    await sql.query(reuse_value_query, [value_reuse, transition_start_id]);
+    await connection.query(transition_query, [value_reuse, transition_end_id]);
+    await connection.query(reuse_value_query, [value_reuse, transition_start_id]);
 
     const delete_transition = `DELETE FROM account_transition WHERE account_transition_id = ? `;
-    await sql.query(delete_transition, [account_transition_id]);
-
+    await connection.query(delete_transition, [account_transition_id]);
+    await connection.commit();
     res.status(200).json({ message: "Transition deleted successfully." });
   } catch (err) {
+    await connection.rollback();
     res.status(500).json({
       error: err.message,
       warning: "Error deleting transition bank!",
     });
+  } finally {
+    connection.release();
   }
 };
 
 //return back transition
 exports.delFor_return_bank = async (req, res) => {
   // const { account_transition_id } = req.params;
-
-  const select_transition_latest = `SELECT *
+  const connection = await sql.getConnection();
+  try {
+    await connection.beginTransaction();
+    const select_transition_latest = `SELECT *
                                     FROM account_transition
                                     WHERE account_category_id = 7 AND account_category_from_id = 1
                                     ORDER BY account_transition_id DESC
                                     LIMIT 1;
                                     ;
                                                 `;
-  // transition_latest data
-  const [result_select_transition_latest] = await sql.query(
-    select_transition_latest
-  );
+    // transition_latest data
+    const [result_select_transition_latest] = await connection.query(
+      select_transition_latest
+    );
 
-  if (!result_select_transition_latest[0]) {
-    console.log("transition not found");
-  }
-  console.log(result_select_transition_latest[0].account_type_id);
+    if (!result_select_transition_latest[0]) {
+      console.log("transition not found");
+    }
+    console.log(result_select_transition_latest[0].account_type_id);
 
-  // account_type_id
-  const rollback_id = result_select_transition_latest[0].account_type_id; //101 bualuang
-  const rollback_value =
-    result_select_transition_latest[0].account_transition_value;
+    // account_type_id
+    const rollback_id = result_select_transition_latest[0].account_type_id; //101 bualuang
+    const rollback_value =
+      result_select_transition_latest[0].account_transition_value;
 
-  const id_for_check_value =
-    result_select_transition_latest[0].account_type_from_id;
+    const id_for_check_value =
+      result_select_transition_latest[0].account_type_from_id;
 
-  const check_value = `SELECT account_type_total FROM account_type WHERE account_type_id = ?`; // 25
+    const check_value = `SELECT account_type_total FROM account_type WHERE account_type_id = ?`; // 25
 
-  const [result_check_value] = await sql.query(check_value, [
-  id_for_check_value,
+    const [result_check_value] = await connection.query(check_value, [
+      id_for_check_value,
     ]);
 
     const account_type_total = result_check_value[0]?.account_type_total;
@@ -724,41 +730,48 @@ exports.delFor_return_bank = async (req, res) => {
       });
     }
 
-  const rollback_transition =
-    "UPDATE account_type SET account_type_total = account_type_total + ? WHERE account_type_id = ?";
-  await sql.query(rollback_transition, [rollback_value, rollback_id]);
+    const rollback_transition =
+      "UPDATE account_type SET account_type_total = account_type_total + ? WHERE account_type_id = ?";
+    await connection.query(rollback_transition, [rollback_value, rollback_id]);
 
-  // account_type_from_id
-  const rollback_id_from =
-    result_select_transition_latest[0].account_type_from_id; // 150 true_money
+    // account_type_from_id
+    const rollback_id_from =
+      result_select_transition_latest[0].account_type_from_id; // 150 true_money
 
-  const rollback_transition_from =
-    "UPDATE account_type SET account_type_total = account_type_total - ? WHERE account_type_id = ?";
+    const rollback_transition_from =
+      "UPDATE account_type SET account_type_total = account_type_total - ? WHERE account_type_id = ?";
 
-  await sql.query(rollback_transition_from, [rollback_value, rollback_id_from]);
+    await connection.query(rollback_transition_from, [rollback_value, rollback_id_from]);
 
-  const account_transition_id =
-    result_select_transition_latest[0].account_transition_id;
-  await sql.query(
-    "DELETE FROM account_transition WHERE account_transition_id = ?",
-    [account_transition_id]
-  );
-
-  res.json({
-    data: result_select_transition_latest[0],
-  });
+    const account_transition_id =
+      result_select_transition_latest[0].account_transition_id;
+    await connection.query(
+      "DELETE FROM account_transition WHERE account_transition_id = ?",
+      [account_transition_id]
+    );
+    await connection.commit();
+    res.json({
+      data: result_select_transition_latest[0],
+    });
+  } catch (error) {
+    await connection.rollback();
+    res.status(500).json({ error: error.message });
+  } finally {
+    connection.release();
+  }
 };
 
 exports.delFor_Creditor = async (req, res) => {
   const { account_transition_id } = req.params;
-
+  const connection = await sql.getConnection();
   try {
+    await connection.beginTransaction();
     const check_cat_and_cat_from_id = `
     SELECT *
     FROM account_transition
     WHERE account_transition_id = ?;
     `;
-    const [rows] = await sql.query(check_cat_and_cat_from_id, [
+    const [rows] = await connection.query(check_cat_and_cat_from_id, [
       account_transition_id,
     ]);
 
@@ -776,7 +789,7 @@ exports.delFor_Creditor = async (req, res) => {
       const return_value_of_creditor = `
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
       `;
-      await sql.query(return_value_of_creditor, [
+      await connection.query(return_value_of_creditor, [
         parseFloat(result.account_transition_value),
         result.account_type_cr_id,
       ]);
@@ -784,7 +797,7 @@ exports.delFor_Creditor = async (req, res) => {
       const return_value_of_owner = `
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
       `;
-      await sql.query(return_value_of_owner, [
+      await connection.query(return_value_of_owner, [
         parseFloat(result.account_transition_value),
         result.account_type_dr_id,
       ]);
@@ -792,7 +805,7 @@ exports.delFor_Creditor = async (req, res) => {
       const delete_transition = `
       DELETE FROM account_transition WHERE account_transition_id = ?;
       `;
-      await sql.query(delete_transition, [account_transition_id]);
+      await connection.query(delete_transition, [account_transition_id]);
     }
     if (
       result.account_category_id === 1 &&
@@ -802,7 +815,7 @@ exports.delFor_Creditor = async (req, res) => {
       const return_value_of_creditor = `
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
       `;
-      await sql.query(return_value_of_creditor, [
+      await connection.query(return_value_of_creditor, [
         parseFloat(result.account_transition_value),
         result.account_type_cr_id,
       ]);
@@ -810,7 +823,7 @@ exports.delFor_Creditor = async (req, res) => {
       const return_value_of_owner = `
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
       `;
-      await sql.query(return_value_of_owner, [
+      await connection.query(return_value_of_owner, [
         parseFloat(result.account_transition_value),
         result.account_type_dr_id,
       ]);
@@ -818,28 +831,32 @@ exports.delFor_Creditor = async (req, res) => {
       const delete_transition = `
       DELETE FROM account_transition WHERE account_transition_id = ?;
       `;
-      await sql.query(delete_transition, [account_transition_id]);
+      await connection.query(delete_transition, [account_transition_id]);
     }
-
+    await connection.commit();
     res
       .status(200)
       .json({ message: "Account transition deleted successfully." });
   } catch (error) {
+    await connection.rollback();
     console.error("Error deleting account transition:", error);
     res.status(500).json({ error: "Error deleting account transition." });
+  } finally {
+    connection.release();
   }
 };
 
 exports.delFor_Debtor = async (req, res) => {
   const { account_transition_id } = req.params;
-
+  const connection = await sql.getConnection();
   try {
+    await connection.beginTransaction();
     const check_cat_and_cat_from_id = `
     SELECT *
     FROM account_transition
     WHERE account_transition_id = ?;
     `;
-    const [rows] = await sql.query(check_cat_and_cat_from_id, [
+    const [rows] = await connection.query(check_cat_and_cat_from_id, [
       account_transition_id,
     ]);
 
@@ -857,7 +874,7 @@ exports.delFor_Debtor = async (req, res) => {
       const return_value_of_creditor = `
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
       `;
-      await sql.query(return_value_of_creditor, [
+      await connection.query(return_value_of_creditor, [
         parseFloat(result.account_transition_value),
         result.account_type_cr_id,
       ]);
@@ -865,7 +882,7 @@ exports.delFor_Debtor = async (req, res) => {
       const return_value_of_owner = `
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
       `;
-      await sql.query(return_value_of_owner, [
+      await connection.query(return_value_of_owner, [
         parseFloat(result.account_transition_value),
         result.account_type_dr_id,
       ]);
@@ -873,7 +890,7 @@ exports.delFor_Debtor = async (req, res) => {
       const delete_transition = `
       DELETE FROM account_transition WHERE account_transition_id = ?;
       `;
-      await sql.query(delete_transition, [account_transition_id]);
+      await connection.query(delete_transition, [account_transition_id]);
     }
     if (
       result.account_category_id === 6 &&
@@ -883,7 +900,7 @@ exports.delFor_Debtor = async (req, res) => {
       const return_value_of_creditor = `
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total + ? WHERE account_type.account_type_id = ?;
       `;
-      await sql.query(return_value_of_creditor, [
+      await connection.query(return_value_of_creditor, [
         parseFloat(result.account_transition_value),
         result.account_type_cr_id,
       ]);
@@ -891,7 +908,7 @@ exports.delFor_Debtor = async (req, res) => {
       const return_value_of_owner = `
       UPDATE account_type SET account_type.account_type_total = account_type.account_type_total - ? WHERE account_type.account_type_id = ?;
       `;
-      await sql.query(return_value_of_owner, [
+      await connection.query(return_value_of_owner, [
         parseFloat(result.account_transition_value),
         result.account_type_dr_id,
       ]);
@@ -899,14 +916,17 @@ exports.delFor_Debtor = async (req, res) => {
       const delete_transition = `
       DELETE FROM account_transition WHERE account_transition_id = ?;
       `;
-      await sql.query(delete_transition, [account_transition_id]);
+      await connection.query(delete_transition, [account_transition_id]);
     }
-
+    await connection.commit();
     res
       .status(200)
       .json({ message: "Account transition deleted successfully." });
   } catch (error) {
+    await connection.rollback();
     console.error("Error deleting account transition:", error);
     res.status(500).json({ error: "Error deleting account transition." });
+  } finally {
+    connection.release();
   }
 };

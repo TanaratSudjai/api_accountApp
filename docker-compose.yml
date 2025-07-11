@@ -5,6 +5,7 @@ services:
     image: mysql:8.1
     container_name: my_mysql
     restart: always
+    command: --wait_timeout=86400
     environment:
       MYSQL_ROOT_PASSWORD: 12334
       MYSQL_DATABASE: accounting
