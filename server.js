@@ -16,6 +16,7 @@ setupSwagger(server);
 
 // Middleware & Controllers
 const authController = require("./controllers/authController");
+const exportAccountController = require("./controllers/ExportAccount");
 const middleware = require("./middleware/authMiddleware");
 const loggingMiddleware = require("./middleware/loggingMiddleware");
 
@@ -53,6 +54,8 @@ router.post("/auth/register", authController.register);
 router.post("/auth/login", authController.login);
 router.post("/auth/logout", authController.logout);
 router.get("/auth/get_session", authController.gettingSession);
+
+router.post("/ExportAccount", exportAccountController.CloseAccount);
 
 // โหลด route files
 const routesPath = path.join(__dirname, "routes");
