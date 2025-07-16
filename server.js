@@ -56,6 +56,7 @@ router.post("/auth/logout", authController.logout);
 router.get("/auth/get_session", authController.gettingSession);
 
 router.post("/ExportAccount", exportAccountController.CloseAccount);
+router.get("/getClosedAccount", exportAccountController.getClosedAccount);
 
 // โหลด route files
 const routesPath = path.join(__dirname, "routes");
