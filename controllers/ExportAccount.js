@@ -50,24 +50,28 @@ exports.CloseAccount = async (req, res) => {
 
     const [rows] = await sql.query(
       `SELECT
-  account_category.account_category_id, 
-  account_category.account_category_name, 
-  account_group.account_group_id, 
-  account_group.account_group_name, 
-  account_type.account_type_id, 
-  account_type.account_type_name, 
-  account_type.account_type_sum
-FROM
-  account_category
-JOIN account_group 
-  ON account_category.account_category_id = account_group.account_category_id
-JOIN account_type 
-  ON account_group.account_group_id = account_type.account_group_id
-JOIN account_user 
-  ON account_group.account_user_id = account_user.account_user_id
-WHERE
-  account_user.account_user_id = ?
-`,
+    account_category.account_category_id, 
+    account_category.account_category_name, 
+    account_group.account_group_id, 
+    account_group.account_group_name, 
+    account_type.account_type_id, 
+    account_type.account_type_name, 
+    account_type.account_type_sum
+  FROM
+    account_category
+  JOIN account_group 
+    ON account_category.account_category_id = account_group.account_category_id
+  JOIN account_type 
+    ON account_group.account_group_id = account_type.account_group_id
+  JOIN account_user 
+    ON account_group.account_user_id = account_user.account_user_id
+  WHERE
+    account_user.account_user_id = ?
+  ORDER BY 
+    FIELD(account_category.account_category_id, 1, 6, 7, 2, 3, 4, 5),
+    account_group.account_group_id,
+    account_type.account_type_id
+  `,
       [userId]
     );
 
@@ -187,4 +191,4 @@ exports.getClosedAccount = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
-}
+};
