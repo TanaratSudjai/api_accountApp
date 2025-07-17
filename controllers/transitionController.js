@@ -357,6 +357,8 @@ exports.getTransaction = async (req, res) => {
           account_group.account_user_id = account_user.account_user_id
       WHERE
         account_user.account_user_id = ?
+      ORDER BY
+        account_transition.account_transition_datetime DESC
        `,
       [account_user_id]
     );
@@ -400,6 +402,26 @@ exports.getTransaction = async (req, res) => {
       [2, account_user_id]
     );
 
+    const [checkOpenAccount] = await sql.query(
+      `
+                                            SELECT 
+                                              account_type.account_type_sum
+                                            FROM
+                                              account_type
+                                              INNER JOIN
+                                              account_group
+                                            ON 
+                                                account_type.account_group_id = account_group.account_group_id
+                                            INNER JOIN
+                                              account_user
+                                            ON 
+                                                account_group.account_user_id = account_user.account_user_id
+                                            WHERE 
+                                                account_type.account_category_id = ? AND account_group.account_user_id = ?`,
+
+      [3, account_user_id]
+    );
+
     // return data to client
     res.json({
       res_transition,
@@ -411,6 +433,10 @@ exports.getTransaction = async (req, res) => {
         {
           type: "Crediter",
           value: sql_crediterCount[0].count_creaditer,
+        },
+        {
+          type: "Open Account",
+          value: checkOpenAccount[0].account_type_sum || 0,
         },
       ],
     });
