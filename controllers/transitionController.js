@@ -422,6 +422,26 @@ exports.getTransaction = async (req, res) => {
       [3, account_user_id]
     );
 
+    const [amount] = await sql.query(
+      `
+                                            SELECT 
+                                              SUM(account_type.account_type_total) as total_amount
+                                            FROM
+                                              account_type
+                                              INNER JOIN
+                                              account_group
+                                            ON 
+                                                account_type.account_group_id = account_group.account_group_id
+                                            INNER JOIN
+                                              account_user
+                                            ON 
+                                                account_group.account_user_id = account_user.account_user_id
+                                            WHERE 
+                                                account_type.account_category_id IN (1,7) AND account_group.account_user_id = ?`,
+
+      [account_user_id]
+    );
+
     // return data to client
     res.json({
       res_transition,
@@ -437,6 +457,10 @@ exports.getTransaction = async (req, res) => {
         {
           type: "Open Account",
           value: checkOpenAccount[0].account_type_sum || 0,
+        },
+        {
+          type: "Open Account",
+          value: amount[0].total_amount || 0,
         },
       ],
     });
