@@ -113,4 +113,14 @@ router.delete(
   typeController.DeleteAccountTypeId
 );
 
+router.get(
+  "/getLastedFund",
+  fundTotalControllers.getLastedFund
+);
+
+router.post(
+  "/updateLastedFund",
+  fundTotalControllers.updateLastedFund
+);
+
 module.exports = router;
