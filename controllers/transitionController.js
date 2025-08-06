@@ -108,7 +108,10 @@ exports.openAccount = async (req, res) => {
       SET account_type_total = account_type_total + ?
       WHERE account_type_id = ?
     `;
-    await connection.query(updateTotalQuery, [account_transition_value, account_type_id]);
+    await connection.query(updateTotalQuery, [
+      account_transition_value,
+      account_type_id,
+    ]);
     await connection.commit();
     res.status(200).json({
       message:
@@ -146,7 +149,9 @@ exports.sumAccount = async (req, res) => {
       FROM account_group
       WHERE account_user_id = ? AND account_category_id = 3
     `;
-    const [group] = await connection.query(account_group_id_query, [account_user_id]);
+    const [group] = await connection.query(account_group_id_query, [
+      account_user_id,
+    ]);
 
     if (!group.length) {
       return res.status(404).json({ error: "No account group found" });
@@ -159,7 +164,9 @@ exports.sumAccount = async (req, res) => {
       FROM account_type
       WHERE account_group_id = ?
     `;
-    const [type] = await connection.query(account_type_id_query, [account_group_id_select]);
+    const [type] = await connection.query(account_type_id_query, [
+      account_group_id_select,
+    ]);
 
     if (!type.length) {
       return res.status(404).json({ error: "No account type found" });
@@ -189,14 +196,18 @@ exports.sumAccount = async (req, res) => {
       VALUES (?, ?, NOW(), ?)
     `;
 
-    await connection.query(insertQuery, [account_type_id, finalValue, newStartValue]);
+    await connection.query(insertQuery, [
+      account_type_id,
+      finalValue,
+      newStartValue,
+    ]);
     await connection.commit();
     res.status(200).json({
       message: "Account transition inserted/updated successfully.",
       finalValue,
       details: {
-        base: accountValue
-      }
+        base: accountValue,
+      },
     });
   } catch (error) {
     await connection.rollback();
@@ -222,7 +233,8 @@ exports.sumbitTransition = async (req, res) => {
       SET account_transition_submit = 1 
       WHERE
           account_user.account_user_id = ? 
-      `,[account_user_id]
+      `,
+      [account_user_id]
     );
 
     // Get latest account_type_id used in transition
@@ -277,7 +289,8 @@ exports.sumbitTransition = async (req, res) => {
       [account_user_id]
     );
 
-    const { account_transition_value, account_type_id } = lasted_account_transition[0] || {};
+    const { account_transition_value, account_type_id } =
+      lasted_account_transition[0] || {};
 
     console.log(account_transition_value, account_type_id);
 
@@ -310,139 +323,108 @@ exports.sumbitTransition = async (req, res) => {
 
 // debug getTransaction
 exports.getTransaction = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user?.account_user_id;
+  if (!user || !user.account_user_id) {
+    return res.status(401).json({ error: "Unauthorized or missing user ID" });
+  }
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 100;
+  const offset = (page - 1) * limit;
+
+  
   try {
-    const user = getUserFromToken(req);
-    const account_user_id = user?.account_user_id;
-    if (!user || !user.account_user_id) {
-      return res.status(401).json({ error: "Unauthorized or missing user ID" });
-    }
-    const [res_transition] = await sql.query(
-      `SELECT
-        account_transition.*, 
-        account_transition.account_transition_id, 
-        account_transition.account_type_id, 
-        account_transition.account_category_id, 
-        account_transition.account_transition_value, 
-        account_transition.account_transition_datetime, 
-        account_transition.account_transition_start, 
-        account_transition.account_type_from_id, 
-        account_transition.account_transition_submit, 
-        account_transition.account_category_from_id, 
-        account_transition.account_type_dr_id, 
-        account_transition.account_type_cr_id, 
-        account_type.account_type_id, 
-        account_type.account_type_name, 
-        account_type.account_type_value, 
-        account_type.account_type_description, 
-        account_type.account_type_from_id, 
-        account_type.account_type_icon, 
-        account_type.account_type_important, 
-        account_type.account_type_sum, 
-        account_type.account_group_id, 
-        account_type.account_category_id, 
-        account_type.account_type_total
-      FROM
-        account_transition
-        INNER JOIN
-        account_type
-        ON 
-          account_transition.account_type_id = account_type.account_type_id
-        INNER JOIN
-        account_group
-        ON 
-          account_type.account_group_id = account_group.account_group_id
-        INNER JOIN
-        account_user
-        ON 
-          account_group.account_user_id = account_user.account_user_id
-      WHERE
-        account_user.account_user_id = ?
-      ORDER BY
-        account_transition.account_transition_datetime DESC
-       `,
+    const connection = await sql.getConnection();
+    // await connection.beginTransaction(); ใช้เมื่อมีการเปลี่ยนแปลงข้อมูลในฐานข้อมูล
+
+    // 1. Main paginated data query
+    const transitionQuery = connection.query(
+      `
+      SELECT account_transition.account_transition_id, 
+      account_transition.account_category_id, 
+      account_transition.account_transition_value,
+      account_transition.account_transition_datetime,
+      account_transition.account_category_from_id,
+      account_type.account_type_name,
+      account_type.account_type_description,
+      account_type.account_type_sum
+      FROM account_transition
+      JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+      JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+      WHERE account_user.account_user_id = ?
+      ORDER BY account_transition.account_transition_id DESC
+      LIMIT ? OFFSET ?
+      `,
+      [account_user_id, limit, offset]
+    );
+
+    // 2. Count Debter
+    const debterQuery = connection.query(
+      `
+      SELECT COUNT(*) AS count_debter
+      FROM account_transition
+      JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+      JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      WHERE account_group.account_user_id = ? AND account_type.account_category_id = ?
+      `,
+      [account_user_id, 6]
+    );
+
+    // 3. Count Crediter
+    const crediterQuery = connection.query(
+      `
+      SELECT COUNT(*) AS count_creaditer
+      FROM account_transition
+      JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+      JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      WHERE account_group.account_user_id = ? AND account_type.account_category_id = ?
+      `,
+      [account_user_id, 2]
+    );
+
+    // 4. Open Account Sum
+    const openAccountQuery = connection.query(
+      `
+      SELECT SUM(account_type_sum) AS account_type_sum
+      FROM account_type
+      JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      WHERE account_group.account_user_id = ? AND account_type.account_category_id = ? 
+      `,
+      [account_user_id, 3]
+    );
+
+    // 5. Total Amount in Transitions
+    const amountQuery = connection.query(
+      `
+      SELECT SUM(account_type.account_type_total) as total_amount
+      FROM account_type 
+      INNER JOIN account_group 
+      ON account_type.account_group_id = account_group.account_group_id
+      INNER JOIN account_user ON 
+      account_group.account_user_id = account_user.account_user_id
+      WHERE account_type.account_category_id IN (1,7) AND account_group.account_user_id = ?
+      `,
       [account_user_id]
     );
 
-    // debter count
-    const [sql_debterCount] = await sql.query(
-      `SELECT
-                                            COUNT(account_type.account_type_id) as count_debter
-                                            FROM
-                                              account_group
-                                              INNER JOIN
-                                              account_category
-                                            ON 
-                                                account_group.account_category_id = account_category.account_category_id
-                                            INNER JOIN
-                                              account_type
-                                            ON 
-                                                account_type.account_group_id = account_group.account_group_id
-                                            WHERE 
-                                                account_type.account_category_id = ? AND account_group.account_user_id = ?`,
-      [6, account_user_id]
-    );
+    // Run all queries in parallel
+    const [
+      [res_transition],
+      [sql_debterCount],
+      [sql_crediterCount],
+      [checkOpenAccount],
+      [amount],
+    ] = await Promise.all([
+      transitionQuery,
+      debterQuery,
+      crediterQuery,
+      openAccountQuery,
+      amountQuery,
+    ]);
 
-    // crediter count
-    const [sql_crediterCount] = await sql.query(
-      `SELECT
-                                            COUNT(account_type.account_type_id) as count_creaditer
-                                            FROM
-                                              account_group
-                                              INNER JOIN
-                                              account_category
-                                            ON 
-                                                account_group.account_category_id = account_category.account_category_id
-                                            INNER JOIN
-                                              account_type
-                                            ON 
-                                                account_type.account_group_id = account_group.account_group_id
-                                            WHERE 
-                                                account_type.account_category_id = ? AND account_group.account_user_id = ?`,
+    connection.release();
 
-      [2, account_user_id]
-    );
-
-    const [checkOpenAccount] = await sql.query(
-      `
-                                            SELECT 
-                                              account_type.account_type_sum
-                                            FROM
-                                              account_type
-                                              INNER JOIN
-                                              account_group
-                                            ON 
-                                                account_type.account_group_id = account_group.account_group_id
-                                            INNER JOIN
-                                              account_user
-                                            ON 
-                                                account_group.account_user_id = account_user.account_user_id
-                                            WHERE 
-                                                account_type.account_category_id = ? AND account_group.account_user_id = ?`,
-
-      [3, account_user_id]
-    );
-
-    const [amount] = await sql.query(
-      `
-                                            SELECT 
-                                              SUM(account_type.account_type_total) as total_amount
-                                            FROM
-                                              account_type
-                                              INNER JOIN
-                                              account_group
-                                            ON 
-                                                account_type.account_group_id = account_group.account_group_id
-                                            INNER JOIN
-                                              account_user
-                                            ON 
-                                                account_group.account_user_id = account_user.account_user_id
-                                            WHERE 
-                                                account_type.account_category_id IN (1,7) AND account_group.account_user_id = ?`,
-
-      [account_user_id]
-    );
-
-    // return data to client
     res.json({
       res_transition,
       data: [
@@ -459,21 +441,16 @@ exports.getTransaction = async (req, res) => {
           value: checkOpenAccount[0].account_type_sum || 0,
         },
         {
-          type: "Open Account",
+          type: "Total Amount",
           value: amount[0].total_amount || 0,
         },
       ],
     });
   } catch (err) {
-    // unauthorized
-    if (err.name === "UnauthorizedError") {
-      res.status(401).json({ message: "Unauthorized" });
-    }
-    if (err) {
-      res.status(500).json({ message: err.message });
-    }
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
-};
+}; //already optimized
 
 exports.getGroupTwoTransition = async (req, res) => {
   const user = getUserFromToken(req);

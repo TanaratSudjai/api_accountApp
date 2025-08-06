@@ -525,6 +525,7 @@ exports.get_Bank_Transition = async (req, res) => {
                   at_trans.account_transition_value, 
                   at_trans.account_category_id, 
                   at_trans.account_category_from_id, 
+                  at_trans.account_transition_datetime,
                   at_from.account_type_name AS account_type_from_name
                 FROM
                   account_transition AS at_trans
@@ -567,6 +568,7 @@ exports.get_Creditor_Transition = async (req, res) => {
         at_trans.account_transition_value, 
         at_trans.account_category_id, 
         at_trans.account_category_from_id, 
+        at_trans.account_transition_datetime,
         at_from.account_type_name AS account_type_from_name
       FROM
         account_transition AS at_trans
@@ -611,6 +613,7 @@ exports.get_Debtor_Transition = async (req, res) => {
         at_trans.account_transition_value, 
         at_trans.account_category_id, 
         at_trans.account_category_from_id, 
+        at_trans.account_transition_datetime,
         at_from.account_type_name AS account_type_from_name
       FROM
         account_transition AS at_trans

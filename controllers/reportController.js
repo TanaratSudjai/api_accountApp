@@ -38,45 +38,46 @@ exports.reportAccount = async (req, res) => {
 exports.sumExpense = async (req, res) => {
   const user = getUserFromToken(req);
   const account_user_id = user?.account_user_id;
+
   try {
     const { day, month, year } = req.query;
 
-    // Base query
     let query = `
-      SELECT SUM(account_transition.account_transition_value) AS total_expense, account_type.account_type_name 
-      FROM account_transition 
-      LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
-      LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
-      LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-      WHERE account_transition.account_category_id = 5 AND account_user.account_user_id = ${account_user_id}
+      SELECT 
+        SUM(t.account_transition_value) AS total_expense,
+        at.account_type_id,
+        at.account_type_name
+      FROM account_transition t
+      LEFT JOIN account_type at ON t.account_type_id = at.account_type_id
+      LEFT JOIN account_group ag ON at.account_group_id = ag.account_group_id
+      LEFT JOIN account_user au ON ag.account_user_id = au.account_user_id
+      WHERE t.account_category_id = 5 AND au.account_user_id = ?
     `;
 
-    const queryParams = [];
+    const queryParams = [account_user_id];
 
-    // Add filters dynamically
     if (year) {
-      query += ` AND YEAR(account_transition.account_transition_datetime) = ?`;
+      query += ` AND YEAR(t.account_transition_datetime) = ?`;
       queryParams.push(year);
     }
-
     if (month) {
-      query += ` AND MONTH(account_transition.account_transition_datetime) = ?`;
+      query += ` AND MONTH(t.account_transition_datetime) = ?`;
       queryParams.push(month);
     }
-
     if (day) {
-      query += ` AND DAY(account_transition.account_transition_datetime) = ?`;
+      query += ` AND DAY(t.account_transition_datetime) = ?`;
       queryParams.push(day);
     }
 
-    query += ` GROUP BY account_type.account_type_name`;
+    query += ` GROUP BY at.account_type_id`;
 
     const [result] = await sql.query(query, queryParams);
     res.json(result);
   } catch (err) {
-    res.json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
+
 exports.sumIncome = async (req, res) => {
   const user = getUserFromToken(req);
   const account_user_id = user?.account_user_id;
@@ -85,33 +86,34 @@ exports.sumIncome = async (req, res) => {
 
     // Base query
     let query = `
-      SELECT SUM(account_transition.account_transition_value) AS total_expense, account_type.account_type_name 
-      FROM account_transition 
-      LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
-      LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
-      LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-      WHERE account_transition.account_category_id = 4 AND account_user.account_user_id = ${account_user_id}
+      SELECT 
+        SUM(t.account_transition_value) AS total_expense,
+        at.account_type_id,
+        at.account_type_name
+      FROM account_transition t
+      LEFT JOIN account_type at ON t.account_type_id = at.account_type_id
+      LEFT JOIN account_group ag ON at.account_group_id = ag.account_group_id
+      LEFT JOIN account_user au ON ag.account_user_id = au.account_user_id
+      WHERE t.account_category_id = 4 AND au.account_user_id = ?
     `;
 
-    const queryParams = [];
+    const queryParams = [account_user_id];
 
     // Add filters dynamically
     if (year) {
-      query += ` AND YEAR(account_transition.account_transition_datetime) = ?`;
+      query += ` AND YEAR(t.account_transition_datetime) = ?`;
       queryParams.push(year);
     }
-
     if (month) {
-      query += ` AND MONTH(account_transition.account_transition_datetime) = ?`;
+      query += ` AND MONTH(t.account_transition_datetime) = ?`;
       queryParams.push(month);
     }
-
     if (day) {
-      query += ` AND DAY(account_transition.account_transition_datetime) = ?`;
+      query += ` AND DAY(t.account_transition_datetime) = ?`;
       queryParams.push(day);
     }
 
-    query += ` GROUP BY account_type.account_type_name`;
+    query += ` GROUP BY at.account_type_id`;
 
     const [result] = await sql.query(query, queryParams);
     res.json(result);
@@ -133,12 +135,12 @@ exports.sumExpenseDaily = async (req, res) => {
           LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
           LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
           LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-          WHERE account_transition.account_category_id = 5 AND account_user.account_user_id = ${account_user_id}
+          WHERE account_transition.account_category_id = 5 AND account_user.account_user_id = ?
           GROUP BY DATE(account_transition.account_transition_datetime)
           ORDER BY date ASC;
     `;
 
-    const [result] = await sql.query(query);
+    const [result] = await sql.query(query,[account_user_id]);
     res.json(result);
   } catch (err) {
     res.json({ error: err.message });
@@ -157,12 +159,12 @@ exports.sumIncomeDaily = async (req, res) => {
           LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
           LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
           LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-          WHERE account_transition.account_category_id = 4 AND account_user.account_user_id = ${account_user_id}
+          WHERE account_transition.account_category_id = 4 AND account_user.account_user_id = ?
           GROUP BY DATE(account_transition.account_transition_datetime)
           ORDER BY date ASC;
     `;
 
-    const [result] = await sql.query(query);
+    const [result] = await sql.query(query,[account_user_id]);
     res.json(result);
   } catch (err) {
     res.json({ error: err.message });
