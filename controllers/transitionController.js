@@ -334,12 +334,27 @@ exports.getTransaction = async (req, res) => {
     return res.status(401).json({ error: "Unauthorized or missing user ID" });
   }
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 100;
+  const limit = parseInt(req.query.limit) || 5;
   const offset = (page - 1) * limit;
 
   const connection = await sql.getConnection();
   try {
-    // 1. Main paginated data query
+    // 1. Get total count for pagination
+    const [countResult] = await connection.query(
+      `
+      SELECT COUNT(*) AS total_count
+      FROM account_transition
+      JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+      JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+      WHERE account_user.account_user_id = ?
+      `,
+      [account_user_id]
+    );
+    const total_count = countResult[0]?.total_count || 0;
+    const total_page = Math.ceil(total_count / limit);
+
+    // 2. Main paginated data query
     const [res_transition] = await connection.query(
       `
       SELECT account_transition.account_transition_id, 
@@ -361,7 +376,7 @@ exports.getTransaction = async (req, res) => {
       [account_user_id, limit, offset]
     );
 
-    // 2. Count Debter
+    // 3. Count Debter
     const [debterCount] = await connection.query(
       `
       SELECT COUNT(*) AS count_debter
@@ -373,7 +388,7 @@ exports.getTransaction = async (req, res) => {
       [account_user_id, 6]
     );
 
-    // 3. Count Crediter
+    // 4. Count Crediter
     const [crediterCount] = await connection.query(
       `
       SELECT COUNT(*) AS count_creaditer
@@ -385,7 +400,7 @@ exports.getTransaction = async (req, res) => {
       [account_user_id, 2]
     );
 
-    // 4. Open Account Sum
+    // 5. Open Account Sum
     const [openAccount] = await connection.query(
       `
       SELECT SUM(account_type_sum) AS account_type_sum
@@ -396,7 +411,7 @@ exports.getTransaction = async (req, res) => {
       [account_user_id, 3]
     );
 
-    // 5. Total Amount in Transitions
+    // 6. Total Amount in Transitions
     const [amount] = await connection.query(
       `
       SELECT SUM(account_type.account_type_total) as total_amount
@@ -411,8 +426,12 @@ exports.getTransaction = async (req, res) => {
     );
 
     res.json({
-      res_transition,
-      data: [
+      data: res_transition,
+      total_count,
+      total_page,
+      page,
+      limit,
+      summary: [
         {
           type: "Debter",
           value: debterCount[0].count_debter,

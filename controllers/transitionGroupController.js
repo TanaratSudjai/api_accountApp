@@ -510,50 +510,98 @@ exports.deleteTransition = async (req, res) => {
 exports.get_Bank_Transition = async (req, res) => {
   const user_auth = getUserFromToken(req);
   const user_id = user_auth.account_user_id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const offset = (page - 1) * limit;
   try {
-    const query = `SELECT
-                  \`at\`.account_type_id, 
-                  \`at\`.account_type_name, 
-                  at_trans.account_type_from_id, 
-                  at_trans.account_transition_id, 
-                  at_trans.account_type_id, 
-                  at_trans.account_transition_value, 
-                  at_trans.account_category_id, 
-                  at_trans.account_category_from_id, 
-                  at_trans.account_transition_datetime,
-                  at_from.account_type_name AS account_type_from_name
-                FROM
-                  account_transition AS at_trans
-                  INNER JOIN account_type AS \`at\`
-                    ON at_trans.account_type_id = \`at\`.account_type_id
-                  INNER JOIN account_type AS at_from
-                    ON at_trans.account_type_from_id = at_from.account_type_id
-                  INNER JOIN account_user
-                  INNER JOIN account_group
-                    ON account_user.account_user_id = account_group.account_user_id
-                    AND \`at\`.account_group_id = account_group.account_group_id
-                WHERE
-                  at_trans.account_category_id = ?
-                  AND at_trans.account_category_from_id = ?
-                  AND account_group.account_user_id = ?
-                ORDER BY
-                  at_trans.account_transition_id DESC;
-                    `;
-    const [data_transition_bank] = await sql.query(query, [7, 1, user_id]);
-    if (!data_transition_bank && data_transition_bank.length === 0) {
-      return res.status(404).json({ error: "Transition not found" });
-    }
-    res.json({ data_transition_bank }).status(200);
+    // 1. Get total count
+    const countQuery = `
+      SELECT COUNT(*) AS total_count
+      FROM account_transition AS at_trans
+      INNER JOIN account_type AS \`at\` ON at_trans.account_type_id = \`at\`.account_type_id
+      INNER JOIN account_type AS at_from ON at_trans.account_type_from_id = at_from.account_type_id
+      INNER JOIN account_user
+      INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+        AND \`at\`.account_group_id = account_group.account_group_id
+      WHERE
+        at_trans.account_category_id = ?
+        AND at_trans.account_category_from_id = ?
+        AND account_group.account_user_id = ?
+    `;
+    const [countResult] = await sql.query(countQuery, [7, 1, user_id]);
+    const total_count = countResult[0]?.total_count || 0;
+    const total_page = Math.ceil(total_count / limit);
+
+    // 2. Get paginated data
+    const dataQuery = `
+      SELECT
+        \`at\`.account_type_id, 
+        \`at\`.account_type_name, 
+        at_trans.account_type_from_id, 
+        at_trans.account_transition_id, 
+        at_trans.account_type_id, 
+        at_trans.account_transition_value, 
+        at_trans.account_category_id, 
+        at_trans.account_category_from_id, 
+        at_trans.account_transition_datetime,
+        at_from.account_type_name AS account_type_from_name
+      FROM
+        account_transition AS at_trans
+        INNER JOIN account_type AS \`at\` ON at_trans.account_type_id = \`at\`.account_type_id
+        INNER JOIN account_type AS at_from ON at_trans.account_type_from_id = at_from.account_type_id
+        INNER JOIN account_user
+        INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+          AND \`at\`.account_group_id = account_group.account_group_id
+      WHERE
+        at_trans.account_category_id = ?
+        AND at_trans.account_category_from_id = ?
+        AND account_group.account_user_id = ?
+      ORDER BY
+        at_trans.account_transition_id DESC LIMIT ? OFFSET ?
+    `;
+    const [data_transition_bank] = await sql.query(dataQuery, [
+      7, 1, user_id, limit, offset
+    ]);
+
+    res.status(200).json({
+      data: data_transition_bank,
+      total_count,
+      total_page,
+      page,
+      limit
+    });
   } catch (err) {
-    res.json({ err: err.massage });
+    res.status(500).json({ err: err.message });
   }
 };
 
 exports.get_Creditor_Transition = async (req, res) => {
   const user_auth = getUserFromToken(req);
   const user_id = user_auth.account_user_id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const offset = (page - 1) * limit;
   try {
-    const query = `
+    // 1. Get total count
+    const countQuery = `
+      SELECT COUNT(*) AS total_count
+      FROM account_transition AS at_trans
+      INNER JOIN account_type AS \`at\` ON at_trans.account_type_id = \`at\`.account_type_id
+      INNER JOIN account_type AS at_from ON at_trans.account_type_from_id = at_from.account_type_id
+      INNER JOIN account_user
+      INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+        AND \`at\`.account_group_id = account_group.account_group_id
+      WHERE
+        at_trans.account_category_id IN (?, ?)
+        AND at_trans.account_category_from_id IN (?, ?)
+        AND account_group.account_user_id = ?
+    `;
+    const [countResult] = await sql.query(countQuery, [2, 1, 2, 1, user_id]);
+    const total_count = countResult[0]?.total_count || 0;
+    const total_page = Math.ceil(total_count / limit);
+
+    // 2. Get paginated data
+    const dataQuery = `
       SELECT
         \`at\`.account_type_id, 
         \`at\`.account_type_name, 
@@ -577,18 +625,19 @@ exports.get_Creditor_Transition = async (req, res) => {
         AND at_trans.account_category_from_id IN (?, ?)
         AND account_group.account_user_id = ? 
       ORDER BY
-        at_trans.account_transition_id DESC
+        at_trans.account_transition_id DESC LIMIT ? OFFSET ?
     `;
-
-    const [data_transition_bank] = await sql.query(query, [
-      2,
-      1,
-      2,
-      1,
-      user_id,
+    const [data_transition_bank] = await sql.query(dataQuery, [
+      2, 1, 2, 1, user_id, limit, offset
     ]);
 
-    res.status(200).json({ data_transition_bank });
+    res.status(200).json({
+      data: data_transition_bank,
+      total_count,
+      total_page,
+      page,
+      limit
+    });
   } catch (err) {
     res.status(500).json({ err: err.message });
   }
@@ -597,8 +646,30 @@ exports.get_Creditor_Transition = async (req, res) => {
 exports.get_Debtor_Transition = async (req, res) => {
   const user_auth = getUserFromToken(req);
   const user_id = user_auth.account_user_id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const offset = (page - 1) * limit;
   try {
-    const query = `
+    // 1. Get total count
+    const countQuery = `
+      SELECT COUNT(*) AS total_count
+      FROM account_transition AS at_trans
+      INNER JOIN account_type AS \`at\` ON at_trans.account_type_id = \`at\`.account_type_id
+      INNER JOIN account_type AS at_from ON at_trans.account_type_from_id = at_from.account_type_id
+      INNER JOIN account_user
+      INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+        AND \`at\`.account_group_id = account_group.account_group_id
+      WHERE
+        at_trans.account_category_id IN (?, ?)
+        AND at_trans.account_category_from_id IN (?, ?)
+        AND account_group.account_user_id = ?
+    `;
+    const [countResult] = await sql.query(countQuery, [6, 1, 6, 1, user_id]);
+    const total_count = countResult[0]?.total_count || 0;
+    const total_page = Math.ceil(total_count / limit);
+
+    // 2. Get paginated data
+    const dataQuery = `
       SELECT
         \`at\`.account_type_id, 
         \`at\`.account_type_name, 
@@ -622,18 +693,20 @@ exports.get_Debtor_Transition = async (req, res) => {
         AND at_trans.account_category_from_id IN (?, ?)
         AND account_group.account_user_id = ? 
       ORDER BY
-        at_trans.account_transition_id DESC
+        at_trans.account_transition_id DESC LIMIT ? OFFSET ?
     `;
 
-    const [data_transition_bank] = await sql.query(query, [
-      6,
-      1,
-      6,
-      1,
-      user_id,
+    const [data_transition_bank] = await sql.query(dataQuery, [
+      6, 1, 6, 1, user_id, limit, offset
     ]);
 
-    res.status(200).json({ data_transition_bank });
+    res.status(200).json({
+      data: data_transition_bank,
+      total_count,
+      total_page,
+      page,
+      limit
+    });
   } catch (err) {
     res.status(500).json({ err: err.message });
   }
