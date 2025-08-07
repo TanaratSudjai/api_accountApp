@@ -12,12 +12,16 @@ exports.getMenuGroup_expense = async (req, res) => {
           account_type.account_type_name, 
           account_type.account_type_value, 
           account_type.account_type_from_id, 
-          account_group.account_category_id
+          account_group.account_category_id,
+          account_icon.account_icon_name
       FROM
           account_type
       INNER JOIN
           account_group
           ON account_type.account_group_id = account_group.account_group_id
+      INNER JOIN
+          account_icon
+          ON account_type.account_type_icon = account_icon.account_icon_id
       WHERE 
           account_type.account_category_id IN (5) AND account_group.account_user_id = ?;
     `;
@@ -43,12 +47,16 @@ exports.getMenuGroup_income = async (req, res) => {
           account_type.account_type_name, 
           account_type.account_type_value, 
           account_type.account_type_from_id, 
-          account_group.account_category_id
+          account_group.account_category_id,
+          account_icon.account_icon_name
       FROM
           account_type
       INNER JOIN
           account_group
           ON account_type.account_group_id = account_group.account_group_id
+      INNER JOIN
+          account_icon
+          ON account_type.account_type_icon = account_icon.account_icon_id
       WHERE 
           account_type.account_category_id IN (4) AND account_group.account_user_id = ?;
     `;
