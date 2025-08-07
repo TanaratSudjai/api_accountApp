@@ -221,23 +221,25 @@ exports.sumAccount = async (req, res) => {
 exports.sumbitTransition = async (req, res) => {
   const user = getUserFromToken(req);
   const account_user_id = user?.account_user_id;
+  if (!account_user_id) {
+    return res.status(401).json({ error: "Unauthorized or missing user ID" });
+  }
   const connection = await sql.getConnection();
   try {
     await connection.beginTransaction();
-    // Submit all transitions
+
+    // 1. Submit all transitions for this user
     await connection.query(
       `UPDATE account_transition 
       JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
       JOIN account_user ON account_group.account_user_id = account_user.account_user_id
       SET account_transition_submit = 1 
-      WHERE
-          account_user.account_user_id = ? 
-      `,
+      WHERE account_user.account_user_id = ?`,
       [account_user_id]
     );
 
-    // Get latest account_type_id used in transition
+    // 2. Get latest account_type_id used in transition
     const account_type_id_query = `
       SELECT at.account_type_id
       FROM account_transition AS at
@@ -250,55 +252,58 @@ exports.sumbitTransition = async (req, res) => {
     const account_type_cr_id = results_type_id[0]?.account_type_id;
 
     if (!account_type_cr_id) {
-      return res
-        .status(400)
-        .json({ error: "No latest account_type_id found." });
+      await connection.rollback();
+      return res.status(400).json({ error: "No latest account_type_id found." });
     }
 
-    // Update account_type_cr_id for the transitions
+    // 3. Update account_type_cr_id for the transitions
     await connection.query(
       `UPDATE account_transition 
       JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
       JOIN account_user ON account_group.account_user_id = account_user.account_user_id
       SET account_transition.account_type_cr_id = ? 
-      WHERE account_transition.account_type_id = ? AND account_user.account_user_id = ? `,
+      WHERE account_transition.account_type_id = ? AND account_user.account_user_id = ?`,
       [account_type_cr_id, account_type_cr_id, account_user_id]
     );
 
+    // 4. Get the latest transition for category 3
     const get_lasted_account_transition = `
       SELECT 
-          account_transition.account_transition_id,
-          account_transition.account_type_id,
-          account_transition.account_transition_value 
+        account_transition.account_transition_id,
+        account_transition.account_type_id,
+        account_transition.account_transition_value 
       FROM
-          account_user
-          INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
-          INNER JOIN account_type ON account_group.account_group_id = account_type.account_group_id
-          INNER JOIN account_transition ON account_type.account_type_id = account_transition.account_type_id
+        account_user
+        INNER JOIN account_group ON account_user.account_user_id = account_group.account_user_id
+        INNER JOIN account_type ON account_group.account_group_id = account_type.account_group_id
+        INNER JOIN account_transition ON account_type.account_type_id = account_transition.account_type_id
       WHERE
-          account_user.account_user_id = ?
-          AND account_group.account_category_id = 3
+        account_user.account_user_id = ?
+        AND account_group.account_category_id = 3
       ORDER BY
-          account_transition.account_transition_id DESC
+        account_transition.account_transition_id DESC
       LIMIT 1;
     `;
-
     const [lasted_account_transition] = await connection.query(
       get_lasted_account_transition,
       [account_user_id]
     );
-
     const { account_transition_value, account_type_id } =
       lasted_account_transition[0] || {};
 
-    console.log(account_transition_value, account_type_id);
+    if (!account_transition_value || !account_type_id) {
+      await connection.rollback();
+      return res.status(400).json({ error: "No valid transition found for update." });
+    }
 
+    // 5. Update sums for the latest account_type
     await connection.query(
       `UPDATE account_type SET account_type_sum = account_type_sum + ?, account_type_total = account_type_total + ? WHERE account_type_id = ?`,
       [account_transition_value, account_transition_value, account_type_id]
     );
 
+    // 6. Update sums for all types except category 3
     await connection.query(
       `UPDATE account_type 
       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
@@ -332,22 +337,19 @@ exports.getTransaction = async (req, res) => {
   const limit = parseInt(req.query.limit) || 100;
   const offset = (page - 1) * limit;
 
-  
+  const connection = await sql.getConnection();
   try {
-    const connection = await sql.getConnection();
-    // await connection.beginTransaction(); ใช้เมื่อมีการเปลี่ยนแปลงข้อมูลในฐานข้อมูล
-
     // 1. Main paginated data query
-    const transitionQuery = connection.query(
+    const [res_transition] = await connection.query(
       `
       SELECT account_transition.account_transition_id, 
-      account_transition.account_category_id, 
-      account_transition.account_transition_value,
-      account_transition.account_transition_datetime,
-      account_transition.account_category_from_id,
-      account_type.account_type_name,
-      account_type.account_type_description,
-      account_type.account_type_sum
+             account_transition.account_category_id, 
+             account_transition.account_transition_value,
+             account_transition.account_transition_datetime,
+             account_transition.account_category_from_id,
+             account_type.account_type_name,
+             account_type.account_type_description,
+             account_type.account_type_sum
       FROM account_transition
       JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
@@ -360,7 +362,7 @@ exports.getTransaction = async (req, res) => {
     );
 
     // 2. Count Debter
-    const debterQuery = connection.query(
+    const [debterCount] = await connection.query(
       `
       SELECT COUNT(*) AS count_debter
       FROM account_transition
@@ -372,7 +374,7 @@ exports.getTransaction = async (req, res) => {
     );
 
     // 3. Count Crediter
-    const crediterQuery = connection.query(
+    const [crediterCount] = await connection.query(
       `
       SELECT COUNT(*) AS count_creaditer
       FROM account_transition
@@ -384,7 +386,7 @@ exports.getTransaction = async (req, res) => {
     );
 
     // 4. Open Account Sum
-    const openAccountQuery = connection.query(
+    const [openAccount] = await connection.query(
       `
       SELECT SUM(account_type_sum) AS account_type_sum
       FROM account_type
@@ -395,7 +397,7 @@ exports.getTransaction = async (req, res) => {
     );
 
     // 5. Total Amount in Transitions
-    const amountQuery = connection.query(
+    const [amount] = await connection.query(
       `
       SELECT SUM(account_type.account_type_total) as total_amount
       FROM account_type 
@@ -408,37 +410,20 @@ exports.getTransaction = async (req, res) => {
       [account_user_id]
     );
 
-    // Run all queries in parallel
-    const [
-      [res_transition],
-      [sql_debterCount],
-      [sql_crediterCount],
-      [checkOpenAccount],
-      [amount],
-    ] = await Promise.all([
-      transitionQuery,
-      debterQuery,
-      crediterQuery,
-      openAccountQuery,
-      amountQuery,
-    ]);
-
-    connection.release();
-
     res.json({
       res_transition,
       data: [
         {
           type: "Debter",
-          value: sql_debterCount[0].count_debter,
+          value: debterCount[0].count_debter,
         },
         {
           type: "Crediter",
-          value: sql_crediterCount[0].count_creaditer,
+          value: crediterCount[0].count_creaditer,
         },
         {
           type: "Open Account",
-          value: checkOpenAccount[0].account_type_sum || 0,
+          value: openAccount[0].account_type_sum || 0,
         },
         {
           type: "Total Amount",
@@ -449,16 +434,17 @@ exports.getTransaction = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
+  } finally {
+    connection.release();
   }
-}; //already optimized
+};
 
 exports.getGroupTwoTransition = async (req, res) => {
   const user = getUserFromToken(req);
   const account_user_id = user?.account_user_id;
+  const connection = await sql.getConnection();
   try {
-    const user = getUserFromToken(req);
-    const account_user_id = user?.account_user_id;
-    const [res_transitiongroup] = await sql.query(
+    const [res_transitiongroup] = await connection.query(
       `SELECT
         account_transition.account_transition_id, 
         account_transition.account_type_id, 
@@ -471,14 +457,8 @@ exports.getGroupTwoTransition = async (req, res) => {
         account_type.account_type_icon
       FROM
         account_transition
-        INNER JOIN
-        account_type
-        ON 
-          account_transition.account_type_id = account_type.account_type_id
-        INNER JOIN
-        account_group
-        ON 
-          account_type.account_group_id = account_group.account_group_id
+        INNER JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+        INNER JOIN account_group ON account_type.account_group_id = account_group.account_group_id
       WHERE
         account_group.account_category_id = 2 AND
         account_transition_value > 0 AND
@@ -486,20 +466,23 @@ exports.getGroupTwoTransition = async (req, res) => {
         account_group.account_user_id = ? AND
         account_transition.account_category_from_id IS NULL AND
         account_transition.account_type_from_id IS NULL
-        `,
+      `,
       [account_user_id]
     );
-    res.json(res_transitiongroup);
+    res.status(200).json(res_transitiongroup);
   } catch (error) {
-    res.json({ massage: error.massage, text: "Error geted data group two !" });
+    res.status(500).json({ error: error.message, text: "Error getting data group two!" });
+  } finally {
+    connection.release();
   }
 };
 
 exports.getGroupOneTransition = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user?.account_user_id;
+  const connection = await sql.getConnection();
   try {
-    const user = getUserFromToken(req);
-    const account_user_id = user?.account_user_id;
-    const [res_transitiongroup] = await sql.query(
+    const [res_transitiongroup] = await connection.query(
       `SELECT
         account_transition.account_transition_id, 
         account_transition.account_type_id, 
@@ -512,87 +495,88 @@ exports.getGroupOneTransition = async (req, res) => {
         account_type.account_type_icon
       FROM
         account_transition
-        INNER JOIN
-        account_type
-        ON 
-          account_transition.account_type_id = account_type.account_type_id
-        INNER JOIN
-        account_group
-        ON 
-          account_type.account_group_id = account_group.account_group_id
+        INNER JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+        INNER JOIN account_group ON account_type.account_group_id = account_group.account_group_id
       WHERE
-        account_group.account_category_id in (1,6,7) AND
+        account_group.account_category_id IN (1,6,7) AND
         account_transition_value > 0 AND
         account_transition.account_transition_submit IS NULL AND
         account_transition.account_category_id IS NULL AND
         account_group.account_user_id = ? AND
         account_transition.account_category_from_id IS NULL AND
         account_transition.account_type_from_id IS NULL
-        `,
+      `,
       [account_user_id]
     );
-    res.json(res_transitiongroup);
+    res.status(200).json(res_transitiongroup);
   } catch (error) {
-    res.json({ massage: error.massage, text: "Error geted data group two !" });
+    res.status(500).json({ error: error.message, text: "Error getting data group one!" });
+  } finally {
+    connection.release();
   }
 };
 
 exports.getSumValueGroupOne = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user?.account_user_id;
+  const connection = await sql.getConnection();
   try {
-    const user = getUserFromToken(req);
-    const account_user_id = user?.account_user_id;
-    const [res_transitiongroup] = await sql.query(
+    const [res_transitiongroup] = await connection.query(
       `
       SELECT 
-    SUM(account_transition.account_transition_value) AS total_transition_value
-FROM 
-    account_transition
-INNER JOIN account_type 
-    ON account_transition.account_type_id = account_type.account_type_id
-INNER JOIN account_group 
-    ON account_type.account_group_id = account_group.account_group_id
-WHERE 
-    account_group.account_category_id IN (1,6,7) 
-    AND account_transition.account_transition_submit IS NULL
-    AND account_transition.account_type_from_id IS NULL
-    AND account_transition.account_category_from_id IS NULL
-    AND account_group.account_user_id = ?;
-    `,
+        SUM(account_transition.account_transition_value) AS total_transition_value
+      FROM 
+        account_transition
+      INNER JOIN account_type 
+        ON account_transition.account_type_id = account_type.account_type_id
+      INNER JOIN account_group 
+        ON account_type.account_group_id = account_group.account_group_id
+      WHERE 
+        account_group.account_category_id IN (1,6,7) 
+        AND account_transition.account_transition_submit IS NULL
+        AND account_transition.account_type_from_id IS NULL
+        AND account_transition.account_category_from_id IS NULL
+        AND account_group.account_user_id = ?
+      `,
       [account_user_id]
     );
-    res.json(res_transitiongroup);
+    res.status(200).json(res_transitiongroup);
   } catch (error) {
-    res.json({ massage: error.massage, text: "Error geted data group One !" });
+    res.status(500).json({ error: error.message, text: "Error getting data group one!" });
+  } finally {
+    connection.release();
   }
 };
 
 exports.getSumValueGroupTwo = async (req, res) => {
+  const user = getUserFromToken(req);
+  const account_user_id = user?.account_user_id;
+  const connection = await sql.getConnection();
   try {
-    const user = getUserFromToken(req);
-    const account_user_id = user?.account_user_id;
-    const [res_transitiongroup] = await sql.query(
+    const [res_transitiongroup] = await connection.query(
       `
       SELECT 
-    SUM(account_transition.account_transition_value) AS total_transition_value
-FROM 
-    account_transition
-INNER JOIN account_type 
-    ON account_transition.account_type_id = account_type.account_type_id
-INNER JOIN account_group 
-    ON account_type.account_group_id = account_group.account_group_id
-WHERE 
-    account_group.account_category_id IN (2)
-
-    AND account_transition.account_transition_submit IS NULL
-    AND account_transition.account_type_from_id IS NULL
-    AND account_transition.account_category_from_id IS NULL
-    AND account_group.account_user_id = ?;
-    `,
+        SUM(account_transition.account_transition_value) AS total_transition_value
+      FROM 
+        account_transition
+      INNER JOIN account_type 
+        ON account_transition.account_type_id = account_type.account_type_id
+      INNER JOIN account_group 
+        ON account_type.account_group_id = account_group.account_group_id
+      WHERE 
+        account_group.account_category_id IN (2)
+        AND account_transition.account_transition_submit IS NULL
+        AND account_transition.account_type_from_id IS NULL
+        AND account_transition.account_category_from_id IS NULL
+        AND account_group.account_user_id = ?
+      `,
       [account_user_id]
     );
-    res.json(res_transitiongroup);
+    res.status(200).json(res_transitiongroup);
   } catch (error) {
-    res.json({ massage: error.massage, text: "Error geted data group Two !" });
+    res.status(500).json({ error: error.message, text: "Error getting data group two!" });
+  } finally {
+    connection.release();
   }
 };
 

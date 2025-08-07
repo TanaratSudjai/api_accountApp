@@ -530,67 +530,57 @@ exports.debtor_return_bankTransition = async (req, res) => {
 exports.delTransition_bank_objectvalue = async (req, res) => {
   const { account_transition_id } = req.params;
   const connection = await sql.getConnection();
-  //const { account_transition_values } = req.body;
   try {
     await connection.beginTransaction();
-    //กรองค่า value ที่ทำรายการของ id transition ที่จะลบเพื่อนำไปคืนค่า
+
+    // Get transition details
     const get_value_transition = `
-                                SELECT 
-                                  account_transition_value , 
-                                  account_type_id AS transition_start ,
-                                  account_type_from_id AS transition_end 
-                                FROM account_transition 
-                                WHERE account_transition_id = ?`;
+      SELECT 
+        account_transition_value, 
+        account_type_id AS transition_start,
+        account_type_from_id AS transition_end 
+      FROM account_transition 
+      WHERE account_transition_id = ?`;
     const [result] = await connection.query(get_value_transition, [
       account_transition_id,
     ]);
 
     if (result.length === 0) {
+      await connection.rollback();
       return res.status(404).json({ message: "Transition not found." });
     }
 
-    //นำค่ากรองมาเก็บในตัวแปร จะได้ง่ายในการเอาไปใช้
-    const value_reuse = result[0].account_transition_value; // ค่าที่จะคืนกลับไปให้ต้นทาง
-    const transition_start_id = result[0].transition_start; // id transition ของต้นทาง
-    const transition_end_id = result[0].transition_end; // id transition ของปลายทาง
+    const value_reuse = result[0].account_transition_value;
+    const transition_start_id = result[0].transition_start;
+    const transition_end_id = result[0].transition_end;
 
-    // หรือจะเขียนเเบบนี้ก็ได้
-    // const {
-    //   account_transition_value: value_reuse,
-    //   transition_start: transition_start_id,
-    //   transition_end: transition_end_id,
-    // } = result[0];
+    // Refund to start
+    await connection.query(
+      `UPDATE account_type SET account_type_total = account_type_total + ? WHERE account_type_id = ?`,
+      [value_reuse, transition_start_id]
+    );
+    // Deduct from end
+    await connection.query(
+      `UPDATE account_type SET account_type_total = account_type_total - ? WHERE account_type_id = ?`,
+      [value_reuse, transition_end_id]
+    );
 
-    // query คืนค่าก่อนให้ต้นทาง ค่อยทำการลบ
-    const reuse_value_query = `UPDATE account_type SET account_type_total = account_type_total + ? WHERE account_type_id = ?`;
-    await connection.query(reuse_value_query, [value_reuse, transition_start_id]);
-    //ดึงค่าคืน จากปลายทาง เพื่อยกเลิก transition
-    const move_value_query = `UPDATE account_type SET account_type_total = account_type_total - ? WHERE account_type_id = ?`;
-    await connection.query(move_value_query, [value_reuse, transition_end_id]);
+    // Delete transition
+    const [deleteResult] = await connection.query(
+      `DELETE FROM account_transition WHERE account_transition_id = ?`,
+      [account_transition_id]
+    );
 
-    // view code
-    // const check_list_transition_formove = `SELECT account_transition_value , account_transition_id  FROM account_transition WHERE account_type_id = ?`;
-    // const [response_transition_node] = await connection.query(
-    //   check_list_transition_formove,
-    //   [transition_start_id]
-    // );
-    // console.log(response_transition_node , transition_start_id);
+    if (deleteResult.affectedRows === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: "Delete failed, transition not found." });
+    }
 
-    // const node_value = response_transition_node[0].account_transition_value;
-    // const node_type_id = response_transition_node[0].account_transition_id;
-
-    // console.log(node_value, node_type_id);
-    // end view code
-
-    //คืนค่าเสร็จเเล้ว ทำการลบ transition นั่น ออกไปด้วย id
-    const delete_transition = `DELETE FROM account_transition WHERE account_transition_id = ? `;
-    await connection.query(delete_transition, [account_transition_id]);
-
-    // คืนสองค่า --- ต้นทาง ปลายทาง
     await connection.commit();
     res.status(200).json({ message: "Transition deleted successfully." });
   } catch (err) {
     await connection.rollback();
+    console.error("Error deleting transition bank:", err);
     res.status(500).json({
       error: err.message,
       warning: "Error deleting transition bank!",
@@ -604,7 +594,6 @@ exports.delTransition_bank_objectvalue = async (req, res) => {
 exports.delFor_return_objectvalue = async (req, res) => {
   const { account_transition_id } = req.params;
   const connection = await sql.getConnection();
-  //const { account_transition_values } = req.body;
   try {
     await connection.beginTransaction();
     const serch_category_id_with_transition_id = `SELECT
