@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const transitionController = require("../controllers/transition.controller");
-
+const funTotal =require("../controllers/fundTotal.controller");
 /**
  * @swagger
  * /transition:
@@ -57,6 +57,7 @@ router.get("/transitions", transitionController.getTransaction);
  *         description: Successfully submitted the account transition.
  */
 router.put("/transitionsubmit", transitionController.sumbitTransition);
+router.get("/getLastedFund", funTotal.getLastedFund);
 
 /**
  * @swagger
@@ -70,7 +71,6 @@ router.put("/transitionsubmit", transitionController.sumbitTransition);
  *       200:
  *         description: Successfully retrieved Group Two transitions.
  */
-router.get("/getGropTwo", transitionController.getGroupTwoTransition);
 
 /**
  * @swagger
@@ -84,7 +84,7 @@ router.get("/getGropTwo", transitionController.getGroupTwoTransition);
  *       200:
  *         description: Successfully retrieved Group One transitions.
  */
-router.get("/getGropOne", transitionController.getGroupOneTransition);
+
 
 /**
  * @swagger
@@ -98,21 +98,7 @@ router.get("/getGropOne", transitionController.getGroupOneTransition);
  *       200:
  *         description: Successfully retrieved the sum of Group One values.
  */
-router.get("/getSumGropOne", transitionController.getSumValueGroupOne);
 
-/**
- * @swagger
- * /getSumGropTwo:
- *   get:
- *     tags:
- *       - TransitionAll
- *     summary: Get Sum of Group Two
- *     description: Retrieve the total sum of values from Group Two.
- *     responses:
- *       200:
- *         description: Successfully retrieved the sum of Group Two values.
- */
-router.get("/getSumGropTwo", transitionController.getSumValueGroupTwo);
 
 /**
  * @swagger
@@ -126,7 +112,6 @@ router.get("/getSumGropTwo", transitionController.getSumValueGroupTwo);
  *       200:
  *         description: Successfully retrieved group details for the account.
  */
-router.get("/getAWG", transitionController.getOnedeTwo);
 
 /**
  * @swagger

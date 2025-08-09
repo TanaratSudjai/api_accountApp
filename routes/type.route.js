@@ -3,10 +3,6 @@ const router = express.Router();
 const typeController = require("../controllers/type.controller");
 const fundTotalControllers = require("../controllers/fundTotal.controller");
 
-router.get(
-  "/total_fund",
-  fundTotalControllers.get_three_type
-);
 
 router.put(
   "/sumbitPerDay",

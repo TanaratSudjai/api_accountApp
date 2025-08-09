@@ -1,59 +1,6 @@
 const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
 
-exports.get_three_type = async (req, res) => {
-  const connection = await sql.getConnection();
-  try {
-    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
-    if (!account_user_id) {
-      return res.status(401).json({ error: "Unauthorized or missing user ID" });
-    }
-    // Owner sum (categories 1, 6, 7)
-    const [get_sum_cat_one_six_seven] = await connection.query(
-      `SELECT SUM(account_type_sum) as total_owner FROM account_type 
-       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
-       JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-       WHERE account_type.account_category_id IN (1, 6, 7)
-         AND account_user.account_user_id = ?`,
-      [account_user_id]
-    );
-
-    // Debt sum (category 2)
-    const [get_sum_cat_two] = await connection.query(
-      `SELECT SUM(account_type_sum) as total_debt FROM account_type 
-       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
-       JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-       WHERE account_type.account_category_id = 2
-         AND account_user.account_user_id = ?`,
-      [account_user_id]
-    );
-
-    // Fund sum (category 3)
-    const [get_sum_cat_three] = await connection.query(
-      `SELECT SUM(account_type_total) as total_fund FROM account_type 
-       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
-       JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-       WHERE account_type.account_category_id = 3
-         AND account_user.account_user_id = ?`,
-      [account_user_id]
-    );
-
-    res.status(200).json({
-      message: "Getting successfully",
-      total_owner: get_sum_cat_one_six_seven[0]?.total_owner || 0,
-      total_debt: get_sum_cat_two[0]?.total_debt || 0,
-      total_fund: get_sum_cat_three[0]?.total_fund || 0,
-    });
-  } catch (err) {
-    console.error(err);
-    res
-      .status(500)
-      .json({ error: err.message, text: "Error getting fund summary!" });
-  } finally {
-    connection.release();
-  }
-};
-
 exports.sumbitPerDay = async (req, res) => {
   const connection = await sql.getConnection();
 
