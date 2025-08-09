@@ -2,8 +2,8 @@ const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
 exports.getMenuWhereCat = async (req, res) => {
   try {
-    console.log(req.cookies.token);
-    const account_user_id = jwt.decode(req.cookies.token).account_user_id;
+    
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
     const qurey = `SELECT
                     account_type.account_type_id, 
                     account_type.account_type_name, 

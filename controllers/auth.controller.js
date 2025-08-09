@@ -195,23 +195,17 @@ exports.register = async (req, res) => {
 
 exports.gettingSession = async (req, res) => {
   try {
-    console.log(req.cookies.token);
-    const session_id = jwt.decode(req.cookies.token).account_user_id;
-
+    const session_id = jwt.decode(req.cookies.token)?.account_user_id;
     if (!session_id) {
       return res.status(401).json({ error: "Unauthorized or missing user ID" });
     }
-
     const query = `SELECT * FROM account_user WHERE account_user_id = ?`;
     const [result] = await pool.query(query, [session_id]);
-
     if (result.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
-
     const { account_user_id, account_user_name, account_user_username } =
       result[0];
-
     res.json({
       success: true,
       data_user: { account_user_id, account_user_name, account_user_username },

@@ -135,8 +135,7 @@ exports.sumAccount = async (req, res) => {
     await connection.beginTransaction();
     const { account_transition_value } = req.body;
 
-    console.log(req.cookies.token);
-    const account_user_id = jwt.decode(req.cookies.token).account_user_id;
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
 
     if (!account_user_id) {
       return res.status(401).json({ error: "Unauthorized or missing user ID" });
@@ -217,13 +216,12 @@ exports.sumAccount = async (req, res) => {
 };
 
 exports.sumbitTransition = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
-  if (!account_user_id) {
-    return res.status(401).json({ error: "Unauthorized or missing user ID" });
-  }
   const connection = await sql.getConnection();
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
+    if (!account_user_id) {
+      return res.status(401).json({ error: "Unauthorized or missing user ID" });
+    }
     await connection.beginTransaction();
 
     // 1. Submit all transitions for this user
@@ -251,7 +249,9 @@ exports.sumbitTransition = async (req, res) => {
 
     if (!account_type_cr_id) {
       await connection.rollback();
-      return res.status(400).json({ error: "No latest account_type_id found." });
+      return res
+        .status(400)
+        .json({ error: "No latest account_type_id found." });
     }
 
     // 3. Update account_type_cr_id for the transitions
@@ -292,7 +292,9 @@ exports.sumbitTransition = async (req, res) => {
 
     if (!account_transition_value || !account_type_id) {
       await connection.rollback();
-      return res.status(400).json({ error: "No valid transition found for update." });
+      return res
+        .status(400)
+        .json({ error: "No valid transition found for update." });
     }
 
     // 5. Update sums for the latest account_type
@@ -326,17 +328,16 @@ exports.sumbitTransition = async (req, res) => {
 
 // debug getTransaction
 exports.getTransaction = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
-  if (!account_user_id) {
-    return res.status(401).json({ error: "Unauthorized or missing user ID" });
-  }
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   const offset = (page - 1) * limit;
 
   const connection = await sql.getConnection();
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
+    if (!account_user_id) {
+      return res.status(401).json({ error: "Unauthorized or missing user ID" });
+    }
     // 1. Get total count for pagination
     const [countResult] = await connection.query(
       `
@@ -457,8 +458,7 @@ exports.getTransaction = async (req, res) => {
 };
 
 exports.getGroupTwoTransition = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
+  const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
   const connection = await sql.getConnection();
   try {
     const [res_transitiongroup] = await connection.query(
@@ -488,17 +488,18 @@ exports.getGroupTwoTransition = async (req, res) => {
     );
     res.status(200).json(res_transitiongroup);
   } catch (error) {
-    res.status(500).json({ error: error.message, text: "Error getting data group two!" });
+    res
+      .status(500)
+      .json({ error: error.message, text: "Error getting data group two!" });
   } finally {
     connection.release();
   }
 };
 
 exports.getGroupOneTransition = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const connection = await sql.getConnection();
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
     const [res_transitiongroup] = await connection.query(
       `SELECT
         account_transition.account_transition_id, 
@@ -527,15 +528,16 @@ exports.getGroupOneTransition = async (req, res) => {
     );
     res.status(200).json(res_transitiongroup);
   } catch (error) {
-    res.status(500).json({ error: error.message, text: "Error getting data group one!" });
+    res
+      .status(500)
+      .json({ error: error.message, text: "Error getting data group one!" });
   } finally {
     connection.release();
   }
 };
 
 exports.getSumValueGroupOne = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
+  const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
   const connection = await sql.getConnection();
   try {
     const [res_transitiongroup] = await connection.query(
@@ -559,17 +561,18 @@ exports.getSumValueGroupOne = async (req, res) => {
     );
     res.status(200).json(res_transitiongroup);
   } catch (error) {
-    res.status(500).json({ error: error.message, text: "Error getting data group one!" });
+    res
+      .status(500)
+      .json({ error: error.message, text: "Error getting data group one!" });
   } finally {
     connection.release();
   }
 };
 
 exports.getSumValueGroupTwo = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const connection = await sql.getConnection();
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
     const [res_transitiongroup] = await connection.query(
       `
       SELECT 
@@ -591,7 +594,9 @@ exports.getSumValueGroupTwo = async (req, res) => {
     );
     res.status(200).json(res_transitiongroup);
   } catch (error) {
-    res.status(500).json({ error: error.message, text: "Error getting data group two!" });
+    res
+      .status(500)
+      .json({ error: error.message, text: "Error getting data group two!" });
   } finally {
     connection.release();
   }

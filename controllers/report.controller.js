@@ -36,8 +36,7 @@ exports.reportAccount = async (req, res) => {
 };
 
 exports.getDashboardReport = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
   if (!account_user_id) {
     return res.status(401).json({ error: "Unauthorized or missing user ID" });
   }

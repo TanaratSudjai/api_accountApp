@@ -2,8 +2,7 @@ const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
 
 exports.getMenuGroup_expense = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
+  const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
 
   const query = `
       SELECT
@@ -38,8 +37,6 @@ exports.getMenuGroup_expense = async (req, res) => {
 };
 
 exports.getMenuGroup_income = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const query = `
       SELECT
           account_type.account_type_id, 
@@ -60,6 +57,8 @@ exports.getMenuGroup_income = async (req, res) => {
           account_type.account_category_id IN (4) AND account_group.account_user_id = ?;
     `;
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
+
     const [result] = await sql.query(query, account_user_id);
 
     if (result.length > 0) {
@@ -160,9 +159,9 @@ exports.submit_transition_group_income_extend = async (req, res) => {
 };
 
 exports.getType_from_id = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
-  const query = `
+  try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
+    const query = `
     SELECT
       account_type.account_type_id, 
       account_category.account_category_name, 
@@ -185,14 +184,17 @@ exports.getType_from_id = async (req, res) => {
     WHERE 
       account_group.account_category_id in (1,7) AND account_group.account_user_id = ?
   `;
-  const [result] = await sql.query(query, [account_user_id]);
-  res.json({ result });
+    const [result] = await sql.query(query, [account_user_id]);
+    res.json({ result });
+  } catch (error) {
+    res.status(500).json({ messageError: error.message });
+  }
 };
 
 exports.getCreditor = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
-  const query = `
+  try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
+    const query = `
     SELECT
       account_type.account_type_id, 
       account_category.account_category_name, 
@@ -213,14 +215,16 @@ exports.getCreditor = async (req, res) => {
       account_type.account_category_id = 2 
       AND account_group.account_user_id = ?
   `;
-  const [result] = await sql.query(query, [account_user_id]);
-  res.json({ result });
+    const [result] = await sql.query(query, [account_user_id]);
+    res.json({ result });
+  } catch {
+    res.status(500).json({ messageError: error.message });
+  }
 };
 
 exports.getDebtor = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
     const query = `
       SELECT
         account_type.account_type_id, 
@@ -384,8 +388,7 @@ exports.openAccountGroup_income = async (req, res) => {
 };
 
 exports.get_expense_transition = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
+  const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
 
   try {
     const [res_transitiongroup] = await sql.query(
@@ -431,9 +434,8 @@ exports.get_expense_transition = async (req, res) => {
 };
 
 exports.get_income_transition = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
     const [res_transitiongroup] = await sql.query(
       `
       SELECT
@@ -507,8 +509,7 @@ exports.deleteTransition = async (req, res) => {
 };
 
 exports.get_Bank_Transition = async (req, res) => {
-  console.log(req.cookies.token);
-  const user_id = jwt.decode(req.cookies.token).account_user_id;
+  const user_id = jwt.decode(req.cookies.token)?.account_user_id;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   const offset = (page - 1) * limit;
@@ -559,7 +560,11 @@ exports.get_Bank_Transition = async (req, res) => {
         at_trans.account_transition_id DESC LIMIT ? OFFSET ?
     `;
     const [data_transition_bank] = await sql.query(dataQuery, [
-      7, 1, user_id, limit, offset
+      7,
+      1,
+      user_id,
+      limit,
+      offset,
     ]);
 
     res.status(200).json({
@@ -567,7 +572,7 @@ exports.get_Bank_Transition = async (req, res) => {
       total_count,
       total_page,
       page,
-      limit
+      limit,
     });
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -575,8 +580,7 @@ exports.get_Bank_Transition = async (req, res) => {
 };
 
 exports.get_Creditor_Transition = async (req, res) => {
-  console.log(req.cookies.token);
-  const user_id = jwt.decode(req.cookies.token).account_user_id;
+  const user_id = jwt.decode(req.cookies.token)?.account_user_id;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   const offset = (page - 1) * limit;
@@ -627,7 +631,13 @@ exports.get_Creditor_Transition = async (req, res) => {
         at_trans.account_transition_id DESC LIMIT ? OFFSET ?
     `;
     const [data_transition_bank] = await sql.query(dataQuery, [
-      2, 1, 2, 1, user_id, limit, offset
+      2,
+      1,
+      2,
+      1,
+      user_id,
+      limit,
+      offset,
     ]);
 
     res.status(200).json({
@@ -635,7 +645,7 @@ exports.get_Creditor_Transition = async (req, res) => {
       total_count,
       total_page,
       page,
-      limit
+      limit,
     });
   } catch (err) {
     res.status(500).json({ err: err.message });
@@ -643,8 +653,7 @@ exports.get_Creditor_Transition = async (req, res) => {
 };
 
 exports.get_Debtor_Transition = async (req, res) => {
-  console.log(req.cookies.token);
-  const user_id = jwt.decode(req.cookies.token).account_user_id;
+  const user_id = jwt.decode(req.cookies.token)?.account_user_id;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   const offset = (page - 1) * limit;
@@ -696,7 +705,13 @@ exports.get_Debtor_Transition = async (req, res) => {
     `;
 
     const [data_transition_bank] = await sql.query(dataQuery, [
-      6, 1, 6, 1, user_id, limit, offset
+      6,
+      1,
+      6,
+      1,
+      user_id,
+      limit,
+      offset,
     ]);
 
     res.status(200).json({
@@ -704,7 +719,7 @@ exports.get_Debtor_Transition = async (req, res) => {
       total_count,
       total_page,
       page,
-      limit
+      limit,
     });
   } catch (err) {
     res.status(500).json({ err: err.message });

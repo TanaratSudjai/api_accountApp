@@ -2,9 +2,9 @@ const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
 
 exports.getDashboard_forsubmition_transition = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
+  
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
     const query_transition_data = `
                                     SELECT
                                           account_type.*,

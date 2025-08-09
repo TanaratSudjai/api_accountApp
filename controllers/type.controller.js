@@ -111,9 +111,9 @@ exports.UpdateAccountType = async (req, res) => {
 };
 
 exports.GetAccountType = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
+  
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
     const query = `SELECT * FROM account_type at 
     JOIN account_group ag ON at.account_group_id = ag.account_group_id
     WHERE ag.account_category_id in (1,7) AND account_user_id = ?`;

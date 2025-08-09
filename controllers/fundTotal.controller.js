@@ -2,13 +2,12 @@ const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
 
 exports.get_three_type = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
-  if (!account_user_id) {
-    return res.status(401).json({ error: "Unauthorized or missing user ID" });
-  }
   const connection = await sql.getConnection();
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
+    if (!account_user_id) {
+      return res.status(401).json({ error: "Unauthorized or missing user ID" });
+    }
     // Owner sum (categories 1, 6, 7)
     const [get_sum_cat_one_six_seven] = await connection.query(
       `SELECT SUM(account_type_sum) as total_owner FROM account_type 
@@ -47,18 +46,19 @@ exports.get_three_type = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message, text: "Error getting fund summary!" });
+    res
+      .status(500)
+      .json({ error: err.message, text: "Error getting fund summary!" });
   } finally {
     connection.release();
   }
 };
 
 exports.sumbitPerDay = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const connection = await sql.getConnection();
 
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
     await connection.beginTransaction();
 
     // Submit all transitions
@@ -70,7 +70,8 @@ exports.sumbitPerDay = async (req, res) => {
       SET account_transition_submit = 1 
       WHERE
           account_user.account_user_id = ? 
-      `,[account_user_id]
+      `,
+      [account_user_id]
     );
 
     // Get latest account_type_id used in transition
@@ -118,10 +119,8 @@ exports.sumbitPerDay = async (req, res) => {
 };
 
 exports.getLastedFund = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
-
   try {
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
     const [rows] = await sql.query(
       `SELECT account_type.* 
        FROM account_type
@@ -131,7 +130,6 @@ exports.getLastedFund = async (req, res) => {
        AND account_user.account_user_id = ?`,
       [account_user_id]
     );
-
     res.status(200).json({ message: "Found Fund.", data: rows });
   } catch (error) {
     console.error("Error updating fund value:", error);
@@ -140,15 +138,12 @@ exports.getLastedFund = async (req, res) => {
 };
 
 exports.updateLastedFund = async (req, res) => {
-  console.log(req.cookies.token);
-  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
-
   const { account_type_id, new_value, account_category_id } = req.body;
-
   const connection = await sql.getConnection();
 
   try {
     await connection.beginTransaction();
+    const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
 
     const [rows] = await connection.query(
       `SELECT account_type_sum FROM account_type WHERE account_type_id = ?`,
@@ -224,4 +219,3 @@ exports.updateLastedFund = async (req, res) => {
     res.status(500).json({ error: "Transaction failed." });
   }
 };
-

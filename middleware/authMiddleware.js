@@ -2,7 +2,7 @@ const { getUserFromToken } = require("../utils/authUtils");
 
 const authMiddleware = (req, res, next) => {
   try {
-    const user = getUserFromToken(req);
+    const user = jwt.decode(req.cookies.token)?.account_user_id;
     req.user = user; // ใส่ข้อมูลผู้ใช้ลงใน `req.user`
     next();
   } catch (error) {
