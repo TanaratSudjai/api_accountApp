@@ -29,12 +29,6 @@ const report = require("../controllers/reportController");
  *       500:
  *         description: Server error while fetching the report.
  */
-router.get("/report", report.reportAccount);
-router.get("/expense_chart", report.sumExpense);
-router.get("/income_chart", report.sumIncome);
-router.get("/daily_expense_totals", report.sumExpenseDaily);
-router.get("/daily_income_totals", report.sumIncomeDaily);
-router.get("/MonthAndYear_expense_totals", report.sumExpenseMonthAndYear);
-router.get("/MonthAndYear_income_totals", report.sumIncomeMonthAndYear);
+router.get("/get_dashboard_data", report.getDashboardReport);
 
 module.exports = router;

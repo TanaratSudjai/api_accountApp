@@ -35,14 +35,52 @@ exports.reportAccount = async (req, res) => {
   }
 };
 
-exports.sumExpense = async (req, res) => {
+exports.getDashboardReport = async (req, res) => {
   const user = getUserFromToken(req);
   const account_user_id = user?.account_user_id;
+  if (!account_user_id) {
+    return res.status(401).json({ error: "Unauthorized or missing user ID" });
+  }
+
+  const { day, month, year } = req.query;
 
   try {
-    const { day, month, year } = req.query;
+    // 1. Daily Expense Totals
+    const [dailyExpenseTotals] = await sql.query(
+      `
+      SELECT 
+        DATE(account_transition.account_transition_datetime) AS date,
+        SUM(account_transition.account_transition_value) AS total
+      FROM account_transition 
+      LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
+      LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+      WHERE account_transition.account_category_id = 5 AND account_user.account_user_id = ?
+      GROUP BY DATE(account_transition.account_transition_datetime)
+      ORDER BY date ASC
+      `,
+      [account_user_id]
+    );
 
-    let query = `
+    // 2. Daily Income Totals
+    const [dailyIncomeTotals] = await sql.query(
+      `
+      SELECT 
+        DATE(account_transition.account_transition_datetime) AS date,
+        SUM(account_transition.account_transition_value) AS total
+      FROM account_transition 
+      LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
+      LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+      WHERE account_transition.account_category_id = 4 AND account_user.account_user_id = ?
+      GROUP BY DATE(account_transition.account_transition_datetime)
+      ORDER BY date ASC
+      `,
+      [account_user_id]
+    );
+
+    // 3. Expense Chart (filtered by year/month/day if provided)
+    let expenseChartQuery = `
       SELECT 
         SUM(t.account_transition_value) AS total_expense,
         at.account_type_id,
@@ -53,41 +91,28 @@ exports.sumExpense = async (req, res) => {
       LEFT JOIN account_user au ON ag.account_user_id = au.account_user_id
       WHERE t.account_category_id = 5 AND au.account_user_id = ?
     `;
-
-    const queryParams = [account_user_id];
-
+    const expenseChartParams = [account_user_id];
     if (year) {
-      query += ` AND YEAR(t.account_transition_datetime) = ?`;
-      queryParams.push(year);
+      expenseChartQuery += ` AND YEAR(t.account_transition_datetime) = ?`;
+      expenseChartParams.push(year);
     }
     if (month) {
-      query += ` AND MONTH(t.account_transition_datetime) = ?`;
-      queryParams.push(month);
+      expenseChartQuery += ` AND MONTH(t.account_transition_datetime) = ?`;
+      expenseChartParams.push(month);
     }
     if (day) {
-      query += ` AND DAY(t.account_transition_datetime) = ?`;
-      queryParams.push(day);
+      expenseChartQuery += ` AND DAY(t.account_transition_datetime) = ?`;
+      expenseChartParams.push(day);
     }
+    expenseChartQuery += `
+       GROUP BY at.account_type_id
+    `;
+    const [expenseChart] = await sql.query(expenseChartQuery, expenseChartParams);
 
-    query += ` GROUP BY at.account_type_id`;
-
-    const [result] = await sql.query(query, queryParams);
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-exports.sumIncome = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
-  try {
-    const { day, month, year } = req.query;
-
-    // Base query
-    let query = `
+    // 4. Income Chart (filtered by year/month/day if provided)
+    let incomeChartQuery = `
       SELECT 
-        SUM(t.account_transition_value) AS total_expense,
+        SUM(t.account_transition_value) AS total_income,
         at.account_type_id,
         at.account_type_name
       FROM account_transition t
@@ -96,88 +121,26 @@ exports.sumIncome = async (req, res) => {
       LEFT JOIN account_user au ON ag.account_user_id = au.account_user_id
       WHERE t.account_category_id = 4 AND au.account_user_id = ?
     `;
-
-    const queryParams = [account_user_id];
-
-    // Add filters dynamically
+    const incomeChartParams = [account_user_id];
     if (year) {
-      query += ` AND YEAR(t.account_transition_datetime) = ?`;
-      queryParams.push(year);
+      incomeChartQuery += ` AND YEAR(t.account_transition_datetime) = ?`;
+      incomeChartParams.push(year);
     }
     if (month) {
-      query += ` AND MONTH(t.account_transition_datetime) = ?`;
-      queryParams.push(month);
+      incomeChartQuery += ` AND MONTH(t.account_transition_datetime) = ?`;
+      incomeChartParams.push(month);
     }
     if (day) {
-      query += ` AND DAY(t.account_transition_datetime) = ?`;
-      queryParams.push(day);
+      incomeChartQuery += ` AND DAY(t.account_transition_datetime) = ?`;
+      incomeChartParams.push(day);
     }
-
-    query += ` GROUP BY at.account_type_id`;
-
-    const [result] = await sql.query(query, queryParams);
-    res.json(result);
-  } catch (err) {
-    res.json({ error: err.message });
-  }
-};
-
-exports.sumExpenseDaily = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
-  try {
-    // Base query
-    let query = `
-            SELECT 
-            DATE(account_transition.account_transition_datetime) AS date,
-            SUM(account_transition.account_transition_value) AS total
-          FROM account_transition 
-          LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
-          LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
-          LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-          WHERE account_transition.account_category_id = 5 AND account_user.account_user_id = ?
-          GROUP BY DATE(account_transition.account_transition_datetime)
-          ORDER BY date ASC;
+    incomeChartQuery += `
+     GROUP BY at.account_type_id
     `;
+    const [incomeChart] = await sql.query(incomeChartQuery, incomeChartParams);
 
-    const [result] = await sql.query(query,[account_user_id]);
-    res.json(result);
-  } catch (err) {
-    res.json({ error: err.message });
-  }
-};
-exports.sumIncomeDaily = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
-  try {
-    // Base query
-    let query = `
-            SELECT 
-            DATE(account_transition.account_transition_datetime) AS date,
-            SUM(account_transition.account_transition_value) AS total
-          FROM account_transition 
-          LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
-          LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
-          LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-          WHERE account_transition.account_category_id = 4 AND account_user.account_user_id = ?
-          GROUP BY DATE(account_transition.account_transition_datetime)
-          ORDER BY date ASC;
-    `;
-
-    const [result] = await sql.query(query,[account_user_id]);
-    res.json(result);
-  } catch (err) {
-    res.json({ error: err.message });
-  }
-};
-
-exports.sumExpenseMonthAndYear = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
-  const { day, month, year } = req.query;
-
-  try {
-    let query = `
+    // 5. MonthAndYear Income Totals
+    let monthYearIncomeQuery = `
       SELECT 
         DATE(account_transition.account_transition_datetime) AS date,
         SUM(account_transition.account_transition_value) AS total
@@ -185,45 +148,25 @@ exports.sumExpenseMonthAndYear = async (req, res) => {
       LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
       LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
       LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-      WHERE account_transition.account_category_id = ? AND account_user.account_user_id = ?
+      WHERE account_transition.account_category_id = 4 AND account_user.account_user_id = ?
     `;
-
-    const queryParams = [5, account_user_id];
-
+    const monthYearIncomeParams = [account_user_id];
     if (year) {
-      query += ` AND YEAR(account_transition.account_transition_datetime) = ?`;
-      queryParams.push(year);
+      monthYearIncomeQuery += ` AND YEAR(account_transition.account_transition_datetime) = ?`;
+      monthYearIncomeParams.push(year);
     }
-
     if (month) {
-      query += ` AND MONTH(account_transition.account_transition_datetime) = ?`;
-      queryParams.push(month);
+      monthYearIncomeQuery += ` AND MONTH(account_transition.account_transition_datetime) = ?`;
+      monthYearIncomeParams.push(month);
     }
-
-    if (day) {
-      query += ` AND DAY(account_transition.account_transition_datetime) = ?`;
-      queryParams.push(day);
-    }
-
-    query += `
+    monthYearIncomeQuery += `
       GROUP BY DATE(account_transition.account_transition_datetime)
       ORDER BY date ASC
     `;
+    const [monthYearIncomeTotals] = await sql.query(monthYearIncomeQuery, monthYearIncomeParams);
 
-    const [result] = await sql.query(query, queryParams);
-    res.json(result);
-  } catch (err) {
-    res.json({ error: err.message });
-  }
-};
-
-exports.sumIncomeMonthAndYear = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
-  const { day, month, year } = req.query;
-
-  try {
-    let query = `
+    // 6. MonthAndYear Expense Totals
+    let monthYearExpenseQuery = `
       SELECT 
         DATE(account_transition.account_transition_datetime) AS date,
         SUM(account_transition.account_transition_value) AS total
@@ -231,34 +174,32 @@ exports.sumIncomeMonthAndYear = async (req, res) => {
       LEFT JOIN account_type ON account_transition.account_type_id = account_type.account_type_id 
       LEFT JOIN account_group ON account_type.account_group_id = account_group.account_group_id
       LEFT JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-      WHERE account_transition.account_category_id = ? AND account_user.account_user_id = ?
+      WHERE account_transition.account_category_id = 5 AND account_user.account_user_id = ?
     `;
-
-    const queryParams = [4, account_user_id];
-
+    const monthYearExpenseParams = [account_user_id];
     if (year) {
-      query += ` AND YEAR(account_transition.account_transition_datetime) = ?`;
-      queryParams.push(year);
+      monthYearExpenseQuery += ` AND YEAR(account_transition.account_transition_datetime) = ?`;
+      monthYearExpenseParams.push(year);
     }
-
     if (month) {
-      query += ` AND MONTH(account_transition.account_transition_datetime) = ?`;
-      queryParams.push(month);
+      monthYearExpenseQuery += ` AND MONTH(account_transition.account_transition_datetime) = ?`;
+      monthYearExpenseParams.push(month);
     }
-
-    if (day) {
-      query += ` AND DAY(account_transition.account_transition_datetime) = ?`;
-      queryParams.push(day);
-    }
-
-    query += `
+    monthYearExpenseQuery += `
       GROUP BY DATE(account_transition.account_transition_datetime)
       ORDER BY date ASC
     `;
+    const [monthYearExpenseTotals] = await sql.query(monthYearExpenseQuery, monthYearExpenseParams);
 
-    const [result] = await sql.query(query, queryParams);
-    res.json(result);
+    res.json({
+      dailyExpenseTotals,
+      dailyIncomeTotals,
+      expenseChart,
+      incomeChart,
+      monthYearIncomeTotals,
+      monthYearExpenseTotals,
+    });
   } catch (err) {
-    res.json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
