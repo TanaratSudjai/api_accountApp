@@ -2,7 +2,6 @@ const pool = require("../database/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const { getUserFromToken } = require("../utils/authUtils");
 
 dotenv.config();
 const SECRET_KEY = process.env.SECRET_KEY;
@@ -196,24 +195,27 @@ exports.register = async (req, res) => {
 
 exports.gettingSession = async (req, res) => {
   try {
-    const user = getUserFromToken(req);
-    if (!user || !user.account_user_id) {
+    console.log(req.cookies.token);
+    const session_id = jwt.decode(req.cookies.token).account_user_id;
+
+    if (!session_id) {
       return res.status(401).json({ error: "Unauthorized or missing user ID" });
     }
-    const account_user_id = user?.account_user_id;
-    console.log("Account User ID:", account_user_id);
 
     const query = `SELECT * FROM account_user WHERE account_user_id = ?`;
-    const [result] = await pool.query(query, [account_user_id]);
+    const [result] = await pool.query(query, [session_id]);
 
     if (result.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
-    const userData = result[0];
-    console.log("User Name:", userData.account_user_name);
-    console.log("User found:", user);
 
-    res.json({ success: true, data_user: userData });
+    const { account_user_id, account_user_name, account_user_username } =
+      result[0];
+
+    res.json({
+      success: true,
+      data_user: { account_user_id, account_user_name, account_user_username },
+    });
   } catch (error) {
     console.error("Error in gettingSession:", error.message);
     res.status(500).json({ error: "Internal Server Error" });

@@ -1,5 +1,5 @@
 const sql = require("../database/db");
-const { getUserFromToken } = require("../utils/authUtils");
+const jwt = require("jsonwebtoken");
 
 exports.MakeImportantToOne = async (req, res) => {
     const { account_group_id } = req.params

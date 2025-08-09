@@ -1,6 +1,5 @@
 const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
-const { getUserFromToken } = require("../utils/authUtils");
 exports.openAccount = async (req, res) => {
   const connection = await sql.getConnection();
   try {
@@ -136,13 +135,12 @@ exports.sumAccount = async (req, res) => {
     await connection.beginTransaction();
     const { account_transition_value } = req.body;
 
-    const user = getUserFromToken(req);
+    console.log(req.cookies.token);
+    const account_user_id = jwt.decode(req.cookies.token).account_user_id;
 
-    if (!user || !user.account_user_id) {
+    if (!account_user_id) {
       return res.status(401).json({ error: "Unauthorized or missing user ID" });
     }
-
-    const account_user_id = user?.account_user_id;
 
     const account_group_id_query = `
       SELECT account_group_id
@@ -219,8 +217,8 @@ exports.sumAccount = async (req, res) => {
 };
 
 exports.sumbitTransition = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   if (!account_user_id) {
     return res.status(401).json({ error: "Unauthorized or missing user ID" });
   }
@@ -328,9 +326,9 @@ exports.sumbitTransition = async (req, res) => {
 
 // debug getTransaction
 exports.getTransaction = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
-  if (!user || !user.account_user_id) {
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
+  if (!account_user_id) {
     return res.status(401).json({ error: "Unauthorized or missing user ID" });
   }
   const page = parseInt(req.query.page) || 1;
@@ -459,8 +457,8 @@ exports.getTransaction = async (req, res) => {
 };
 
 exports.getGroupTwoTransition = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const connection = await sql.getConnection();
   try {
     const [res_transitiongroup] = await connection.query(
@@ -497,8 +495,8 @@ exports.getGroupTwoTransition = async (req, res) => {
 };
 
 exports.getGroupOneTransition = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const connection = await sql.getConnection();
   try {
     const [res_transitiongroup] = await connection.query(
@@ -536,8 +534,8 @@ exports.getGroupOneTransition = async (req, res) => {
 };
 
 exports.getSumValueGroupOne = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const connection = await sql.getConnection();
   try {
     const [res_transitiongroup] = await connection.query(
@@ -568,8 +566,8 @@ exports.getSumValueGroupOne = async (req, res) => {
 };
 
 exports.getSumValueGroupTwo = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const connection = await sql.getConnection();
   try {
     const [res_transitiongroup] = await connection.query(

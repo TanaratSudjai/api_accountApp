@@ -1,7 +1,7 @@
 const sql = require("../database/db");
 const path = require("path");
 const multer = require("multer");
-const { getUserFromToken } = require("../utils/authUtils");
+const jwt = require("jsonwebtoken");
 
 exports.CreateAccountType = async (req, res) => {
   const {
@@ -111,8 +111,8 @@ exports.UpdateAccountType = async (req, res) => {
 };
 
 exports.GetAccountType = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   try {
     const query = `SELECT * FROM account_type at 
     JOIN account_group ag ON at.account_group_id = ag.account_group_id

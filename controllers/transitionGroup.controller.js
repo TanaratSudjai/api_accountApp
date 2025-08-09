@@ -1,10 +1,9 @@
 const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
-const { getUserFromToken } = require("../utils/authUtils");
 
 exports.getMenuGroup_expense = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
 
   const query = `
       SELECT
@@ -39,8 +38,8 @@ exports.getMenuGroup_expense = async (req, res) => {
 };
 
 exports.getMenuGroup_income = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const query = `
       SELECT
           account_type.account_type_id, 
@@ -161,8 +160,8 @@ exports.submit_transition_group_income_extend = async (req, res) => {
 };
 
 exports.getType_from_id = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const query = `
     SELECT
       account_type.account_type_id, 
@@ -191,8 +190,8 @@ exports.getType_from_id = async (req, res) => {
 };
 
 exports.getCreditor = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const query = `
     SELECT
       account_type.account_type_id, 
@@ -219,8 +218,8 @@ exports.getCreditor = async (req, res) => {
 };
 
 exports.getDebtor = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   try {
     const query = `
       SELECT
@@ -385,8 +384,8 @@ exports.openAccountGroup_income = async (req, res) => {
 };
 
 exports.get_expense_transition = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
 
   try {
     const [res_transitiongroup] = await sql.query(
@@ -432,8 +431,8 @@ exports.get_expense_transition = async (req, res) => {
 };
 
 exports.get_income_transition = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   try {
     const [res_transitiongroup] = await sql.query(
       `
@@ -508,8 +507,8 @@ exports.deleteTransition = async (req, res) => {
 };
 
 exports.get_Bank_Transition = async (req, res) => {
-  const user_auth = getUserFromToken(req);
-  const user_id = user_auth.account_user_id;
+  console.log(req.cookies.token);
+  const user_id = jwt.decode(req.cookies.token).account_user_id;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   const offset = (page - 1) * limit;
@@ -576,8 +575,8 @@ exports.get_Bank_Transition = async (req, res) => {
 };
 
 exports.get_Creditor_Transition = async (req, res) => {
-  const user_auth = getUserFromToken(req);
-  const user_id = user_auth.account_user_id;
+  console.log(req.cookies.token);
+  const user_id = jwt.decode(req.cookies.token).account_user_id;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   const offset = (page - 1) * limit;
@@ -644,8 +643,8 @@ exports.get_Creditor_Transition = async (req, res) => {
 };
 
 exports.get_Debtor_Transition = async (req, res) => {
-  const user_auth = getUserFromToken(req);
-  const user_id = user_auth.account_user_id;
+  console.log(req.cookies.token);
+  const user_id = jwt.decode(req.cookies.token).account_user_id;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   const offset = (page - 1) * limit;

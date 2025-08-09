@@ -1,6 +1,6 @@
 const sql = require("../database/db");
 const { query_typename } = require("../models/dataDasktopModal");
-const { getUserFromToken } = require("../utils/authUtils");
+const jwt = require("jsonwebtoken");
 
 exports.getNameType = async (req, res) => {
   const query = query_typename;
@@ -14,8 +14,8 @@ exports.getNameType = async (req, res) => {
 };
 
 exports.get_sumvalue_type = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
 
   const query = `
     SELECT
@@ -61,8 +61,8 @@ ORDER BY
 };
 
 exports.get_zero_value = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
 
   const query = `
       SELECT

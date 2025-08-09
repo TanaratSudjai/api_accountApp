@@ -1,9 +1,9 @@
 const sql = require("../database/db");
-const { getUserFromToken } = require("../utils/authUtils");
+const jwt = require("jsonwebtoken");
 
 exports.get_three_type = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   if (!account_user_id) {
     return res.status(401).json({ error: "Unauthorized or missing user ID" });
   }
@@ -54,8 +54,8 @@ exports.get_three_type = async (req, res) => {
 };
 
 exports.sumbitPerDay = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
   const connection = await sql.getConnection();
 
   try {
@@ -118,8 +118,8 @@ exports.sumbitPerDay = async (req, res) => {
 };
 
 exports.getLastedFund = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
 
   try {
     const [rows] = await sql.query(
@@ -140,8 +140,8 @@ exports.getLastedFund = async (req, res) => {
 };
 
 exports.updateLastedFund = async (req, res) => {
-  const user = getUserFromToken(req);
-  const account_user_id = user?.account_user_id;
+  console.log(req.cookies.token);
+  const account_user_id = jwt.decode(req.cookies.token).account_user_id;
 
   const { account_type_id, new_value, account_category_id } = req.body;
 
