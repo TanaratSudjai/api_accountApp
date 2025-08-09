@@ -128,4 +128,39 @@ router.get("/getSumGropTwo", transitionController.getSumValueGroupTwo);
  */
 router.get("/getAWG", transitionController.getOnedeTwo);
 
+/**
+ * @swagger
+ * /transition-summary:
+ *   get:
+ *     tags:
+ *       - TransitionAll
+ *     summary: Get Consolidated Transition Summary
+ *     description: Retrieve all transition data including group transitions, sums, three type summary, and menu data in a single API call.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved consolidated transition summary.
+ *       401:
+ *         description: Unauthorized or missing user ID.
+ *       500:
+ *         description: Server error retrieving transition summary.
+ */
+
+/**
+ * @swagger
+ * /transition-summary:
+ *   get:
+ *     tags:
+ *       - TransitionAll
+ *     summary: Get Consolidated Transition Summary
+ *     description: Retrieve all transition data including group transitions, sums, three type summary, and menu data in a single API call.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved consolidated transition summary.
+ *       401:
+ *         description: Unauthorized or missing user ID.
+ *       500:
+ *         description: Server error retrieving transition summary.
+ */
+router.get("/data_transition_open", transitionController.getTransitionSummary);
+
 module.exports = router;

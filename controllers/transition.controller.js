@@ -645,3 +645,184 @@ exports.getOnedeTwo = async (req, res) => {
     res.json({ error: error.message });
   }
 };
+
+// Consolidated API that merges multiple functions into one endpoint
+
+exports.getTransitionSummary = async (req, res) => {
+  const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
+
+  if (!account_user_id) {
+    return res.status(401).json({ error: "Unauthorized or missing user ID" });
+  }
+
+  const connection = await sql.getConnection();
+  try {
+    // 1. Get Group One Transitions (categories 1,6,7)
+    const [groupOneTransitions] = await connection.query(
+      `SELECT
+        account_transition.account_transition_id, 
+        account_transition.account_type_id, 
+        account_transition.account_transition_value, 
+        account_transition.account_transition_datetime, 
+        account_transition.account_transition_start, 
+        account_transition.account_transition_submit, 
+        account_group.account_category_id, 
+        account_type.account_type_name, 
+        account_type.account_type_icon
+      FROM
+        account_transition
+        INNER JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+        INNER JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      WHERE
+        account_group.account_category_id IN (1,6,7) AND
+        account_transition_value > 0 AND
+        account_transition.account_transition_submit IS NULL AND
+        account_transition.account_category_id IS NULL AND
+        account_group.account_user_id = ? AND
+        account_transition.account_category_from_id IS NULL AND
+        account_transition.account_type_from_id IS NULL`,
+      [account_user_id]
+    );
+
+    // 2. Get Group Two Transitions (category 2)
+    const [groupTwoTransitions] = await connection.query(
+      `SELECT
+        account_transition.account_transition_id, 
+        account_transition.account_type_id, 
+        account_transition.account_transition_value, 
+        account_transition.account_transition_datetime, 
+        account_transition.account_transition_start, 
+        account_transition.account_transition_submit, 
+        account_group.account_category_id, 
+        account_type.account_type_name, 
+        account_type.account_type_icon
+      FROM
+        account_transition
+        INNER JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+        INNER JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      WHERE
+        account_group.account_category_id = 2 AND
+        account_transition_value > 0 AND
+        account_transition.account_transition_submit IS NULL AND
+        account_group.account_user_id = ? AND
+        account_transition.account_category_from_id IS NULL AND
+        account_transition.account_type_from_id IS NULL`,
+      [account_user_id]
+    );
+
+    // 3. Get Sum Value Group One
+    const [sumGroupOne] = await connection.query(
+      `SELECT 
+        SUM(account_transition.account_transition_value) AS total_transition_value
+      FROM 
+        account_transition
+      INNER JOIN account_type 
+        ON account_transition.account_type_id = account_type.account_type_id
+      INNER JOIN account_group 
+        ON account_type.account_group_id = account_group.account_group_id
+      WHERE 
+        account_group.account_category_id IN (1,6,7) 
+        AND account_transition.account_transition_submit IS NULL
+        AND account_transition.account_type_from_id IS NULL
+        AND account_transition.account_category_from_id IS NULL
+        AND account_group.account_user_id = ?`,
+      [account_user_id]
+    );
+
+    // 4. Get Sum Value Group Two
+    const [sumGroupTwo] = await connection.query(
+      `SELECT 
+        SUM(account_transition.account_transition_value) AS total_transition_value
+      FROM 
+        account_transition
+      INNER JOIN account_type 
+        ON account_transition.account_type_id = account_type.account_type_id
+      INNER JOIN account_group 
+        ON account_type.account_group_id = account_group.account_group_id
+      WHERE 
+        account_group.account_category_id IN (2)
+        AND account_transition.account_transition_submit IS NULL
+        AND account_transition.account_type_from_id IS NULL
+        AND account_transition.account_category_from_id IS NULL
+        AND account_group.account_user_id = ?`,
+      [account_user_id]
+    );
+
+    // 5. Get Three Type Summary (from fundTotal controller)
+    const [ownerSum] = await connection.query(
+      `SELECT SUM(account_type_sum) as total_owner FROM account_type 
+       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+       JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+       WHERE account_type.account_category_id IN (1, 6, 7)
+         AND account_user.account_user_id = ?`,
+      [account_user_id]
+    );
+
+    const [debtSum] = await connection.query(
+      `SELECT SUM(account_type_sum) as total_debt FROM account_type 
+       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+       JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+       WHERE account_type.account_category_id = 2
+         AND account_user.account_user_id = ?`,
+      [account_user_id]
+    );
+
+    const [fundSum] = await connection.query(
+      `SELECT SUM(account_type_total) as total_fund FROM account_type 
+       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+       JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+       WHERE account_type.account_category_id = 3
+         AND account_user.account_user_id = ?`,
+      [account_user_id]
+    );
+
+    // 6. Get Menu Where Cat (from menu controller)
+    const [menuData] = await connection.query(
+      `SELECT
+        account_type.account_type_id, 
+        account_type.account_type_name, 
+        account_type.account_type_value, 
+        account_type.account_type_icon, 
+        account_group.account_category_id,
+        account_icon.account_icon_id,
+        account_icon.account_icon_name
+      FROM
+        account_type
+      INNER JOIN
+        account_group ON account_type.account_group_id = account_group.account_group_id
+      INNER JOIN
+        account_icon ON account_type.account_type_icon = account_icon.account_icon_id
+      WHERE
+        account_group.account_category_id IN (1, 2, 6, 7)
+        AND account_group.account_user_id = ?`,
+      [account_user_id]
+    );
+
+    // Return consolidated response
+    res.status(200).json({
+      message: "Transition summary retrieved successfully",
+      data: {
+        groupOneTransitions,
+        groupTwoTransitions,
+        sumGroupOne: sumGroupOne[0]?.total_transition_value || 0,
+        sumGroupTwo: sumGroupTwo[0]?.total_transition_value || 0,
+        threeTypeSummary: {
+          total_owner: ownerSum[0]?.total_owner || 0,
+          total_debt: debtSum[0]?.total_debt || 0,
+          total_fund: fundSum[0]?.total_fund || 0
+        },
+        menuData
+      }
+    });
+
+  } catch (error) {
+    console.error("Error getting transition summary:", error);
+    res.status(500).json({
+      error: error.message,
+      text: "Error getting transition summary!"
+    });
+  } finally {
+    connection.release();
+  }
+};
+
