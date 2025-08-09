@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const dataDasktopController = require("../controllers/dataDasktopController");
+const dataDasktopController = require("../controllers/dataDasktop.controller");
 
 /**
  * @swagger

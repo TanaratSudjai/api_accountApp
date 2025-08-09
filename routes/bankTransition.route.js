@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const bankControllers = require("../controllers/bankTransitionController");
+const bankControllers = require("../controllers/bankTransition.controller");
 
 /**
  * @swagger
