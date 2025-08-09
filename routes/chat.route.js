@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const pieChartController = require("../controllers/pieChartController");
+const pieChartController = require("../controllers/pieChart.controller");
 /**
  * @swagger
  * /dataGetIncome:

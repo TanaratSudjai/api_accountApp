@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const transitionGroupController = require("../controllers/transitionGroupController");
+const transitionGroupController = require("../controllers/transitionGroup.controller");
 
 /**
  * @swagger

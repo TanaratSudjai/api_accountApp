@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const typeController = require("../controllers/typeController");
-const fundTotalControllers = require("../controllers/fundTotal");
+const typeController = require("../controllers/type.controller");
+const fundTotalControllers = require("../controllers/fundTotal.controller");
 
 router.get(
   "/total_fund",

@@ -11,12 +11,12 @@ const router = express.Router();
 const server = express();
 
 // Swagger
-const { setupSwagger } = require("./controllers/swaggerController");
+const { setupSwagger } = require("./controllers/swagger.controller");
 setupSwagger(server);
 
 // Middleware & Controllers
-const authController = require("./controllers/authController");
-const exportAccountController = require("./controllers/ExportAccount");
+const authController = require("./controllers/auth.controller");
+const exportAccountController = require("./controllers/ExportAccount.controller");
 const middleware = require("./middleware/authMiddleware");
 const loggingMiddleware = require("./middleware/loggingMiddleware");
 
