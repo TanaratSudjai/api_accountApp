@@ -3,6 +3,9 @@ const path = require("path");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
 const redisServer = require("../database/redis")
+
+var groupID;
+
 exports.CreateAccountType = async (req, res) => {
   const {
     account_type_name,
@@ -44,6 +47,9 @@ exports.CreateAccountType = async (req, res) => {
       account_category_id,
       0,
     ]);
+
+    const cacheKey = `account_type_`+this.groupID;
+    await redisServer.del(cacheKey);
 
     res.status(201).json({
       message: "Account type created successfully",
@@ -100,7 +106,7 @@ exports.UpdateAccountType = async (req, res) => {
     }
 
     // ลบ cache ที่เกี่ยวข้อง เช่น cache ของ account_type นี้
-    const cacheKey = `account_type_user_and_group`;
+    const cacheKey = `account_type_`+this.groupID;
     await redisServer.del(cacheKey);
 
     res.status(200).json({
@@ -114,14 +120,12 @@ exports.UpdateAccountType = async (req, res) => {
   }
 };
 
-
-
-
 exports.GetAccountTypeId = async (req, res) => {
   const { account_type_id } = req.params;
+  this.groupID = account_type_id;
 
   try {
-    const cacheKey = `account_type_user_and_group`;
+    const cacheKey = `account_type_`+this.groupID;
     console.log("get key", cacheKey);
 
     // ตรวจสอบ cache ก่อน
@@ -154,13 +158,15 @@ exports.GetAccountTypeId = async (req, res) => {
   }
 };
 
-
 exports.DeleteAccountTypeId = async (req, res) => {
   const { account_type_id } = req.params;
   try {
     const query = `DELETE FROM account_type WHERE account_type_id = ?`;
 
     const [account_type] = await sql.query(query, [account_type_id]);
+
+    const cacheKey = `account_type_`+this.groupID;
+    await redisServer.del(cacheKey);
 
     res.status(201).json({
       message: "Account type Delete successfully",
@@ -193,6 +199,7 @@ exports.GetAccountType = async (req, res) => {
     });
   }
 };
+
 // exports.insertSumtype = async (req, res) => {
 //   try {
 //     const { account_type_sum } = req.body;

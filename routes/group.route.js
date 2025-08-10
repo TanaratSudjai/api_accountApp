@@ -105,7 +105,6 @@ router.put('/account_group_update/:account_group_id', groupController.UpdateAcco
  *       200:
  *         description: Successfully retrieved the account group type count.
  */
-router.get('/account_group_counttype', groupController.GetAccountTypeCount_group);
 
 /**
  * @swagger
