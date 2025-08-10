@@ -1,5 +1,6 @@
 const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
+const redisServer = require('../database/redis')
 
 exports.CreateAccountGroup = async (req, res) => {
   const { account_group_name, account_category_id } = req.body;
@@ -149,11 +150,20 @@ exports.GetAccountTypeCount_group = async (req, res) => {
 
 exports.GetAccountTypeCount_groupID = async (req, res) => {
   const { account_category_id } = req.params;
-  
-
-  
   try {
     const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
+
+    const cacheKey = `group_of_user:${account_category_id}+${account_user_id}`;
+
+    // เช็ค cache ก่อน
+    const cachedData = await redisServer.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        message: "Group retrieved successfully (from cache)",
+        count_type_at_group: JSON.parse(cachedData),
+        source: "redis",
+      });
+    }
 
     const query = `
       SELECT 
@@ -172,11 +182,13 @@ exports.GetAccountTypeCount_groupID = async (req, res) => {
       account_user_id,
     ]);
 
-    console.log(count_type_at_group);
+    // เก็บ cache ใน Redis 5 นาที
+    await redisServer.set(cacheKey, JSON.stringify(count_type_at_group), "EX", 300);
 
     res.status(200).json({
-      message: "Group retrieved successfully",
+      message: "Group retrieved successfully (from DB)",
       count_type_at_group,
+      source: "mysql",
     });
   } catch (err) {
     console.error("SQL Error:", err);
@@ -186,4 +198,5 @@ exports.GetAccountTypeCount_groupID = async (req, res) => {
     });
   }
 };
+
 
