@@ -2,19 +2,16 @@ const pool = require("../database/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-
+const redisServer = require('../database/redis')
 dotenv.config();
 const SECRET_KEY = process.env.SECRET_KEY;
 
-exports.verifyToken = (req, res, next) => {
+exports.verifyToken = async (req, res, next) => {
   const token = req.headers["authorization"];
 
   if (!token) {
     return res.status(403).json({ message: "No token provided" });
   }
-
-  console.log("This is Token verifyToken ", token);
-  console.log("Token received in verifyToken:", token);
 
   jwt.verify(token, SECRET_KEY, (err, decoded) => {
     if (err) {
@@ -193,28 +190,51 @@ exports.register = async (req, res) => {
   }
 };
 
+// gettingSession Controller
 exports.gettingSession = async (req, res) => {
   try {
     const session_id = jwt.decode(req.cookies.token)?.account_user_id;
     if (!session_id) {
       return res.status(401).json({ error: "Unauthorized or missing user ID" });
     }
-    const query = `SELECT * FROM account_user WHERE account_user_id = ?`;
+
+    const cacheKey = `user:${session_id}`;
+
+    // 1️⃣ ลองดึงจาก Redis ก่อน
+    const cachedData = await redisServer.get(cacheKey);
+    if (cachedData) {
+      return res.json({
+        success: true,
+        data_user: JSON.parse(cachedData),
+        source: "redis",
+      });
+    }
+
+    // 2️⃣ Query MySQL
+    const query = `SELECT account_user_id, account_user_name, account_user_username FROM account_user WHERE account_user_id = ?`;
     const [result] = await pool.query(query, [session_id]);
+
     if (result.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
-    const { account_user_id, account_user_name, account_user_username } =
-      result[0];
+
+    const { account_user_id, account_user_name, account_user_username } = result[0];
+    const userData = { account_user_id, account_user_name, account_user_username };
+
+    // 3️⃣ เก็บลง Redis พร้อม TTL 300 วินาที (5 นาที)
+    await redisServer.set(cacheKey, JSON.stringify(userData), "EX", 300);
+
     res.json({
       success: true,
-      data_user: { account_user_id, account_user_name, account_user_username },
+      data_user: userData,
+      source: "mysql",
     });
   } catch (error) {
     console.error("Error in gettingSession:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 // login
 exports.login = async (req, res) => {
