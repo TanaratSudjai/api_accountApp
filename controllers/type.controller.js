@@ -2,6 +2,9 @@ const sql = require("../database/db");
 const path = require("path");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
+const redisServer = require("../database/redis")
+
+var groupID;
 
 exports.CreateAccountType = async (req, res) => {
   const {
@@ -45,6 +48,9 @@ exports.CreateAccountType = async (req, res) => {
       0,
     ]);
 
+    const cacheKey = `account_type_`+this.groupID;
+    await redisServer.del(cacheKey);
+
     res.status(201).json({
       message: "Account type created successfully",
       new_account_type,
@@ -70,8 +76,7 @@ exports.UpdateAccountType = async (req, res) => {
   if (
     !account_type_id ||
     !account_type_name ||
-    !account_type_value 
-    
+    !account_type_value
   ) {
     return res.status(400).json({
       message: "Required fields are missing!",
@@ -80,9 +85,10 @@ exports.UpdateAccountType = async (req, res) => {
 
   try {
     const query = `
-  UPDATE account_type 
-  SET account_type_name = ?, account_type_value = ?, account_type_from_id = ?, account_type_description = ?, account_type_icon = ?
-  WHERE account_type_id = ?`;
+      UPDATE account_type 
+      SET account_type_name = ?, account_type_value = ?, account_type_from_id = ?, account_type_description = ?, account_type_icon = ?
+      WHERE account_type_id = ?
+    `;
 
     const [result] = await sql.query(query, [
       account_type_name,
@@ -99,6 +105,10 @@ exports.UpdateAccountType = async (req, res) => {
       });
     }
 
+    // ลบ cache ที่เกี่ยวข้อง เช่น cache ของ account_type นี้
+    const cacheKey = `account_type_`+this.groupID;
+    await redisServer.del(cacheKey);
+
     res.status(200).json({
       message: "Account type updated successfully",
     });
@@ -110,8 +120,66 @@ exports.UpdateAccountType = async (req, res) => {
   }
 };
 
+exports.GetAccountTypeId = async (req, res) => {
+  const { account_type_id } = req.params;
+  this.groupID = account_type_id;
+
+  try {
+    const cacheKey = `account_type_`+this.groupID;
+    console.log("get key", cacheKey);
+
+    // ตรวจสอบ cache ก่อน
+    const cachedData = await redisServer.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        message: "Account type retrieved successfully (from cache)",
+        account_type: JSON.parse(cachedData),
+        source: "redis",
+      });
+    }
+    const query = `
+      SELECT * FROM account_type 
+      JOIN account_icon ON account_type.account_type_icon = account_icon.account_icon_id 
+      WHERE account_type.account_group_id = ?
+    `;
+    const [account_type] = await sql.query(query, [account_type_id]);
+    // เก็บ cache ใน Redis 5 นาที
+    await redisServer.set(cacheKey, JSON.stringify(account_type), "EX", 300);
+    res.status(200).json({
+      message: "Account type retrieved successfully (from DB)",
+      account_type,
+      source: "mysql",
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error getting account!",
+      error: err.message,
+    });
+  }
+};
+
+exports.DeleteAccountTypeId = async (req, res) => {
+  const { account_type_id } = req.params;
+  try {
+    const query = `DELETE FROM account_type WHERE account_type_id = ?`;
+
+    const [account_type] = await sql.query(query, [account_type_id]);
+
+    const cacheKey = `account_type_`+this.groupID;
+    await redisServer.del(cacheKey);
+
+    res.status(201).json({
+      message: "Account type Delete successfully",
+      account_type,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error Delete account!",
+      error: err.message,
+    });
+  }
+};
 exports.GetAccountType = async (req, res) => {
-  
   try {
     const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
     const query = `SELECT * FROM account_type at 
@@ -127,45 +195,6 @@ exports.GetAccountType = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       message: "Error geting account!",
-      error: err.message,
-    });
-  }
-};
-
-exports.GetAccountTypeId = async (req, res) => {
-  const { account_type_id } = req.params;
-  try {
-    const query = `SELECT * FROM account_type JOIN account_icon 
-    ON account_type.account_type_icon = account_icon.account_icon_id WHERE account_type.account_group_id = ?`;
-
-    const [account_type] = await sql.query(query, [account_type_id]);
-
-    res.status(201).json({
-      message: "Account type getId successfully",
-      account_type,
-    });
-  } catch (err) {
-    res.status(500).json({
-      message: "Error geting account!",
-      error: err.message,
-    });
-  }
-};
-
-exports.DeleteAccountTypeId = async (req, res) => {
-  const { account_type_id } = req.params;
-  try {
-    const query = `DELETE FROM account_type WHERE account_type_id = ?`;
-
-    const [account_type] = await sql.query(query, [account_type_id]);
-
-    res.status(201).json({
-      message: "Account type Delete successfully",
-      account_type,
-    });
-  } catch (err) {
-    res.status(500).json({
-      message: "Error Delete account!",
       error: err.message,
     });
   }

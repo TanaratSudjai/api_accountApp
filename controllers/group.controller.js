@@ -1,9 +1,12 @@
 const sql = require("../database/db");
 const jwt = require("jsonwebtoken");
+const redisServer = require("../database/redis");
+
+var catID;
 
 exports.CreateAccountGroup = async (req, res) => {
   const { account_group_name, account_category_id } = req.body;
-
+  
   if (!account_group_name || !account_category_id) {
     return res.status(401).json({
       message: "Account group name and account category ID are required",
@@ -21,6 +24,9 @@ exports.CreateAccountGroup = async (req, res) => {
       account_category_id,
       account_user_id,
     ]);
+
+    const cacheKey = `account_group_`+this.catID;
+    await redisServer.del(cacheKey);
     res.status(201).json({
       message: "Group created successfully",
       new_account_group,
@@ -35,6 +41,19 @@ exports.CreateAccountGroup = async (req, res) => {
 
 exports.GetAccountGroup = async (req, res) => {
   try {
+    const cacheKey = `account_group_`+this.catID;
+    console.log("get key", cacheKey);
+
+    // ตรวจสอบ cache ก่อน
+    const cachedData = await redisServer.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        message: "Account type retrieved successfully (from cache)",
+        account_type: JSON.parse(cachedData),
+        source: "redis",
+      });
+    }
+
     const query = `SELECT * FROM account_group`;
 
     const [account_group_all] = await sql.query(query);
@@ -52,7 +71,20 @@ exports.GetAccountGroup = async (req, res) => {
 
 exports.GetAccountGroupById = async (req, res) => {
   const { account_group_id } = req.params;
+  
   try {
+    const cacheKey = `account_group_`+this.catID;
+    console.log("get key", cacheKey);
+
+    // ตรวจสอบ cache ก่อน
+    const cachedData = await redisServer.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        message: "Account type retrieved successfully (from cache)",
+        account_type: JSON.parse(cachedData),
+        source: "redis",
+      });
+    }
     const query = `SELECT * FROM account_group WHERE account_group_id = ?`;
 
     const [account_group_by_id] = await sql.query(query, [account_group_id]);
@@ -76,6 +108,7 @@ exports.GetAccountGroupById = async (req, res) => {
 
 exports.DeleteAccountGroupById = async (req, res) => {
   const { account_group_id } = req.params;
+  console.log("group id", this.catID);
   try {
     const query = `DELETE FROM account_group WHERE account_group_id = ?`;
 
@@ -86,6 +119,10 @@ exports.DeleteAccountGroupById = async (req, res) => {
         message: "Account group not found",
       });
     }
+
+     const cacheKey = `account_group_`+this.catID;
+    await redisServer.del(cacheKey);
+
     res.status(201).json({
       message: "Group deleting successfully",
       accounnt_group_delete,
@@ -114,6 +151,10 @@ exports.UpdateAccountGroupById = async (req, res) => {
         message: "Account group not found",
       });
     }
+
+     const cacheKey = `account_group_`+this.catID;
+     console.log("get key", cacheKey);
+    await redisServer.del(cacheKey);
     res.status(201).json({
       message: "Group geting successfully",
       account_group_update,
@@ -126,34 +167,25 @@ exports.UpdateAccountGroupById = async (req, res) => {
   }
 };
 
-exports.GetAccountTypeCount_group = async (req, res) => {
-  try {
-    const query = `SELECT ag.account_group_id, ag.account_group_name, COUNT(at.account_type_id) AS type_count
-                    FROM account_group ag
-                    LEFT JOIN account_type at ON ag.account_group_id = at.account_group_id
-                    GROUP BY ag.account_group_id;
-                    `;
-
-    const [count_type_at_group] = await sql.query(query);
-    res.status(201).json({
-      message: "Group geting successfully",
-      count_type_at_group,
-    });
-  } catch (err) {
-    res.status(500).json({
-      massage: "Error for geting account!",
-      error: err.message,
-    });
-  }
-};
-
 exports.GetAccountTypeCount_groupID = async (req, res) => {
   const { account_category_id } = req.params;
-  
+  this.catID = account_category_id;
 
-  
   try {
     const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
+
+    const cacheKey = `account_group_`+account_category_id;
+    console.log("get key", cacheKey);
+
+    // เช็ค cache ก่อน
+    const cachedData = await redisServer.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        message: "Group retrieved successfully (from cache)",
+        count_type_at_group: JSON.parse(cachedData),
+        source: "redis",
+      });
+    }
 
     const query = `
       SELECT 
@@ -172,11 +204,18 @@ exports.GetAccountTypeCount_groupID = async (req, res) => {
       account_user_id,
     ]);
 
-    console.log(count_type_at_group);
+    // เก็บ cache ใน Redis 5 นาที
+    await redisServer.set(
+      cacheKey,
+      JSON.stringify(count_type_at_group),
+      "EX",
+      300
+    );
 
     res.status(200).json({
-      message: "Group retrieved successfully",
+      message: "Group retrieved successfully (from DB)",
       count_type_at_group,
+      source: "mysql",
     });
   } catch (err) {
     console.error("SQL Error:", err);
@@ -186,4 +225,3 @@ exports.GetAccountTypeCount_groupID = async (req, res) => {
     });
   }
 };
-
