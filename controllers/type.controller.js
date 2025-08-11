@@ -17,6 +17,8 @@ exports.CreateAccountType = async (req, res) => {
     account_category_id,
   } = req.body;
 
+  const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
+
   if (!account_type_name || !account_group_id || !account_category_id) {
     return res.status(400).json({
       message: "Input not found!",
@@ -28,12 +30,28 @@ exports.CreateAccountType = async (req, res) => {
       message: "กรุณาเลือกไอคอน!",
     });
   }
+
   try {
+    // ✅ 1. Check if this group belongs to this user
+    const [groupCheck] = await sql.query(
+      `SELECT account_group_id 
+       FROM account_group 
+       WHERE account_group_id = ? AND account_user_id = ?`,
+      [account_group_id, account_user_id]
+    );
+
+    if (groupCheck.length === 0) {
+      return res.status(403).json({
+        message: "You are not allowed to create an account type in this group",
+      });
+    }
+
+    // ✅ 2. Insert if ownership check passes
     const query = `
-        INSERT INTO account_type 
-        (account_type_name, account_type_value, account_type_description, account_type_from_id, account_type_icon, account_type_important ,account_type_sum ,account_group_id, account_category_id, account_type_total) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?)
-      `;
+      INSERT INTO account_type 
+      (account_type_name, account_type_value, account_type_description, account_type_from_id, account_type_icon, account_type_important, account_type_sum, account_group_id, account_category_id, account_type_total) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
     const [new_account_type] = await sql.query(query, [
       account_type_name,
@@ -48,7 +66,8 @@ exports.CreateAccountType = async (req, res) => {
       0,
     ]);
 
-    const cacheKey = `account_type_`+this.groupID;
+    // ✅ 3. Clear cache for this group
+    const cacheKey = `account_type_${account_group_id}`;
     await redisServer.del(cacheKey);
 
     res.status(201).json({
@@ -62,6 +81,7 @@ exports.CreateAccountType = async (req, res) => {
     });
   }
 };
+
 
 exports.UpdateAccountType = async (req, res) => {
   const { account_type_id } = req.params;
@@ -123,6 +143,7 @@ exports.UpdateAccountType = async (req, res) => {
 exports.GetAccountTypeId = async (req, res) => {
   const { account_type_id } = req.params;
   this.groupID = account_type_id;
+  const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
 
   try {
     const cacheKey = `account_type_`+this.groupID;
@@ -140,9 +161,11 @@ exports.GetAccountTypeId = async (req, res) => {
     const query = `
       SELECT * FROM account_type 
       JOIN account_icon ON account_type.account_type_icon = account_icon.account_icon_id 
-      WHERE account_type.account_group_id = ?
+      JOIN account_group ON account_type.account_group_id = account_group.account_group_id
+      JOIN account_user ON account_group.account_user_id = account_user.account_user_id
+      WHERE account_type.account_group_id = ? AND account_user.account_user_id = ?
     `;
-    const [account_type] = await sql.query(query, [account_type_id]);
+    const [account_type] = await sql.query(query, [account_type_id,account_user_id]);
     // เก็บ cache ใน Redis 5 นาที
     await redisServer.set(cacheKey, JSON.stringify(account_type), "EX", 300);
     res.status(200).json({
