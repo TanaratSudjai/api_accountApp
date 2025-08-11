@@ -406,7 +406,8 @@ exports.login = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true, // ✅ ป้องกันการเข้าถึงจาก JavaScript
       secure: true, // ✅ ใช้ Secure เมื่อเป็น HTTPS
-      sameSite: "None", // ✅ ให้ Cookie ทำงานข้าม Origin ได้
+      sameSite: "strict", // ✅ ป้องกันการเข้าถึงจาก cross-site
+      path: "/",
     });
     console.log("Token at storage : ", token);
     console.log("Token created:", token);
