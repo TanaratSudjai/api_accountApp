@@ -108,42 +108,174 @@ exports.register = async (req, res) => {
     // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 1 ---->
     const [default_group_cat_5] = await connection.query(
       "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?)",
-      ["ค่าใช้จ่ายรายเดือน", userId, 5]
+      ["อาหาร & เครื่องดื่ม", userId, 5]
     );
     const group_id_cat_5 = default_group_cat_5.insertId;
     await connection.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [group_id_cat_5, 5, 2, `ค่าน้ำ`, 0, 0, 0, 0]
+      [group_id_cat_5, 5, 92, `อาหาร`, 0, 0, 0, 0]
     );
     await connection.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [group_id_cat_5, 5, 3, `ค่าไฟ`, 0, 0, 0, 0]
+      [group_id_cat_5, 5, 85, `คาเฟ่ / ร้านกาแฟ`, 0, 0, 0, 0]
     );
     await connection.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [group_id_cat_5, 5, 4, `ค่าบ้าน`, 0, 0, 0, 0]
+      [group_id_cat_5, 5, 87, `ขนมขบเคี้ยว`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5, 5, 88, `น้ำดื่ม`, 0, 0, 0, 0]
     );
     // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 1 ---->
 
     // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 2 ---->
     const [default_group_cat_5_2] = await connection.query(
       "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?)",
-      ["ค่่าใช้จ่ายประจำวัน", userId, 5]
+      ["การเดินทาง & ขนส่ง", userId, 5]
     );
     const group_id_cat_5_2 = default_group_cat_5_2.insertId;
     await connection.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [group_id_cat_5_2, 5, 21, `ค่าอาหารเช้า`, 0, 0, 0, 0]
+      [group_id_cat_5_2, 5, 131, `รถไฟ`, 0, 0, 0, 0]
     );
     await connection.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [group_id_cat_5_2, 5, 22, `อาหารกลางวัน`, 0, 0, 0, 0]
+      [group_id_cat_5_2, 5, 123, `รถบัส`, 0, 0, 0, 0]
     );
     await connection.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [group_id_cat_5_2, 5, 20, `อาหารเย็น`, 0, 0, 0, 0]
+      [group_id_cat_5_2, 5, 130, `แท็กซี่`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_2, 5, 128, `ค่าน้ำมัน`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_2, 5, 125, `ค่าซ่อมบำรุงรถ`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_2, 5, 124, `ค่าประกันรถ`, 0, 0, 0, 0]
     );
     // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 2 ---->
+
+    // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 3 ---->
+    const [default_group_cat_5_3] = await connection.query(
+      "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?)",
+      ["ที่อยู่อาศัย & ค่าสาธารณูปโภค", userId, 5]
+    );
+    const group_id_cat_5_3 = default_group_cat_5_3.insertId;
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_3, 5, 107, `ค่าเช่าบ้าน / คอนโด`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_3, 5, 110, `ค่าน้ำ`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_3, 5, 103, `ค่าไฟ`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_3, 5, 108, `ค่าอินเทอร์เน็ต`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_3, 5, 109, `ค่าโทรศัพท์`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_3, 5, 106, `ค่าซ่อมแซมบ้าน`, 0, 0, 0, 0]
+    );
+    // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 3 ---->
+
+    // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 4 ---->
+    const [default_group_cat_5_4] = await connection.query(
+      "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?)",
+      ["สุขภาพ & การดูแลตัวเอง", userId, 5]
+    );
+    const group_id_cat_5_4 = default_group_cat_5_4.insertId;
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_4, 5, 100, `ค่ารักษาพยาบาล`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_4, 5, 98, `ค่าประกันสุขภาพ`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_4, 5, 93, `เครื่องสำอาง`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_4, 5, 95, `อาหารเสริม`, 0, 0, 0, 0]
+    );
+    // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 4 ---->
+
+    // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 5 ---->
+    const [default_group_cat_5_5] = await connection.query(
+      "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?)",
+      ["ความบันเทิง & งานอดิเรก", userId, 5]
+    );
+    const group_id_cat_5_5 = default_group_cat_5_5.insertId;
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_5, 5, 61, `ดูหนัง / คอนเสิร์ต`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_5, 5, 59, `เกม / แอปพลิเคชัน`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_5, 5, 64, `ค่าแพลตฟอร์มสตรีมมิ่ง (Netflix, Spotify)`, 0, 0, 0, 0]
+    );
+    // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 5 ---->
+
+    // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 6 ---->
+    const [default_group_cat_5_6] = await connection.query(
+      "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?)",
+      ["การเงิน & ภาษี", userId, 5]
+    );
+    const group_id_cat_5_6 = default_group_cat_5_6.insertId;
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_6, 5, 75, `ค่าธรรมเนียมธนาคาร`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_6, 5, 76, `ค่าบัตรเครดิต`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_6, 5, 83, `ค่าภาษี`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_6, 5, 81, `เบี้ยประกันชีวิต`, 0, 0, 0, 0]
+    );
+    // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 6 ---->
+
+    // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 7 ---->
+    const [default_group_cat_5_7] = await connection.query(
+      "INSERT INTO account_group (account_group_name, account_user_id, account_category_id) VALUES (?, ?, ?)",
+      ["ท่องเที่ยว & ที่พัก", userId, 5]
+    );
+    const group_id_cat_5_7 = default_group_cat_5_7.insertId;
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_7, 5, 136, `ค่าที่พักโรงแรม`, 0, 0, 0, 0]
+    );
+    await connection.query(
+      "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [group_id_cat_5_7, 5, 133, `ค่าตั๋วเครื่องบิน`, 0, 0, 0, 0]
+    );
+    // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 7 ---->
 
     // <---- ค่าเริ่มต้นของลูกหนี้ ---->
     const [default_group_cat_6] = await connection.query(

@@ -142,14 +142,13 @@ exports.UpdateAccountType = async (req, res) => {
 
 exports.GetAccountTypeId = async (req, res) => {
   const { account_type_id } = req.params;
-  this.groupID = account_type_id;
   const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
 
   try {
-    const cacheKey = `account_type_`+this.groupID;
+    const cacheKey = `account_type_${account_type_id}`;
     console.log("get key", cacheKey);
 
-    // ตรวจสอบ cache ก่อน
+    // Check Redis cache first
     const cachedData = await redisServer.get(cacheKey);
     if (cachedData) {
       return res.status(200).json({
@@ -158,21 +157,43 @@ exports.GetAccountTypeId = async (req, res) => {
         source: "redis",
       });
     }
+
+    // Main query to get all account_type rows
     const query = `
-      SELECT * FROM account_type 
+      SELECT * 
+      FROM account_type 
       JOIN account_icon ON account_type.account_type_icon = account_icon.account_icon_id 
       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
       JOIN account_user ON account_group.account_user_id = account_user.account_user_id
-      WHERE account_type.account_group_id = ? AND account_user.account_user_id = ?
+      WHERE account_type.account_group_id = ? 
+      AND account_user.account_user_id = ?
     `;
-    const [account_type] = await sql.query(query, [account_type_id,account_user_id]);
-    // เก็บ cache ใน Redis 5 นาที
+    const [account_type] = await sql.query(query, [account_type_id, account_user_id]);
+
+    // Loop and fetch account_type_from_id_name for each
+    for (let row of account_type) {
+      if (row.account_type_from_id) {
+        const [fromRows] = await sql.query(
+          `SELECT account_type_name 
+           FROM account_type 
+           WHERE account_type_id = ?`,
+          [row.account_type_from_id]
+        );
+        row.account_type_from_id_name = fromRows[0]?.account_type_name || null;
+      } else {
+        row.account_type_from_id_name = null;
+      }
+    }
+
+    // Cache in Redis
     await redisServer.set(cacheKey, JSON.stringify(account_type), "EX", 300);
+
     res.status(200).json({
       message: "Account type retrieved successfully (from DB)",
       account_type,
       source: "mysql",
     });
+
   } catch (err) {
     res.status(500).json({
       message: "Error getting account!",
@@ -180,6 +201,7 @@ exports.GetAccountTypeId = async (req, res) => {
     });
   }
 };
+
 
 exports.DeleteAccountTypeId = async (req, res) => {
   const { account_type_id } = req.params;

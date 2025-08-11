@@ -5,29 +5,52 @@ exports.getMenuGroup_expense = async (req, res) => {
   const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
 
   const query = `
-      SELECT
-          account_type.account_type_id, 
-          account_type.account_type_name, 
-          account_type.account_type_value, 
-          account_type.account_type_from_id, 
-          account_group.account_category_id,
-          account_icon.account_icon_name
-      FROM
-          account_type
-      INNER JOIN
-          account_group
-          ON account_type.account_group_id = account_group.account_group_id
-      INNER JOIN
-          account_icon
-          ON account_type.account_type_icon = account_icon.account_icon_id
-      WHERE 
-          account_type.account_category_id IN (5) AND account_group.account_user_id = ?;
-    `;
+    SELECT
+      account_type.account_type_id, 
+      account_type.account_type_name, 
+      account_type.account_type_value, 
+      account_type.account_type_from_id, 
+      account_group.account_category_id,
+      account_group.account_group_name,
+      account_icon.account_icon_name
+    FROM
+      account_type
+    INNER JOIN
+      account_group
+      ON account_type.account_group_id = account_group.account_group_id
+    INNER JOIN
+      account_icon
+      ON account_type.account_type_icon = account_icon.account_icon_id
+    WHERE 
+      account_type.account_category_id IN (5) 
+      AND account_group.account_user_id = ?;
+  `;
+
   try {
     const [result] = await sql.query(query, account_user_id);
 
     if (result.length > 0) {
-      res.json(result);
+      const groupedArray = Object.values(
+        result.reduce((acc, item) => {
+          if (!acc[item.account_group_name]) {
+            acc[item.account_group_name] = {
+              account_group_name: item.account_group_name,
+              items: [],
+            };
+          }
+          acc[item.account_group_name].items.push({
+            account_type_id: item.account_type_id,
+            account_type_name: item.account_type_name,
+            account_type_value: item.account_type_value,
+            account_type_from_id: item.account_type_from_id,
+            account_category_id: item.account_category_id,
+            account_icon_name: item.account_icon_name,
+          });
+          return acc;
+        }, {})
+      );
+
+      res.json(groupedArray);
     } else {
       res.status(404).json({ error: "No records found" });
     }
