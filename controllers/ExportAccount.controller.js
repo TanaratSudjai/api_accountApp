@@ -10,7 +10,28 @@ exports.CloseAccount = async (req, res) => {
     const userId = jwt.decode(token)?.account_user_id;
     if (!userId) {
       await connection.rollback();
-      return res.status(401).json({ message: "Unauthorized or missing user ID" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized or missing user ID" });
+    }
+
+    const [existingClosing] = await connection.query(
+      `
+        SELECT 1 
+        FROM account_closing
+        WHERE account_user_id = ?
+          AND MONTH(account_closing_time) = MONTH(CURRENT_DATE())
+          AND YEAR(account_closing_time) = YEAR(CURRENT_DATE())
+        LIMIT 1
+      `,
+      [userId]
+    );
+
+    if (existingClosing.length > 0) {
+      await connection.rollback();
+      return res
+        .status(400)
+        .json({ message: "Account already closed for this month" });
     }
 
     // 1. Get total income (category 4)
@@ -130,12 +151,7 @@ exports.CloseAccount = async (req, res) => {
       `INSERT INTO account_closing 
         (account_user_id, account_closing_time, account_closing_data, account_closing_income, account_closing_expence)
       VALUES (?, NOW(), ?, ?, ?)`,
-      [
-        userId,
-        JSON.stringify(result),
-        totalIncome,
-        totalExpense,
-      ]
+      [userId, JSON.stringify(result), totalIncome, totalExpense]
     );
 
     // 6. Reset categories 4 and 5
