@@ -16,7 +16,10 @@ setupSwagger(server);
 const authController = require("./controllers/auth.controller");
 const exportAccountController = require("./controllers/ExportAccount.controller");
 const middleware = require("./middleware/authMiddleware");
-const { registerLimiterMiddleware, loginLimiterMiddleware } = require('./middleware/limit');
+const {
+  registerLimiterMiddleware,
+  loginLimiterMiddleware,
+} = require("./middleware/limit");
 // CORS ต้องมาก่อน middleware อื่นๆ
 server.use(
   cors({
@@ -37,20 +40,30 @@ server.use(
   })
 );
 
-
 // cookieParser และ JSON middleware
-server.set('trust proxy', 1);
+server.set("trust proxy", 1);
 server.use(cookieParser());
 server.use(express.json());
 
+router.get("/", (req, res) => {
+  console.log(process.env.CLIENT_ORIGIN);
+  res.status(200).json({
+    status: "success",
+    message: "API is running",
+  });
+});
 // ใช้ router กับ /api path
 server.use("/api", router);
 
 // Authentication Routes
-router.post("/auth/register", registerLimiterMiddleware, authController.register);
+router.post(
+  "/auth/register",
+  registerLimiterMiddleware,
+  authController.register
+);
 router.post("/auth/login", loginLimiterMiddleware, authController.login);
 router.post("/auth/logout", authController.logout);
-router.get("/auth/get_session",  authController.gettingSession);
+router.get("/auth/get_session", authController.gettingSession);
 
 router.post("/ExportAccount", exportAccountController.CloseAccount);
 router.get("/getClosedAccount", exportAccountController.getClosedAccount);
@@ -72,8 +85,6 @@ fs.readdirSync(routesPath).forEach((file) => {
     console.error(`Error loading route from file ${file}:`, error.message);
   }
 });
-
-
 
 // Centralized error handling
 server.use((err, req, res, next) => {
