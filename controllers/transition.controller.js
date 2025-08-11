@@ -378,8 +378,7 @@ exports.getTransaction = async (req, res) => {
     const [debterCount] = await connection.query(
       `
       SELECT COUNT(*) AS count_debter
-      FROM account_transition
-      JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+      FROM account_type
       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
       WHERE account_group.account_user_id = ? AND account_type.account_category_id = ?
       `,
@@ -390,8 +389,7 @@ exports.getTransaction = async (req, res) => {
     const [crediterCount] = await connection.query(
       `
       SELECT COUNT(*) AS count_creaditer
-      FROM account_transition
-      JOIN account_type ON account_transition.account_type_id = account_type.account_type_id
+      FROM account_type
       JOIN account_group ON account_type.account_group_id = account_group.account_group_id
       WHERE account_group.account_user_id = ? AND account_type.account_category_id = ?
       `,
