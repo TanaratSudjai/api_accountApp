@@ -143,7 +143,8 @@ exports.UpdateAccountType = async (req, res) => {
 exports.GetAccountTypeId = async (req, res) => {
   const { account_type_id } = req.params;
   const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
-
+  this.groupID = account_type_id;
+  
   try {
     const cacheKey = `account_type_${account_type_id}`;
     console.log("get key", cacheKey);
