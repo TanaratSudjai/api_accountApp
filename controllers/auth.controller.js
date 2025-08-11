@@ -2,7 +2,7 @@ const pool = require("../database/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const redisServer = require('../database/redis')
+const redisServer = require("../database/redis");
 dotenv.config();
 const SECRET_KEY = process.env.SECRET_KEY;
 
@@ -233,7 +233,16 @@ exports.register = async (req, res) => {
     );
     await connection.query(
       "INSERT INTO account_type (account_group_id, account_category_id, account_type_icon, account_type_name, account_type_important, account_type_sum, account_type_total, account_type_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [group_id_cat_5_5, 5, 64, `ค่าแพลตฟอร์มสตรีมมิ่ง (Netflix, Spotify)`, 0, 0, 0, 0]
+      [
+        group_id_cat_5_5,
+        5,
+        64,
+        `ค่าแพลตฟอร์มสตรีมมิ่ง (Netflix, Spotify)`,
+        0,
+        0,
+        0,
+        0,
+      ]
     );
     // <---- ค่าเริ่มต้นของรายจ่ายกลุ่มที่ 5 ---->
 
@@ -350,8 +359,13 @@ exports.gettingSession = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const { account_user_id, account_user_name, account_user_username } = result[0];
-    const userData = { account_user_id, account_user_name, account_user_username };
+    const { account_user_id, account_user_name, account_user_username } =
+      result[0];
+    const userData = {
+      account_user_id,
+      account_user_name,
+      account_user_username,
+    };
 
     // 3️⃣ เก็บลง Redis พร้อม TTL 300 วินาที (5 นาที)
     await redisServer.set(cacheKey, JSON.stringify(userData), "EX", 300);
@@ -366,7 +380,6 @@ exports.gettingSession = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 
 // login
 exports.login = async (req, res) => {
@@ -406,7 +419,7 @@ exports.login = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true, // ✅ ป้องกันการเข้าถึงจาก JavaScript
       secure: true, // ✅ ใช้ Secure เมื่อเป็น HTTPS
-      sameSite: "strict", // ✅ ป้องกันการเข้าถึงจาก cross-site
+      sameSite: "none", // ✅ ป้องกันการเข้าถึงจาก cross-site
       path: "/",
     });
     console.log("Token at storage : ", token);
