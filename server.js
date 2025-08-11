@@ -3,26 +3,24 @@ const fs = require("fs");
 const path = require("path");
 const dotenv = require("dotenv");
 dotenv.config();
-const pool = require("./database/db");
 
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const router = express.Router();
 const server = express();
-
 // Swagger
-const { setupSwagger } = require("./controllers/swaggerController");
+const { setupSwagger } = require("./controllers/swagger.controller");
 setupSwagger(server);
 
 // Middleware & Controllers
-const authController = require("./controllers/authController");
+const authController = require("./controllers/auth.controller");
+const exportAccountController = require("./controllers/ExportAccount.controller");
 const middleware = require("./middleware/authMiddleware");
-const loggingMiddleware = require("./middleware/loggingMiddleware");
-
+const { registerLimiterMiddleware, loginLimiterMiddleware } = require('./middleware/limit');
 // CORS ต้องมาก่อน middleware อื่นๆ
 server.use(
   cors({
-    origin: [process.env.CLIENT_ORIGIN, "http://localhost:3000"] ,
+    origin: [process.env.CLIENT_ORIGIN, "http://localhost:3000"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
@@ -41,20 +39,21 @@ server.use(
 
 
 // cookieParser และ JSON middleware
+server.set('trust proxy', 1);
 server.use(cookieParser());
 server.use(express.json());
 
-
-// Logging Middleware
-server.use(loggingMiddleware);
+// ใช้ router กับ /api path
+server.use("/api", router);
 
 // Authentication Routes
-router.post("/auth/register", authController.register);
-router.post("/auth/login", authController.login);
+router.post("/auth/register", registerLimiterMiddleware, authController.register);
+router.post("/auth/login", loginLimiterMiddleware, authController.login);
 router.post("/auth/logout", authController.logout);
-router.get("/auth/get_session", authController.gettingSession);
+router.get("/auth/get_session",  authController.gettingSession);
 
-
+router.post("/ExportAccount", exportAccountController.CloseAccount);
+router.get("/getClosedAccount", exportAccountController.getClosedAccount);
 
 // โหลด route files
 const routesPath = path.join(__dirname, "routes");
@@ -62,7 +61,7 @@ fs.readdirSync(routesPath).forEach((file) => {
   try {
     if (file.endsWith(".js")) {
       const route = require(path.join(routesPath, file));
-      console.log("♻️  Loaded Route ➜ ", file ,"  🔥");
+      console.log("♻️  Loaded Route ➜ ", file, "  🔥");
 
       if (route.requiresAuth) {
         router.use("/", middleware, route);
@@ -74,28 +73,7 @@ fs.readdirSync(routesPath).forEach((file) => {
   }
 });
 
-async function checkDatabaseConnection() {
-  try {
-    const connection = await pool.getConnection();
-    console.log("✅ Database connected successfully!");
-    connection.release();
-    return true;
-  } catch (error) {
-    console.error("❌ Database connection failed:", error.message);
-    return false;
-  }
-}
 
-const isDBConnected = checkDatabaseConnection();
-
-if (isDBConnected) {
-  console.error("✅ Connnected successfullly.");
-} else {
-  console.error("❌ Server not started due to database connection failure.");
-}
-
-// ใช้ router กับ /api path
-server.use("/api", router);
 
 // Centralized error handling
 server.use((err, req, res, next) => {

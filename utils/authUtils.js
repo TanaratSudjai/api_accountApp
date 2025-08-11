@@ -5,15 +5,16 @@ if (!SECRET_KEY) {
   throw new Error("SECRET_KEY is not defined in environment variables");
 }
 
-const getUserFromToken = (req) => {
+const getUserFromToken = (req, res) => {
   try {
     const token = req.cookies.token;
     if (!token) {
-      console.log("Token is missing");
-      return null;
+      return res.json({
+        massage: error.massage,
+        text: "Error geted data group Transition Expense !",
+      });
     }
     const user = jwt.verify(token, SECRET_KEY);
-    // console.log("Decoded user from token:", user);
 
     return user;
   } catch (error) {

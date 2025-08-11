@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+// เปลี่ยนจาก onnectTimeout เป็น connectTimeout
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -12,8 +13,11 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  onnectTimeout: 10000,   // 10 seconds
+  connectTimeout: 10000,
   enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
   dateStrings: true,
 });
+
+
 module.exports = pool;
