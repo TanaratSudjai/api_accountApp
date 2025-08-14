@@ -387,7 +387,7 @@ exports.login = async (req, res) => {
     const { account_user_username, account_user_password } = req.body;
 
     const [users] = await pool.query(
-      "SELECT * FROM account_user WHERE account_user_username = ?",
+      "SELECT account_user_username, account_user_password ,account_user_id ,account_user_name FROM account_user WHERE account_user_username = ?",
       [account_user_username]
     );
 
@@ -399,6 +399,7 @@ exports.login = async (req, res) => {
     }
 
     const user = users[0];
+
     const isPasswordValid = await bcrypt.compare(
       account_user_password,
       user.account_user_password
@@ -411,6 +412,8 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       {
         account_user_id: user.account_user_id,
+        account_user_username: user.account_user_username,
+        account_user_name: user.account_user_name,
       },
       SECRET_KEY,
       { expiresIn: "24h" }
