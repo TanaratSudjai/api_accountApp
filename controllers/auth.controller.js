@@ -419,17 +419,16 @@ exports.login = async (req, res) => {
       { expiresIn: "24h" }
     );
 
+    // ตั้งค่า cookie ให้ตรงกับ frontend
     res.cookie("token", token, {
-      httpOnly: true, // ✅ ป้องกันการเข้าถึงจาก JavaScript
+      httpOnly: false, // ⚠️ เปลี่ยนเป็น false เพื่อให้ client อ่านได้
       secure: true, // ✅ ใช้ Secure เมื่อเป็น HTTPS
-      sameSite: "None", // ✅ ป้องกันการเข้าถึงจาก cross-site
+      sameSite: "None", // ✅ สำหรับ cross-domain (ต้องเป็น None กับ secure: true)
       path: "/",
-      domain: process.env.DOMAIN, // ✅ กำหนดโดเมนที่สามารถเข้าถึง cookie นี้ได้
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 2 ชั่วโมง
-      signed: true, // ✅ ใช้ signed cookie เพื่อป้องกันการแก้ไข cookie
+      domain: process.env.DOMAIN, // ✅ ใช้ .goo.lnw.com
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 วัน
+      signed: false, // ⚠️ เปลี่ยนเป็น false หรือจัดการ signed cookie ใน frontend ด้วย
     });
-    console.log("Token at storage : ", token);
-    console.log("Token created:", token);
 
     res.json({
       success: true,
