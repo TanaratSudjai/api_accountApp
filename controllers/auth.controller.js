@@ -424,6 +424,7 @@ exports.login = async (req, res) => {
       secure: true, // ✅ ใช้ Secure เมื่อเป็น HTTPS
       sameSite: "none", // ✅ ป้องกันการเข้าถึงจาก cross-site
       path: "/",
+      domain: process.env.DOMAIN, // ✅ กำหนดโดเมนที่สามารถเข้าถึง cookie นี้ได้
     });
     console.log("Token at storage : ", token);
     console.log("Token created:", token);
