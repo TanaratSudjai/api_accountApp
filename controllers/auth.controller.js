@@ -425,7 +425,7 @@ exports.login = async (req, res) => {
       sameSite: "none", // ✅ ป้องกันการเข้าถึงจาก cross-site
       path: "/",
       domain: process.env.DOMAIN, // ✅ กำหนดโดเมนที่สามารถเข้าถึง cookie นี้ได้
-      maxAge: 2 * 60 * 60 * 1000, // 2 ชั่วโมง
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 2 ชั่วโมง
       signed: true, // ✅ ใช้ signed cookie เพื่อป้องกันการแก้ไข cookie
     });
     console.log("Token at storage : ", token);
