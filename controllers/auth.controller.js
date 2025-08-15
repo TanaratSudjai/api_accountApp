@@ -422,7 +422,7 @@ exports.login = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true, // ✅ ป้องกันการเข้าถึงจาก JavaScript
       secure: true, // ✅ ใช้ Secure เมื่อเป็น HTTPS
-      sameSite: "none", // ✅ ป้องกันการเข้าถึงจาก cross-site
+      sameSite: "None", // ✅ ป้องกันการเข้าถึงจาก cross-site
       path: "/",
       domain: process.env.DOMAIN, // ✅ กำหนดโดเมนที่สามารถเข้าถึง cookie นี้ได้
       maxAge: 7 * 24 * 60 * 60 * 1000, // 2 ชั่วโมง
