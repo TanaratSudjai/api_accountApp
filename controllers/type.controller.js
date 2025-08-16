@@ -2,9 +2,6 @@ const sql = require("../database/db");
 const path = require("path");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
-const redisServer = require("../database/redis")
-
-var groupID;
 
 exports.CreateAccountType = async (req, res) => {
   const {
@@ -66,10 +63,6 @@ exports.CreateAccountType = async (req, res) => {
       0,
     ]);
 
-    // ✅ 3. Clear cache for this group
-    const cacheKey = `account_type_${account_group_id}`;
-    await redisServer.del(cacheKey);
-
     res.status(201).json({
       message: "Account type created successfully",
       new_account_type,
@@ -81,7 +74,6 @@ exports.CreateAccountType = async (req, res) => {
     });
   }
 };
-
 
 exports.UpdateAccountType = async (req, res) => {
   const { account_type_id } = req.params;
@@ -125,10 +117,6 @@ exports.UpdateAccountType = async (req, res) => {
       });
     }
 
-    // ลบ cache ที่เกี่ยวข้อง เช่น cache ของ account_type นี้
-    const cacheKey = `account_type_`+this.groupID;
-    await redisServer.del(cacheKey);
-
     res.status(200).json({
       message: "Account type updated successfully",
     });
@@ -143,22 +131,8 @@ exports.UpdateAccountType = async (req, res) => {
 exports.GetAccountTypeId = async (req, res) => {
   const { account_type_id } = req.params;
   const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
-  this.groupID = account_type_id;
   
   try {
-    const cacheKey = `account_type_${account_type_id}`;
-    console.log("get key", cacheKey);
-
-    // Check Redis cache first
-    const cachedData = await redisServer.get(cacheKey);
-    if (cachedData) {
-      return res.status(200).json({
-        message: "Account type retrieved successfully (from cache)",
-        account_type: JSON.parse(cachedData),
-        source: "redis",
-      });
-    }
-
     // Main query to get all account_type rows
     const query = `
       SELECT * 
@@ -186,11 +160,8 @@ exports.GetAccountTypeId = async (req, res) => {
       }
     }
 
-    // Cache in Redis
-    await redisServer.set(cacheKey, JSON.stringify(account_type), "EX", 300);
-
     res.status(200).json({
-      message: "Account type retrieved successfully (from DB)",
+      message: "Account type retrieved successfully",
       account_type,
       source: "mysql",
     });
@@ -203,16 +174,12 @@ exports.GetAccountTypeId = async (req, res) => {
   }
 };
 
-
 exports.DeleteAccountTypeId = async (req, res) => {
   const { account_type_id } = req.params;
   try {
     const query = `DELETE FROM account_type WHERE account_type_id = ?`;
 
     const [account_type] = await sql.query(query, [account_type_id]);
-
-    const cacheKey = `account_type_`+this.groupID;
-    await redisServer.del(cacheKey);
 
     res.status(201).json({
       message: "Account type Delete successfully",
@@ -225,6 +192,7 @@ exports.DeleteAccountTypeId = async (req, res) => {
     });
   }
 };
+
 exports.GetAccountType = async (req, res) => {
   try {
     const account_user_id = jwt.decode(req.cookies.token)?.account_user_id;
