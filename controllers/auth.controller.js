@@ -426,7 +426,7 @@ exports.login = async (req, res) => {
       sameSite: "None", // ✅ สำหรับ cross-domain (ต้องเป็น None กับ secure: true)
       path: "/",
       domain: process.env.DOMAIN, // ✅ ใช้ .goo.lnw.com
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 วัน
+      maxAge: 1 * 24 * 60 * 60 * 1000, // 7 วัน
       signed: false, // ⚠️ เปลี่ยนเป็น false หรือจัดการ signed cookie ใน frontend ด้วย
     });
 

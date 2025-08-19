@@ -79,7 +79,7 @@ exports.UpdateAccountType = async (req, res) => {
   const { account_type_id } = req.params;
   const {
     account_type_name,
-    account_type_value,
+    account_type_value ,
     account_type_from_id,
     account_type_description,
     account_type_icon
@@ -87,8 +87,7 @@ exports.UpdateAccountType = async (req, res) => {
 
   if (
     !account_type_id ||
-    !account_type_name ||
-    !account_type_value
+    !account_type_name 
   ) {
     return res.status(400).json({
       message: "Required fields are missing!",
